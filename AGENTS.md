@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a Next.js 14 application that automates Google Workspace and Microsoft Entra ID integration through a step-based workflow. It uses TypeScript, NextAuth for dual-provider authentication, and Redux Toolkit for state management.
+This is a Next.js application that automates Google Workspace and Microsoft Entra ID integration through a step-based workflow. It uses TypeScript, NextAuth for dual-provider authentication, and Redux Toolkit for state management.
 
 ## Core Architecture Principles
 
@@ -111,3 +111,9 @@ return {
 3. Add UI components following existing patterns
 4. Update Redux state and types as needed
 5. Test authentication flows and error handling
+
+# Testing
+
+- ensure `pnpm lint` works
+
+- ensure `pnpm build` works
