@@ -66,7 +66,6 @@ export interface StepDefinition {
   category: "Google" | "Microsoft" | "SSO";
   automatable: boolean;
   requires?: string[];
-  check?: (context: StepContext) => Promise<StepCheckResult>;
   execute: (context: StepContext) => Promise<StepExecutionResult>;
   /**
    * Optional deep links to relevant admin console locations. These may be

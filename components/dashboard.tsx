@@ -26,6 +26,7 @@ import type {
   StepContext,
   StepExecutionResult,
 } from "@/lib/types";
+import { executeStepCheck } from "@/app/actions/unified-check-action";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -196,9 +197,9 @@ export function AutomationDashboard({
         outputs: store.getState().appConfig.outputs,
       };
       try {
-        if (definition.automatable && stepActionImplementations.check) {
+        if (definition.automatable) {
           const checkResult: StepCheckResult =
-            await stepActionImplementations.check(context);
+            await executeStepCheck(stepId, context);
           if (checkResult.outputs) dispatch(addOutputs(checkResult.outputs));
           if (checkResult.completed) {
             dispatch(
@@ -296,9 +297,6 @@ export function AutomationDashboard({
 
   const executeCheck = useCallback(
     async (stepId: string) => {
-      const definition = allStepDefinitions.find((s) => s.id === stepId);
-      if (!definition?.check) return;
-
       if (!appConfig.domain || !appConfig.tenantId) return;
 
       const context: StepContext = {
@@ -308,7 +306,7 @@ export function AutomationDashboard({
       };
 
       try {
-        const checkResult = await definition.check(context);
+        const checkResult = await executeStepCheck(stepId, context);
 
         if (checkResult.outputs) {
           dispatch(addOutputs(checkResult.outputs));
@@ -330,35 +328,9 @@ export function AutomationDashboard({
         }
       } catch (error) {
         console.error(`Auto-check failed for ${stepId}:`, error);
-        if (isAuthenticationError(error)) {
-          toast.error(error.message, {
-            duration: 10000,
-            action: {
-              label: "Sign In",
-              onClick: () => router.push("/login"),
-            },
-          });
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "failed",
-              error: error.message,
-              metadata: {
-                errorCode: "AUTH_EXPIRED",
-                errorProvider: error.provider,
-              },
-            }),
-          );
-        } else {
-          const message = error instanceof Error ? error.message : String(error);
-          dispatch(updateStep({ id: stepId, status: "failed", error: message }));
-          toast.error(`${definition.title}: Check failed. ${message}`, {
-            duration: 10000,
-          });
-        }
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store, router],
+    [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
   useAutoCheck(executeCheck);
