@@ -207,7 +207,7 @@ export function StepItem({
                         <a
                           href={
                             typeof step.adminUrls.configure === "function"
-                              ? step.adminUrls.configure(outputs) ?? "#"
+                              ? (step.adminUrls.configure(outputs) ?? "#")
                               : step.adminUrls.configure
                           }
                           target="_blank"
@@ -278,7 +278,8 @@ export function StepItem({
                         disabled={
                           isStepEffectivelyDisabled ||
                           step.status === "in_progress" ||
-                          (step.status === ("completed" as StepStatusInfo["status"]) &&
+                          (step.status ===
+                            ("completed" as StepStatusInfo["status"]) &&
                             !step.metadata?.preExisting)
                         }
                         variant={
@@ -343,25 +344,61 @@ export function StepItem({
             </div>
           )}
 
-          {step.status === "failed" && step.metadata?.errorCode === "AUTH_EXPIRED" && (
-            <Alert variant="destructive" className="mt-2">
-              <AlertCircleIcon className="h-4 w-4" />
-              <AlertTitle>Authentication Required</AlertTitle>
-              <AlertDescription>
-                Your {step.metadata.errorProvider === "google" ? "Google Workspace" : "Microsoft"}
-                {" "}session has expired. Please sign in again to continue.
-              </AlertDescription>
-            </Alert>
-          )}
+          {step.status === "failed" &&
+            step.metadata?.errorCode === "AUTH_EXPIRED" && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertCircleIcon className="h-4 w-4" />
+                <AlertTitle>Authentication Required</AlertTitle>
+                <AlertDescription>
+                  Your{" "}
+                  {step.metadata.errorProvider === "google"
+                    ? "Google Workspace"
+                    : "Microsoft"}{" "}
+                  session has expired. Please sign in again to continue.
+                </AlertDescription>
+              </Alert>
+            )}
 
           {step.status === "failed" && step.error && (
             <Alert variant="destructive" className="mt-2 text-xs">
               <AlertCircleIcon className="h-4 w-4" />
               <AlertTitle className="font-medium">Error</AlertTitle>
               <AlertDescription>
-                {step.error.includes(
-                  "is not enabled for your Google Cloud project",
-                ) ? (
+                {step.metadata?.errorCode === "API_NOT_ENABLED" ? (
+                  <div className="space-y-2">
+                    <p>This step requires enabling a Google Cloud API:</p>
+                    <div className="text-xs bg-red-50 dark:bg-red-950 p-2 rounded space-y-1">
+                      {step.error.split("\n").map((line, i) => {
+                        const urlMatch = line.match(
+                          /https:\/\/console\.developers\.google\.com[^\s]+/,
+                        );
+                        if (urlMatch) {
+                          const parts = line.split(urlMatch[0]);
+                          return (
+                            <div key={i}>
+                              {parts[0]}
+                              <a
+                                href={urlMatch[0]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Enable API
+                              </a>
+                              {parts[1]}
+                            </div>
+                          );
+                        }
+                        return <div key={i}>{line}</div>;
+                      })}
+                    </div>
+                    <p className="text-xs italic">
+                      After enabling, wait 2-3 minutes before retrying.
+                    </p>
+                  </div>
+                ) : step.error.includes(
+                    "is not enabled for your Google Cloud project",
+                  ) ? (
                   <div className="space-y-2">
                     <p>This step requires enabling a Google Cloud API:</p>
                     <div className="text-xs bg-red-50 dark:bg-red-950 p-2 rounded">

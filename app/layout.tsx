@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Providers } from "./providers";
+import { ErrorToastProvider } from "@/components/error-toast-provider";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangleIcon } from "lucide-react";
@@ -52,8 +53,10 @@ export default function RootLayout({
           </AlertDescription>
         </Alert>
         <Providers>
-          {children}
-          <Toaster richColors />
+          <ErrorToastProvider>
+            {children}
+            <Toaster richColors />
+          </ErrorToastProvider>
         </Providers>
       </body>
     </html>
