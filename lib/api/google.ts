@@ -2,6 +2,7 @@ import type { admin_directory_v1 } from "googleapis";
 
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
 import { wrapAuthError } from "./auth-interceptor";
+import { isAPIEnablementError, createEnablementError } from "./api-enablement-error";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -63,6 +64,11 @@ function handleGoogleError(error: unknown): never {
       error.message?.includes("invalid authentication credentials"))
   ) {
     throw wrapAuthError(error, "google");
+  }
+
+  // Handle API enablement errors specially
+  if (error instanceof APIError && isAPIEnablementError(error)) {
+    throw createEnablementError(error);
   }
   throw error;
 }

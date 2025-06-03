@@ -274,7 +274,38 @@ export function StepItem({
             <Alert variant="destructive" className="mt-2 text-xs">
               <AlertCircleIcon className="h-4 w-4" />
               <AlertTitle className="font-medium">Error</AlertTitle>
-              <AlertDescription>{step.error}</AlertDescription>
+              <AlertDescription>
+                {step.error.includes(
+                  "is not enabled for your Google Cloud project",
+                ) ? (
+                  <div className="space-y-2">
+                    <p>This step requires enabling a Google Cloud API:</p>
+                    <div className="text-xs bg-red-50 dark:bg-red-950 p-2 rounded">
+                      {step.error.split("\n").map((line, i) => (
+                        <div key={i}>
+                          {line.includes("Click here to enable") ? (
+                            <span>
+                              {line.split(": ")[0]}:
+                              <a
+                                href={line.split(": ")[1]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline text-blue-600 hover:text-blue-800"
+                              >
+                                Enable API
+                              </a>
+                            </span>
+                          ) : (
+                            line
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  step.error
+                )}
+              </AlertDescription>
             </Alert>
           )}
         </CardContent>

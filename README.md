@@ -69,6 +69,27 @@ GRAPH_API_BASE=https://graph.microsoft.com/v1.0
 
 Once both providers are configured you can sign in with accounts that have administrator permissions in each service. The dashboard will then guide you through the integration steps.
 
+## Google Cloud Project Setup
+
+Before using this tool, ensure these APIs are enabled in your Google Cloud project:
+
+1. **Admin SDK API** - Required for Google Workspace directory operations
+   - Enable at: https://console.cloud.google.com/apis/library/admin.googleapis.com
+
+2. **Cloud Identity API** - Required for SAML SSO configuration
+   - Enable at: https://console.cloud.google.com/apis/library/cloudidentity.googleapis.com
+
+To find your project ID:
+1. Go to https://console.cloud.google.com
+2. Select your project from the dropdown
+3. The project ID is shown in the project info card
+
+### Common Setup Issues
+
+- **"API has not been used in project X before"**: Enable the mentioned API using the link in the error message
+- **"Request had insufficient authentication scopes"**: Re-authenticate after updating scopes in your environment
+- **403 Forbidden errors**: Ensure your Google Workspace admin account has Super Admin privileges
+
 ## Testing
 
 Run `pnpm lint` to check code formatting and `pnpm build` to create a production build.
