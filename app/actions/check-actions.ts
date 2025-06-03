@@ -119,6 +119,78 @@ export async function checkDomainVerified(
   }
 }
 
+export async function checkServiceAccountExists(
+  serviceAccountEmail: string,
+): Promise<StepCheckResult> {
+  try {
+    const { googleToken } = await getAuthenticatedTokens(["google"]);
+    const user = await google.getUser(googleToken!, serviceAccountEmail);
+    if (user?.primaryEmail) {
+      return {
+        completed: true,
+        message: `Service account '${serviceAccountEmail}' exists.`,
+        outputs: {
+          [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: user.primaryEmail,
+          [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: user.id,
+        },
+      };
+    }
+    return {
+      completed: false,
+      message: `Service account '${serviceAccountEmail}' not found.`,
+    };
+  } catch (e) {
+    if (e instanceof APIError && e.status === 404) {
+      return {
+        completed: false,
+        message: `Service account '${serviceAccountEmail}' not found.`,
+      };
+    }
+    return handleCheckError(e, `Failed to check service account existence.`);
+  }
+}
+
+export async function checkServiceAccountIsAdmin(
+  serviceAccountEmail: string,
+): Promise<StepCheckResult> {
+  try {
+    const { googleToken } = await getAuthenticatedTokens(["google"]);
+    const user = await google.getUser(googleToken!, serviceAccountEmail);
+    if (!user) {
+      return {
+        completed: false,
+        message: `Service account '${serviceAccountEmail}' not found.`,
+      };
+    }
+    if (user.isAdmin === true && user.suspended === false) {
+      return {
+        completed: true,
+        message: `Service account '${serviceAccountEmail}' has admin privileges.`,
+      };
+    }
+    const roleAssignments = await google.listRoleAssignments(
+      googleToken!,
+      serviceAccountEmail,
+    );
+    const hasSuperAdminRole = roleAssignments.some(
+      (assignment) => assignment.roleId === "3",
+    );
+    if (hasSuperAdminRole) {
+      return {
+        completed: true,
+        message: `Service account has Super Admin role assigned.`,
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+      };
+    }
+    return {
+      completed: false,
+      message: `Service account exists but lacks admin privileges.`,
+    };
+  } catch (e) {
+    return handleCheckError(e, `Failed to check admin status.`);
+  }
+}
+
 /**
  * Inspect a Google SAML profile by display name or full resource name.
  */

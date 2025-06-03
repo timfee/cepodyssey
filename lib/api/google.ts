@@ -204,6 +204,30 @@ export async function getUser(
   }
 }
 
+export async function listUsers(
+  token: string,
+  params?: {
+    domain?: string;
+    query?: string;
+    orderBy?: string;
+    maxResults?: number;
+  },
+): Promise<DirectoryUser[]> {
+  const baseUrl = getDirectoryApiBaseUrl();
+  const queryParams = new URLSearchParams();
+  if (params?.domain) queryParams.append("domain", params.domain);
+  if (params?.query) queryParams.append("query", params.query);
+  if (params?.orderBy) queryParams.append("orderBy", params.orderBy);
+  if (params?.maxResults) queryParams.append("maxResults", params.maxResults.toString());
+  const url = `${baseUrl}/users${queryParams.toString() ? `?${queryParams}` : ""}`;
+  const res = await fetchWithAuth(url, token);
+  const data = await handleApiResponse<{ users?: DirectoryUser[] }>(res);
+  if (typeof data === "object" && data !== null && "alreadyExists" in data) {
+    return [];
+  }
+  return data.users ?? [];
+}
+
 /** Add a secondary domain to the Google Workspace tenant. */
 export async function addDomain(
   token: string,
