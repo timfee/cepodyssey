@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState, useTransition } from "react";
+import React, { Suspense, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { lookupTenantId } from "@/app/actions/auth-actions";
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
-export default function LoginPage() {
+function LoginPage() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -286,5 +286,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading login page...</div>}>
+      <LoginPage />
+    </Suspense>
   );
 }
