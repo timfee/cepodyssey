@@ -595,3 +595,47 @@ export async function checkMicrosoftAppAssignments(
     );
   }
 }
+
+export async function checkGoogleAPIsEnabled(): Promise<{
+  adminSDK: boolean;
+  cloudIdentity: boolean;
+  errors: string[];
+}> {
+  const errors: string[] = [];
+  let adminSDK = false;
+  let cloudIdentity = false;
+
+  try {
+    const { googleToken } = await getAuthenticatedTokens(["google"]);
+
+    // Try a simple Admin SDK call
+    try {
+      await google.getUser(googleToken!, "test@nonexistent.domain");
+      adminSDK = true;
+    } catch (e) {
+      if (e instanceof APIError && e.message?.includes("Admin SDK API has not been used")) {
+        errors.push("Admin SDK API is not enabled");
+      } else {
+        adminSDK = true; // API is enabled, user doesn't exist
+      }
+    }
+
+    // Try a simple Cloud Identity call
+    try {
+      await google.listSamlProfiles(googleToken!);
+      cloudIdentity = true;
+    } catch (e) {
+      if (e instanceof APIError && e.message?.includes("Cloud Identity API has not been used")) {
+        errors.push("Cloud Identity API is not enabled");
+      } else {
+        cloudIdentity = true; // API is enabled
+      }
+    }
+  } catch (e) {
+    errors.push(
+      "Unable to check API status: " + (e instanceof Error ? e.message : String(e)),
+    );
+  }
+
+  return { adminSDK, cloudIdentity, errors };
+}
