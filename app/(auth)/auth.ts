@@ -1,9 +1,15 @@
 // ./app/(auth)/auth.ts
-import type { User } from "next-auth";
+import { withRetry } from "@/lib/api/utils";
+import type { User } from "next-auth"; // Standard NextAuth types
 import NextAuth from "next-auth";
-import { JWT } from "next-auth/jwt";
-import GoogleProvider from "next-auth/providers/google";
-import MicrosoftEntraIDProvider from "next-auth/providers/microsoft-entra-id";
+import type { JWT } from "next-auth/jwt"; // NextAuth JWT type
+import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
+import MicrosoftEntraIDProvider, {
+  type MicrosoftEntraIDProfile,
+} from "next-auth/providers/microsoft-entra-id";
+// Assuming refresh token functions are correctly in ./refresh as per your project-code.md
+
+// Assuming withRetry is from your lib/utils/retry.ts or lib/api/utils.ts if moved
 
 const ADMIN_USER_KEY = "admin-user";
 const accountStore = new Map<string, JWT>();
@@ -103,17 +109,18 @@ async function checkGoogleAdmin(
     process.env.GOOGLE_API_BASE
   }/admin/directory/v1/users/${encodeURIComponent(
     email
-  )}?fields=isAdmin,suspended,primaryEmail`;
+  )}?fields=isAdmin,suspended,primaryEmail`; // Request primaryEmail for logging
 
   console.log(
     `checkGoogleAdmin: Fetching admin status for ${email} from ${fetchUrl}`
   );
   try {
-    const res = await fetch(fetchUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const res = await withRetry(() =>
+      // Using withRetry from your project-code.md's auth.ts
+      fetch(fetchUrl, { headers: { Authorization: `Bearer ${accessToken}` } })
+    );
 
-    const responseBodyForLogging = await res.clone().text(); // Clone to log body without consuming it
+    const responseBodyForLogging = await res.clone().text();
     console.log(
       `checkGoogleAdmin: API response status: ${res.status}, body: ${responseBodyForLogging}`
     );
@@ -123,29 +130,26 @@ async function checkGoogleAdmin(
         `checkGoogleAdmin: API call failed with status ${res.status}. User: ${email}`
       );
       try {
-        const errorData = await res.json();
+        const errorData = JSON.parse(responseBodyForLogging);
         console.warn("checkGoogleAdmin: API error data:", errorData);
       } catch {
         console.warn("checkGoogleAdmin: Could not parse error JSON from API.");
       }
       return false;
     }
-    const data = (await res.json()) as {
+    const data = JSON.parse(responseBodyForLogging) as {
       isAdmin?: boolean;
-      suspensionReason?: string;
+      suspended?: boolean; // Corrected from suspensionReason
       primaryEmail?: string;
     };
-    console.log(`checkGoogleAdmin: API response data for ${email}:`, data);
-
-    if (data.primaryEmail?.toLowerCase() !== email.toLowerCase()) {
-      console.warn(
-        `checkGoogleAdmin: Requested email ${email} does not match primaryEmail ${data.primaryEmail} from response. This might indicate a non-Workspace account or an alias issue.`
-      );
-    }
-
-    const isSuperAdmin = data.isAdmin === true && !data.suspensionReason;
     console.log(
-      `checkGoogleAdmin: User ${email}, isAdmin: ${data.isAdmin}, suspensionReason: ${data.suspensionReason}, Determined SuperAdmin: ${isSuperAdmin}`
+      `checkGoogleAdmin: Parsed API response data for ${email}:`,
+      data
+    );
+
+    const isSuperAdmin = data.isAdmin === true && data.suspended === false;
+    console.log(
+      `checkGoogleAdmin: User ${email}, isAdmin: ${data.isAdmin}, suspended: ${data.suspended}, Determined SuperAdmin: ${isSuperAdmin}`
     );
     return isSuperAdmin;
   } catch (err) {
@@ -165,9 +169,10 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
   const fetchUrl = `${process.env.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
   console.log(`checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`);
   try {
-    const res = await fetch(fetchUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const res = await withRetry(() =>
+      // Using withRetry
+      fetch(fetchUrl, { headers: { Authorization: `Bearer ${accessToken}` } })
+    );
 
     const responseBodyForLogging = await res.clone().text();
     console.log(
@@ -179,7 +184,7 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
         `checkMicrosoftAdmin: API call failed with status ${res.status}.`
       );
       try {
-        const errorData = await res.json();
+        const errorData = JSON.parse(responseBodyForLogging);
         console.warn("checkMicrosoftAdmin: API error data:", errorData);
       } catch {
         console.warn(
@@ -188,12 +193,12 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
       }
       return false;
     }
-    const data = (await res.json()) as {
+    const data = JSON.parse(responseBodyForLogging) as {
       value?: { displayName?: string; roleTemplateId?: string }[];
     };
     console.log("checkMicrosoftAdmin: API response data (roles):", data.value);
 
-    const globalAdminRoleTemplateId = "62e90394-69f5-4237-9190-012177145e10";
+    const globalAdminRoleTemplateId = "62e90394-69f5-4237-9190-012177145e10"; // Global Administrator
     const isGlobalAdmin =
       data.value?.some(
         (role) => role.roleTemplateId === globalAdminRoleTemplateId
@@ -212,71 +217,54 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET, // Your project-code.md used NEXTAUTH_SECRET, ensure consistency or use AUTH_SECRET
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: process.env.GOOGLE_ADMIN_SCOPES,
+          scope: process.env.GOOGLE_ADMIN_SCOPES!,
           access_type: "offline",
           prompt: "consent",
         },
       },
+      allowDangerousEmailAccountLinking: true, // As per your project-code.md
     }),
     MicrosoftEntraIDProvider({
-      clientId: process.env.MICROSOFT_CLIENT_ID,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+      // Using direct provider
+      clientId: process.env.MICROSOFT_CLIENT_ID!,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
       issuer: `https://login.microsoftonline.com/${
         process.env.MICROSOFT_TENANT_ID ?? "common"
       }/v2.0`,
       authorization: {
         params: {
-          scope: process.env.MICROSOFT_GRAPH_SCOPES,
+          scope: process.env.MICROSOFT_GRAPH_SCOPES!,
+          prompt: "consent", // Added for consistency, can be reviewed
         },
       },
+      allowDangerousEmailAccountLinking: true, // As per your project-code.md
     }),
   ],
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
-    error: "/login",
+    error: "/login", // Redirect to login page on auth errors
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log(
-        "signIn callback initiated. Provider:",
-        account?.provider,
-        "User email:",
-        user?.email
-      );
       if (!account || !profile || !user?.email) {
-        console.warn(
-          "signIn callback: Missing account, profile, or user email for",
-          user
-        );
         return "/login?error=SignInInformationMissing";
       }
       let isAdmin = false;
       if (account.provider === "google") {
         isAdmin = await checkGoogleAdmin(account.access_token!, user.email);
-        if (!isAdmin) {
-          console.warn(`User ${user.email} did not pass Google Admin check.`);
-          return "/login?error=GoogleAdminRequired";
-        }
+        if (!isAdmin) return "/login?error=GoogleAdminRequired";
       } else if (account.provider === "microsoft-entra-id") {
         isAdmin = await checkMicrosoftAdmin(account.access_token!);
-        if (!isAdmin) {
-          console.warn(
-            `User ${user.email} did not pass Microsoft Admin check.`
-          );
-          return "/login?error=MicrosoftAdminRequired";
-        }
+        if (!isAdmin) return "/login?error=MicrosoftAdminRequired";
       }
-      console.log(
-        `signIn callback: User ${user.email} from provider ${account.provider} isAdmin: ${isAdmin}`
-      );
       return isAdmin;
     },
     async jwt({ token, user, account, profile }) {
@@ -290,26 +278,55 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         finalToken.picture = user.image ?? finalToken.picture;
       }
 
-      if (account) {
-        finalToken.error = undefined;
+      if (account && profile) {
+        finalToken.error = undefined; // Clear previous errors
         if (account.provider === "google") {
+          console.log(
+            "Google Profile in JWT callback:",
+            JSON.stringify(profile, null, 2)
+          ); // Log Google profile
           finalToken.googleAccessToken = account.access_token;
           finalToken.googleRefreshToken = account.refresh_token;
           finalToken.googleExpiresAt = account.expires_at
             ? Date.now() + account.expires_at * 1000
             : undefined;
+          // Attempt to capture 'hd' (hosted domain) from Google profile
+          finalToken.authFlowDomain =
+            (profile as GoogleProfile).hd ?? finalToken.authFlowDomain;
+          if ((profile as GoogleProfile).hd) {
+            console.log(
+              "Captured Google authFlowDomain (hd):",
+              (profile as GoogleProfile).hd
+            );
+          } else {
+            console.warn(
+              "Google profile did not contain 'hd' claim for authFlowDomain."
+            );
+          }
         } else if (account.provider === "microsoft-entra-id") {
+          console.log(
+            "Microsoft Profile in JWT callback:",
+            JSON.stringify(profile, null, 2)
+          ); // Log Microsoft profile
           finalToken.microsoftAccessToken = account.access_token;
           finalToken.microsoftRefreshToken = account.refresh_token;
           finalToken.microsoftExpiresAt = account.expires_at
             ? Date.now() + account.expires_at * 1000
             : undefined;
           const accountTenantId =
-            (profile as { tid?: string })?.tid ||
+            (profile as MicrosoftEntraIDProfile).tid ||
             (account as { tenantId?: string }).tenantId ||
             token.microsoftTenantId;
           finalToken.microsoftTenantId =
             accountTenantId || process.env.MICROSOFT_TENANT_ID;
+          if (finalToken.microsoftTenantId) {
+            console.log(
+              "Captured Microsoft tenantId:",
+              finalToken.microsoftTenantId
+            );
+          } else {
+            console.warn("Microsoft profile/account did not yield a tenantId.");
+          }
         }
       }
       accountStore.set(userKey, finalToken);
@@ -321,8 +338,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (finalToken.googleExpiresAt ?? 0) < now
       ) {
         if (finalToken.googleRefreshToken) {
-          console.log("Refreshing Google token for admin-user...");
-          finalToken = await refreshGoogleToken(finalToken);
+          finalToken = await refreshGoogleToken(finalToken); // refreshGoogleToken from ./refresh
           tokenNeedsUpdateInStore = true;
         } else if (!finalToken.error) {
           finalToken.error = "RefreshTokenError";
@@ -334,17 +350,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (finalToken.microsoftExpiresAt ?? 0) < now
       ) {
         if (finalToken.microsoftRefreshToken) {
-          console.log("Refreshing Microsoft token for admin-user...");
-          finalToken = await refreshMicrosoftToken(finalToken);
+          finalToken = await refreshMicrosoftToken(finalToken); // refreshMicrosoftToken from ./refresh
           tokenNeedsUpdateInStore = true;
         } else if (!finalToken.error) {
           finalToken.error = "RefreshTokenError";
           finalToken.microsoftAccessToken = undefined;
         }
       }
-      if (tokenNeedsUpdateInStore) {
-        accountStore.set(userKey, finalToken);
-      }
+      if (tokenNeedsUpdateInStore) accountStore.set(userKey, finalToken);
       return finalToken;
     },
     async session({ session, token }) {
@@ -354,12 +367,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.image = token.picture ?? session.user.image;
       session.hasGoogleAuth = !!token.googleAccessToken;
       session.hasMicrosoftAuth = !!token.microsoftAccessToken;
-      session.googleToken = token.googleAccessToken;
-      session.microsoftToken = token.microsoftAccessToken;
+      session.googleToken = token.googleAccessToken; // For server-side use
+      session.microsoftToken = token.microsoftAccessToken; // For server-side use
       session.microsoftTenantId = token.microsoftTenantId;
-      if (token.error) {
-        session.error = token.error;
-      }
+      session.authFlowDomain = token.authFlowDomain; // Pass Google domain to session
+      if (token.error) session.error = token.error;
       return session;
     },
   },

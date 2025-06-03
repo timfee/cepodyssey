@@ -1,20 +1,19 @@
 import type { admin_directory_v1 } from "googleapis";
-import { fetchWithAuth, handleApiResponse } from "./utils";
 
-const GWS_BASE_URL = "https://admin.googleapis.com/admin/directory/v1";
-const GCI_BASE_URL = "https://cloudidentity.googleapis.com/v1";
-const GWS_CUSTOMER_ID = "my_customer";
+import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
 
-export type OrgUnit = admin_directory_v1.Schema$OrgUnit;
 export type DirectoryUser = admin_directory_v1.Schema$User;
-export type Role = admin_directory_v1.Schema$Role;
-export type RoleAssignment = admin_directory_v1.Schema$RoleAssignment;
-export type Domain = admin_directory_v1.Schema$Domains;
+export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
+export type GoogleRole = admin_directory_v1.Schema$Role;
+export type GoogleRoleAssignment = admin_directory_v1.Schema$RoleAssignment;
+export type GoogleDomain = admin_directory_v1.Schema$Domains & {
+  verified?: boolean;
+};
+export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
 export interface InboundSamlSsoProfile {
-  name: string; // Full resource name, e.g., "inboundSamlSsoProfiles/xxxxxxxx"
-  displayName: string;
-  ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED";
+  name?: string;
+  displayName?: string;
   idpConfig?: {
     idpEntityId?: string;
     ssoUrl?: string;
@@ -25,232 +24,370 @@ export interface InboundSamlSsoProfile {
     spEntityId?: string;
     assertionConsumerServiceUrl?: string;
   };
+  ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED";
+  ssoAssignments?: {
+    orgUnitId?: string;
+    ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
+  }[];
 }
 
-export async function getOrgUnit(
+const GWS_CUSTOMER_ID = "my_customer";
+
+function getDirectoryApiBaseUrl(): string {
+  const envBase = process.env.GOOGLE_API_BASE;
+  if (!envBase) {
+    console.error("CRITICAL: GOOGLE_API_BASE environment variable is not set!");
+    throw new Error("Google API base URL is not configured.");
+  }
+  return `${envBase}/admin/directory/v1`;
+}
+
+function getCloudIdentityApiBaseUrl(): string {
+  const envBase = process.env.GOOGLE_IDENTITY_BASE;
+  if (!envBase) {
+    console.error(
+      "CRITICAL: GOOGLE_IDENTITY_BASE environment variable is not set!"
+    );
+    throw new Error("Google Cloud Identity API base URL is not configured.");
+  }
+  return `${envBase}/v1`;
+}
+
+export async function getDomainVerificationStatus(
   token: string,
-  ouPath: string
-): Promise<OrgUnit | null> {
-  const path = ouPath.startsWith("/") ? ouPath.substring(1) : ouPath;
+  domainName: string
+): Promise<boolean> {
+  try {
+    const baseUrl = getDirectoryApiBaseUrl();
+    const res = await fetchWithAuth(
+      // Corrected to fetchWithAuth
+      `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
+        domainName
+      )}`,
+      token
+    );
+    if (res.status === 404) return false;
+    const data = await handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return false;
+    return Boolean(data.verified);
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) return false;
+    console.error(
+      `Error fetching domain verification status for ${domainName}:`,
+      error
+    );
+    throw error;
+  }
+}
+
+interface ListOrgUnitsResponse {
+  organizationUnits?: GoogleOrgUnit[];
+}
+export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
+  const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
-      path
-    )}`,
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits?type=all`,
     token
   );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<OrgUnit>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  const data = await handleApiResponse<ListOrgUnitsResponse>(res); // Corrected to handleApiResponse
+  if (typeof data === "object" && data !== null && "alreadyExists" in data)
+    return [];
+  return data.organizationUnits ?? [];
 }
 
 export async function createOrgUnit(
   token: string,
   name: string,
-  parentOrgUnitPath: string
-): Promise<OrgUnit | { alreadyExists: true }> {
+  parentOrgUnitPath = "/"
+): Promise<GoogleOrgUnit | { alreadyExists: true }> {
+  const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/orgunits`,
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits`,
     token,
     {
       method: "POST",
       body: JSON.stringify({ name, parentOrgUnitPath }),
     }
   );
-  return handleApiResponse(res);
+  return handleApiResponse<GoogleOrgUnit>(res); // Corrected to handleApiResponse
+}
+
+export async function getOrgUnit(
+  token: string,
+  ouPath: string
+): Promise<GoogleOrgUnit | null> {
+  try {
+    const baseUrl = getDirectoryApiBaseUrl();
+    // Fixed: Remove leading slash from ouPath before encoding for correct API path
+    const relativePath = ouPath.startsWith("/") ? ouPath.substring(1) : ouPath;
+    if (!relativePath && ouPath === "/") {
+      console.warn(
+        "getOrgUnit: Attempting to fetch root OU ('/') by path. This specific function expects a non-root path."
+      );
+      return null;
+    }
+    if (!relativePath) {
+      return null;
+    }
+    const fetchUrl = `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
+      relativePath
+    )}`;
+    const res = await fetchWithAuth(fetchUrl, token); // Corrected to fetchWithAuth
+
+    if (res.status === 404) {
+      return null;
+    }
+    const data = await handleApiResponse<GoogleOrgUnit>(res); // Corrected to handleApiResponse
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return null;
+    return data;
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) return null;
+    console.error(`Error fetching OU '${ouPath}':`, error);
+    throw error;
+  }
+}
+
+export async function createUser(
+  token: string,
+  user: Partial<DirectoryUser>
+): Promise<DirectoryUser | { alreadyExists: true }> {
+  const baseUrl = getDirectoryApiBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/users`, token, {
+    // Corrected to fetchWithAuth
+    method: "POST",
+    body: JSON.stringify(user),
+  });
+  return handleApiResponse<DirectoryUser>(res); // Corrected to handleApiResponse
 }
 
 export async function getUser(
   token: string,
   userKey: string
 ): Promise<DirectoryUser | null> {
-  const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/users/${encodeURIComponent(userKey)}`,
-    token
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<DirectoryUser>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
-}
-
-export async function createUser(
-  token: string,
-  userPayload: Partial<DirectoryUser>
-): Promise<DirectoryUser | { alreadyExists: true }> {
-  const res = await fetchWithAuth(`${GWS_BASE_URL}/users`, token, {
-    method: "POST",
-    body: JSON.stringify(userPayload),
-  });
-  return handleApiResponse(res);
-}
-
-export async function listAdminRoles(token: string): Promise<Role[]> {
-  const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/roles`,
-    token
-  );
-  const result = await handleApiResponse<{ items?: Role[] }>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? []
-    : result.items ?? [];
-}
-
-export async function listRoleAssignments(
-  token: string,
-  userKey: string
-): Promise<RoleAssignment[]> {
-  const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
-      userKey
-    )}`,
-    token
-  );
-  const result = await handleApiResponse<{ items?: RoleAssignment[] }>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? []
-    : result.items ?? [];
-}
-
-export async function assignAdminRole(
-  token: string,
-  userEmail: string,
-  roleId: string
-): Promise<RoleAssignment | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/roleassignments`,
-    token,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        assignedTo: userEmail,
-        roleId: roleId,
-        scopeType: "CUSTOMER", // Or other valid scopeType as needed
-      }),
-    }
-  );
-  return handleApiResponse(res);
-}
-
-export async function getDomain(
-  token: string,
-  domainName: string
-): Promise<Domain | null> {
-  const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
-      domainName
-    )}`,
-    token
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<Domain>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  try {
+    const baseUrl = getDirectoryApiBaseUrl();
+    const res = await fetchWithAuth(
+      // Corrected to fetchWithAuth
+      `${baseUrl}/users/${encodeURIComponent(
+        userKey
+      )}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath`,
+      token
+    );
+    if (res.status === 404) return null;
+    const data = await handleApiResponse<DirectoryUser>(res); // Corrected to handleApiResponse
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return null;
+    return data;
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) return null;
+    console.error(`Error fetching user '${userKey}':`, error);
+    throw error;
+  }
 }
 
 export async function addDomain(
   token: string,
   domainName: string
-): Promise<Domain | { alreadyExists: true }> {
+): Promise<GoogleDomain | { alreadyExists: true }> {
+  const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GWS_BASE_URL}/customers/${GWS_CUSTOMER_ID}/domains`,
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains`,
     token,
     {
       method: "POST",
       body: JSON.stringify({ domainName }),
     }
   );
-  return handleApiResponse(res);
+  return handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
 }
 
-export async function listSamlProfiles(
-  token: string
-): Promise<InboundSamlSsoProfile[]> {
+export async function getDomain(
+  token: string,
+  domainName: string
+): Promise<GoogleDomain | null> {
+  try {
+    const baseUrl = getDirectoryApiBaseUrl();
+    const res = await fetchWithAuth(
+      // Corrected to fetchWithAuth
+      `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
+        domainName
+      )}`,
+      token
+    );
+    if (res.status === 404) return null;
+    const data = await handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return null;
+    return data;
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) return null;
+    console.error(`Error fetching domain '${domainName}':`, error);
+    throw error;
+  }
+}
+
+interface ListAdminRolesResponse {
+  items?: GoogleRole[];
+}
+export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
+  const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GCI_BASE_URL}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roles`,
     token
   );
-  const result = await handleApiResponse<{
-    inboundSamlSsoProfiles?: InboundSamlSsoProfile[];
-  }>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? []
-    : result.inboundSamlSsoProfiles ?? [];
+  const data = await handleApiResponse<ListAdminRolesResponse>(res); // Corrected to handleApiResponse
+  if (typeof data === "object" && data !== null && "alreadyExists" in data)
+    return [];
+  return data.items ?? [];
 }
 
-export async function getSamlProfile(
+export async function assignAdminRole(
   token: string,
-  profileFullName: string
-): Promise<InboundSamlSsoProfile | null> {
-  const res = await fetchWithAuth(`${GCI_BASE_URL}/${profileFullName}`, token);
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<InboundSamlSsoProfile>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  userEmail: string,
+  roleId: string
+): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
+  const baseUrl = getDirectoryApiBaseUrl();
+  const res = await fetchWithAuth(
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roleassignments`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        roleId,
+        assignedTo: userEmail,
+        scopeType: "CUSTOMER",
+      }),
+    }
+  );
+  return handleApiResponse<GoogleRoleAssignment>(res); // Corrected to handleApiResponse
+}
+
+export async function listRoleAssignments(
+  token: string,
+  userKey: string
+): Promise<GoogleRoleAssignment[]> {
+  const baseUrl = getDirectoryApiBaseUrl();
+  const res = await fetchWithAuth(
+    // Corrected to fetchWithAuth
+    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
+      userKey
+    )}`,
+    token
+  );
+  const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(res); // Corrected to handleApiResponse
+  if (typeof data === "object" && data !== null && "alreadyExists" in data)
+    return [];
+  return data.items ?? [];
 }
 
 export async function createSamlProfile(
   token: string,
   displayName: string
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
+  const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GCI_BASE_URL}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
+    // Corrected to fetchWithAuth
+    `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
     token,
     {
       method: "POST",
       body: JSON.stringify({ displayName }),
     }
   );
-  return handleApiResponse(res);
+  return handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
+}
+
+export async function getSamlProfile(
+  token: string,
+  profileFullName: string
+): Promise<InboundSamlSsoProfile | null> {
+  try {
+    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
+    const res = await fetchWithAuth(
+      `${cloudIdentityBaseUrl}/${profileFullName}`,
+      token
+    ); // Corrected to fetchWithAuth
+    if (res.status === 404) return null;
+    const data = await handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return null;
+    return data;
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) return null;
+    console.error(`Error fetching SAML profile '${profileFullName}':`, error);
+    throw error;
+  }
+}
+
+export async function listSamlProfiles(
+  token: string
+): Promise<InboundSamlSsoProfile[]> {
+  const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
+  const res = await fetchWithAuth(
+    // Corrected to fetchWithAuth
+    `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
+    token
+  );
+  const data = await handleApiResponse<{
+    inboundSamlSsoProfiles?: InboundSamlSsoProfile[];
+  }>(res); // Corrected to handleApiResponse
+  if (typeof data === "object" && data !== null && "alreadyExists" in data)
+    return [];
+  return data.inboundSamlSsoProfiles ?? [];
 }
 
 export async function updateSamlProfile(
   token: string,
-  profileFullName: string, // Full resource name e.g. inboundSamlSsoProfiles/PROFILE_ID
-  updatePayload: Partial<InboundSamlSsoProfile>
+  profileFullName: string,
+  config: Partial<Pick<InboundSamlSsoProfile, "idpConfig" | "ssoMode">>
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
-  // alreadyExists not typical for PATCH, but handleApiResponse structure
-  const res = await fetchWithAuth(`${GCI_BASE_URL}/${profileFullName}`, token, {
-    method: "PATCH",
-    body: JSON.stringify(updatePayload),
-  });
-  return handleApiResponse(res);
+  const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
+  const updateMaskPaths: string[] = [];
+  if (config.idpConfig) updateMaskPaths.push("idpConfig");
+  if (config.ssoMode) updateMaskPaths.push("ssoMode");
+  const updateMask = updateMaskPaths.join(",");
+
+  const res = await fetchWithAuth(
+    // Corrected to fetchWithAuth
+    `${cloudIdentityBaseUrl}/${profileFullName}${
+      updateMask ? `?updateMask=${updateMask}` : ""
+    }`,
+    token,
+    {
+      method: "PATCH",
+      body: JSON.stringify(config),
+    }
+  );
+  return handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
 }
 
-export async function assignSamlToOrgUnits(
-  token: string,
-  profileFullName: string, // Full resource name
+interface AssignSamlSsoPayload {
   assignments: {
     orgUnitId: string;
-    ssoMode: "SAML_SSO_ENABLED" | "SSO_OFF";
-  }[]
+    ssoMode: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
+  }[];
+}
+export async function assignSamlToOrgUnits(
+  token: string,
+  profileFullName: string,
+  assignments: AssignSamlSsoPayload["assignments"]
 ): Promise<object | { alreadyExists: true }> {
-  // The response for this is usually empty on success
+  const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
   const res = await fetchWithAuth(
-    `${GCI_BASE_URL}/${profileFullName}:assignToOrgUnits`,
+    // Corrected to fetchWithAuth
+    `${cloudIdentityBaseUrl}/${profileFullName}:assignToOrgUnits`,
     token,
     {
       method: "POST",
-      body: JSON.stringify({ assignments }),
+      body: JSON.stringify({ assignments } as AssignSamlSsoPayload),
     }
   );
-  return handleApiResponse(res);
+  return handleApiResponse<object>(res); // Corrected to handleApiResponse
 }

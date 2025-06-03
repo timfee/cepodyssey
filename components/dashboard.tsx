@@ -1,6 +1,11 @@
 "use client";
 
-import { AlertTriangleIcon, Loader2Icon, PlayIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  Loader2Icon,
+  PlayIcon,
+} from "lucide-react";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useMemo } from "react";
@@ -24,24 +29,24 @@ import type {
   StepExecutionResult,
 } from "@/lib/types";
 
-import { Button } from "@/components/ui/button";
-// Using Alert components from shadcn/ui for the "Action Required" box
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming Card is still wanted
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
 
 interface AutomationDashboardProps {
   serverSession: Session;
-  initialConfig?: Partial<AppConfigTypeFromTypes>;
+  initialConfig?: Partial<AppConfigTypeFromTypes>; // Now sourced from session by app/page.tsx
 }
 
 export function AutomationDashboard({
   serverSession,
-  initialConfig,
+  initialConfig, // This prop now contains domain/tenantId from the session
 }: AutomationDashboardProps) {
   const { data: session, status } = useSession({
-    required: true,
+    required: true, // Ensures we have a client-side session
   });
 
   const dispatch = useAppDispatch();
@@ -54,66 +59,44 @@ export function AutomationDashboard({
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
 
-  // Effect 1: Initialize Redux config from server-provided initialConfig (from getConfig())
+  // Effect 1: Initialize Redux config from initialConfig prop (sourced from session by server component)
   useEffect(() => {
-    console.log(
-      "AutomationDashboard: Received initialConfig prop:",
-      initialConfig
-    );
-    if (initialConfig && (initialConfig.domain || initialConfig.tenantId)) {
+    // This should only run if Redux domain/tenantId are not yet set, or if initialConfig has new values.
+    if (
+      initialConfig &&
+      (initialConfig.domain !== appConfig.domain ||
+        initialConfig.tenantId !== appConfig.tenantId ||
+        (initialConfig.domain && !appConfig.domain) ||
+        (initialConfig.tenantId && !appConfig.tenantId))
+    ) {
       console.log(
-        "AutomationDashboard: Valid initialConfig found, dispatching initializeConfig."
+        "AutomationDashboard: Initializing Redux with config from server session props:",
+        initialConfig
       );
       dispatch(
         initializeConfig({
           domain: initialConfig.domain ?? null,
           tenantId: initialConfig.tenantId ?? null,
-          outputs: initialConfig.outputs ?? {},
+          outputs: initialConfig.outputs ?? {}, // Server doesn't persist outputs in this model
         })
       );
-      // Values from server take precedence, clear potentially stale loginPage items
-      localStorage.removeItem("loginPageDomain");
-      localStorage.removeItem("loginPageTenantId");
-    } else if (!appConfig.domain && !appConfig.tenantId) {
-      // Only run if Redux isn't already populated AND no server config
-      const loginDomain = localStorage.getItem("loginPageDomain");
-      const loginTenantId = localStorage.getItem("loginPageTenantId");
-      if (loginDomain || loginTenantId) {
-        console.log(
-          "AutomationDashboard: No server config, trying loginPage localStorage.",
-          { loginDomain, loginTenantId }
-        );
-        dispatch(
-          initializeConfig({
-            domain: loginDomain,
-            tenantId: loginTenantId,
-            outputs: {}, // Outputs loaded separately via domain key
-          })
-        );
-        // Clear after use
-        localStorage.removeItem("loginPageDomain");
-        localStorage.removeItem("loginPageTenantId");
-      } else {
-        console.log(
-          "AutomationDashboard: No initialConfig from server and no loginPage localStorage found."
-        );
-      }
+    } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
+      console.log(
+        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant."
+      );
     }
-  }, [appConfig.domain, appConfig.tenantId, dispatch, initialConfig]); // Depend only on initialConfig and dispatch for this specific effect
+  }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
 
-  // Effect 2: Load step progress & step-specific outputs from localStorage, keyed by domain.
+  // Effect 2: Load step progress & step-specific outputs from domain-keyed localStorage.
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
-      console.log(
-        "AutomationDashboard: Domain in Redux:",
-        appConfig.domain,
-        ". Loading step progress."
-      );
       const persisted: PersistedProgress | null = loadProgress(
         appConfig.domain
       );
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
+        // Merge outputs: Redux outputs might have just been initialized (empty)
+        // from initialConfig. Persisted outputs are step-specific.
         dispatch(addOutputs(persisted.outputs || {}));
         toast.info("Loaded saved step progress for this domain.", {
           duration: 2000,
@@ -128,7 +111,7 @@ export function AutomationDashboard({
     }
   }, [appConfig.domain, dispatch]);
 
-  // Effect 3: Persist Redux state (steps and outputs) to localStorage.
+  // Effect 3: Persist Redux state (steps and outputs) to domain-keyed localStorage.
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       saveProgress(appConfig.domain, {
@@ -347,43 +330,38 @@ export function AutomationDashboard({
             Automate Google Workspace & Microsoft Entra ID Integration
           </p>
         </header>
-        <ConfigForm />
+        <ConfigForm /> {/* ConfigForm is now read-only for domain/tenantId */}
         <AuthStatus />
         {showActionRequired && (
           <Alert
             variant="default"
-            className="border-orange-400 bg-orange-50 text-orange-700 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-300"
+            className="border-orange-300 bg-orange-50 text-orange-900 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-200"
           >
-            <AlertTriangleIcon className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            <AlertTitle className="font-semibold text-orange-800 dark:text-orange-200">
-              Action Required
-            </AlertTitle>
+            <AlertTriangleIcon className="h-5 w-5 !text-orange-500 dark:!text-orange-400" />
+            <AlertTitle className="font-semibold">Action Required</AlertTitle>
             <AlertDescription>
               <ul className="list-disc space-y-1 pl-5 mt-1">
-                {!appConfig.domain && (
+                {!appConfig.domain && !session?.authFlowDomain && (
                   <li>
-                    Provide Google Workspace primary domain in the
-                    configuration.
+                    Google Workspace domain not identified from session. Please
+                    re-login with Google if needed.
                   </li>
                 )}
-                {!appConfig.tenantId && (
+                {!appConfig.tenantId && !session?.microsoftTenantId && (
                   <li>
-                    Provide Microsoft Entra ID Tenant ID in the configuration.
+                    Microsoft Entra ID Tenant ID not identified from session.
+                    Please re-login with Microsoft if needed.
                   </li>
                 )}
-                {appConfig.domain &&
-                  appConfig.tenantId &&
+                {(appConfig.domain || session?.authFlowDomain) &&
+                  (appConfig.tenantId || session?.microsoftTenantId) &&
                   !currentSession?.hasGoogleAuth && (
-                    <li>
-                      Connect to Google Workspace via Authentication Status.
-                    </li>
+                    <li>Connect to Google Workspace.</li>
                   )}
-                {appConfig.domain &&
-                  appConfig.tenantId &&
+                {(appConfig.domain || session?.authFlowDomain) &&
+                  (appConfig.tenantId || session?.microsoftTenantId) &&
                   !currentSession?.hasMicrosoftAuth && (
-                    <li>
-                      Connect to Microsoft Entra ID via Authentication Status.
-                    </li>
+                    <li>Connect to Microsoft Entra ID.</li>
                   )}
               </ul>
               <p className="mt-2">

@@ -6,14 +6,14 @@ import {
   ChromeIcon,
   CloudIcon,
   Loader2Icon,
-} from "lucide-react"; // LogInIcon removed as buttons change text
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { lookupTenantId } from "@/app/actions/auth-actions";
-import { saveConfig } from "@/app/actions/config-actions";
+// saveConfig is no longer called from here for domain/tenantId
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,171 +31,96 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [domain, setDomain] = useState("");
+  const [domain, setDomain] = useState(""); // For Google 'hd' param
   const [tenantId, setTenantId] = useState(
     process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || ""
-  );
+  ); // For Microsoft login if not fixed by env
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
   const [isLookingUpTenant, setIsLookingUpTenant] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
 
   const [isGooglePending, startGoogleLoginTransition] = useTransition();
   const [isMicrosoftPending, startMicrosoftLoginTransition] = useTransition();
-  const [isSavingConfig, startSavingConfigTransition] = useTransition();
 
-  // Effect to display authentication errors from URL parameters
+  // Effect to redirect if both providers are authenticated
+  useEffect(() => {
+    if (session?.hasGoogleAuth && session.hasMicrosoftAuth) {
+      console.log(
+        "LoginPage: Both providers authenticated. Redirecting to dashboard."
+      );
+      router.replace("/"); // Redirect to dashboard
+    }
+  }, [session, router]);
+
+  // Effect to display authentication errors
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
       let errorMessage = "Authentication failed. Please try again.";
       if (error === "GoogleAdminRequired")
         errorMessage =
-          "Sign-in failed: Google Super Administrator privileges required for the provided account.";
+          "Sign-in failed: Google Super Administrator privileges required.";
       if (error === "MicrosoftAdminRequired")
         errorMessage =
-          "Sign-in failed: Microsoft Global Administrator privileges required for the provided account.";
+          "Sign-in failed: Microsoft Global Administrator privileges required.";
       if (error === "SignInInformationMissing")
-        errorMessage =
-          "Sign-in failed: Essential user information was missing.";
-      // Add more specific error messages as needed from NextAuth errors
+        errorMessage = "Sign-in failed: Essential user information missing.";
       toast.error(errorMessage, {
         id: `login-error-${error}`,
         duration: 10000,
       });
-      // Removed router.replace here to allow toast to be seen and error to persist in URL for debugging.
-      // User can manually remove it or it will be cleared on next successful navigation.
     }
-  }, [searchParams]); // Only re-run if searchParams change
-
-  const onSuccessfulDualLogin = React.useCallback(async () => {
-    if (isSavingConfig) return; // Prevent duplicate saves if already in progress
-
-    const finalDomain = domain || localStorage.getItem("loginPageDomain") || "";
-    let finalTenantId =
-      tenantId ||
-      localStorage.getItem("loginPageTenantId") ||
-      process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
-      "";
-
-    if (!finalDomain) {
-      toast.error(
-        "Primary Google Workspace domain is missing. Please enter it."
-      );
-      return;
-    }
-    if (!finalTenantId && !process.env.MICROSOFT_TENANT_ID) {
-      // Check against the actual env var if public one is not set
-      toast.error(
-        "Microsoft Entra ID Tenant ID is missing. Please enter it or use the lookup feature."
-      );
-      return;
-    }
-    if (!finalTenantId && process.env.MICROSOFT_TENANT_ID) {
-      // If set in server .env but not in UI state
-      finalTenantId = process.env.MICROSOFT_TENANT_ID; // This won't work client side, rely on public or UI
-    }
-
-    startSavingConfigTransition(async () => {
-      // Use tenantId from state, which could be user-input, discovered, or prefilled from NEXT_PUBLIC_ env var
-      const effectiveTenantIdForSave =
-        tenantId || process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "";
-      if (!effectiveTenantIdForSave) {
-        toast.error(
-          "Microsoft Tenant ID is still missing for saving configuration."
-        );
-        return;
-      }
-
-      const result = await saveConfig({
-        domain: finalDomain,
-        tenantId: effectiveTenantIdForSave,
-        outputs: {},
-      });
-      if (result.success) {
-        toast.success("Configuration saved. Redirecting to dashboard...");
-        localStorage.removeItem("loginPageDomain"); // Clean up temp storage
-        localStorage.removeItem("loginPageTenantId");
-        router.replace("/");
-      } else {
-        toast.error(
-          `Failed to save configuration: ${
-            result.error || "Unknown error"
-          }. You are authenticated with both services but initial configuration could not be saved. Please proceed to the dashboard and save configuration there.`
-        );
-        // Allow redirect to dashboard even if saveConfig fails here, dashboard can handle it.
-        router.replace("/?configSaveError=true");
-      }
-    });
-  }, [domain, tenantId, router, isSavingConfig]);
-
-  useEffect(() => {
-    if (session?.hasGoogleAuth && session.hasMicrosoftAuth && !isSavingConfig) {
-      onSuccessfulDualLogin();
-    }
-  }, [session, onSuccessfulDualLogin, isSavingConfig]);
+  }, [searchParams]);
 
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDomain = e.target.value;
-    setDomain(newDomain);
-    localStorage.setItem("loginPageDomain", newDomain); // Persist immediately for resilience
+    setDomain(e.target.value);
     setIsTenantDiscovered(false);
     setLookupMessage("");
   };
 
   const handleTenantIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTenantId = e.target.value;
-    setTenantId(newTenantId);
-    localStorage.setItem("loginPageTenantId", newTenantId); // Persist immediately
+    setTenantId(e.target.value);
     setIsTenantDiscovered(false);
   };
 
   const onLookupTenant = async () => {
-    const currentDomain = domain || localStorage.getItem("loginPageDomain");
-    if (!currentDomain) {
+    if (!domain) {
       toast.error("Please enter a domain first to lookup Tenant ID.");
       return;
     }
     setIsLookingUpTenant(true);
     setLookupMessage("");
-    const result = await lookupTenantId(currentDomain);
+    const result = await lookupTenantId(domain);
     if (result.success && result.tenantId) {
       setTenantId(result.tenantId);
-      localStorage.setItem("loginPageTenantId", result.tenantId);
       setIsTenantDiscovered(true);
       setLookupMessage(`Tenant ID found: ${result.tenantId}`);
       toast.success("Tenant ID discovered!");
     } else {
-      setLookupMessage(
-        result.message || "Could not auto-discover Tenant ID for the domain."
-      );
+      setLookupMessage(result.message || "Could not auto-discover Tenant ID.");
       toast.error(result.message || "Tenant ID lookup failed.");
     }
     setIsLookingUpTenant(false);
   };
 
   const onGoogleSignIn = () => {
-    const currentDomain = domain || localStorage.getItem("loginPageDomain");
-    if (!currentDomain) {
+    if (!domain) {
       toast.error(
-        "Primary Google Workspace domain is required before signing in."
+        "Primary Google Workspace domain is required for Google Sign-In."
       );
       return;
     }
     startGoogleLoginTransition(async () => {
       const formData = new FormData();
-      formData.append("domain", currentDomain);
+      formData.append("domain", domain);
       await handleGoogleLogin(formData);
-      // No need to call updateSession() here, NextAuth redirect will trigger session update on page load.
     });
   };
 
   const onMicrosoftSignIn = () => {
-    const currentDomain = domain || localStorage.getItem("loginPageDomain");
     const effectiveTenantId =
-      tenantId ||
-      localStorage.getItem("loginPageTenantId") ||
-      process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
-
+      tenantId || process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
+    // Domain is optional for MS login, but good as a hint if available
     if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
       toast.info(
         "Microsoft Tenant ID is not specified. Attempting sign-in with common endpoint.",
@@ -204,34 +129,18 @@ export default function LoginPage() {
     }
     startMicrosoftLoginTransition(async () => {
       const formData = new FormData();
-      if (currentDomain) formData.append("domain", currentDomain);
+      if (domain) formData.append("domain", domain); // domain_hint
       if (effectiveTenantId) formData.append("tenantId", effectiveTenantId);
       await handleMicrosoftLogin(formData);
     });
   };
 
-  useEffect(() => {
-    const savedDomain = localStorage.getItem("loginPageDomain");
-    const savedTenantId = localStorage.getItem("loginPageTenantId");
-
-    if (savedDomain && !domain) setDomain(savedDomain);
-    if (
-      savedTenantId &&
-      !tenantId &&
-      !process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID
-    )
-      setTenantId(savedTenantId);
-  }, [domain, tenantId]);
-
-  const isLoadingButtons =
-    sessionStatus === "loading" ||
-    isGooglePending ||
-    isMicrosoftPending ||
-    isSavingConfig;
+  const isLoadingOverall =
+    sessionStatus === "loading" || isGooglePending || isMicrosoftPending;
   const isGoogleButtonDisabled =
-    isLoadingButtons || !domain || (session?.hasGoogleAuth ?? false);
+    isLoadingOverall || !domain || (session?.hasGoogleAuth ?? false);
   const isMicrosoftButtonDisabled =
-    isLoadingButtons ||
+    isLoadingOverall ||
     (!tenantId &&
       !process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID &&
       !process.env.MICROSOFT_TENANT_ID) ||
@@ -245,34 +154,37 @@ export default function LoginPage() {
             Connect Your Admin Accounts
           </CardTitle>
           <CardDescription>
-            First, enter your Google Workspace domain and Microsoft Tenant ID.
-            Then, sign in to both services with appropriate administrator
-            privileges to proceed.
+            First, enter your Google Workspace domain (for Google sign-in) and
+            optionally your Microsoft Tenant ID (or use lookup). Then, sign in
+            to both services with administrator privileges.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4 rounded-md border bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div>
-              <Label htmlFor="domain" className="text-base font-semibold">
+              <Label htmlFor="domain-login" className="text-base font-semibold">
                 1. Primary Google Workspace Domain
               </Label>
               <Input
-                id="domain"
+                id="domain-login"
                 name="domain"
                 placeholder="yourcompany.com"
                 value={domain}
                 onChange={handleDomainChange}
                 className="mt-1 text-base"
-                disabled={isLoadingButtons || session?.hasGoogleAuth}
+                disabled={isLoadingOverall || session?.hasGoogleAuth}
               />
             </div>
             <div>
-              <Label htmlFor="tenantId" className="text-base font-semibold">
+              <Label
+                htmlFor="tenantId-login"
+                className="text-base font-semibold"
+              >
                 2. Microsoft Entra ID Tenant ID
               </Label>
               <div className="mt-1 flex items-center gap-2">
                 <Input
-                  id="tenantId"
+                  id="tenantId-login"
                   name="tenantId"
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                   value={tenantId}
@@ -281,7 +193,7 @@ export default function LoginPage() {
                     isTenantDiscovered ? "border-green-500" : ""
                   }`}
                   disabled={
-                    isLoadingButtons ||
+                    isLoadingOverall ||
                     !!process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
                     session?.hasMicrosoftAuth
                   }
@@ -291,7 +203,7 @@ export default function LoginPage() {
                   variant="outline"
                   onClick={onLookupTenant}
                   disabled={
-                    isLoadingButtons ||
+                    isLoadingOverall ||
                     !domain ||
                     isLookingUpTenant ||
                     !!process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
@@ -301,7 +213,7 @@ export default function LoginPage() {
                 >
                   {isLookingUpTenant ? (
                     <Loader2Icon className="h-4 w-4 animate-spin" />
-                  ) : null}
+                  ) : null}{" "}
                   Lookup
                 </Button>
               </div>
@@ -316,12 +228,11 @@ export default function LoginPage() {
               )}
               {process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Tenant ID is pre-configured for this application instance.
+                  Tenant ID is pre-configured.
                 </p>
               )}
             </div>
           </div>
-
           <CardTitle className="pt-2 text-center text-xl font-semibold">
             3. Sign In to Services
           </CardTitle>
@@ -345,7 +256,6 @@ export default function LoginPage() {
                 ? "Google Workspace Connected"
                 : "Sign in with Google"}
             </Button>
-
             <Button
               onClick={onMicrosoftSignIn}
               disabled={isMicrosoftButtonDisabled}
@@ -366,7 +276,6 @@ export default function LoginPage() {
                 : "Sign in with Microsoft"}
             </Button>
           </div>
-
           {sessionStatus === "loading" &&
             !isGooglePending &&
             !isMicrosoftPending && (
@@ -375,13 +284,6 @@ export default function LoginPage() {
                 Initializing session...
               </p>
             )}
-
-          {isSavingConfig && (
-            <p className="text-center text-sm text-muted-foreground flex items-center justify-center">
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> Finalizing
-              setup and redirecting...
-            </p>
-          )}
         </CardContent>
       </Card>
     </div>

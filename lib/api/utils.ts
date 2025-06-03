@@ -5,7 +5,7 @@ export class APIError extends Error {
   }
 }
 
-async function withRetry<T>(
+export async function withRetry<T>(
   operation: () => Promise<T>,
   retries = 3
 ): Promise<T> {

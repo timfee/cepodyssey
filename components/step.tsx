@@ -4,19 +4,29 @@ import {
   AlertCircleIcon,
   CheckCircle2Icon,
   CircleIcon,
+  ClipboardCheckIcon,
   ExternalLinkIcon,
   InfoIcon,
   Loader2Icon,
   PlayIcon,
   RotateCcwIcon,
 } from "lucide-react";
+import React from "react";
 
-import { useAppSelector } from "@/hooks/use-redux";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { updateStep } from "@/lib/redux/slices/setup-steps";
 import type { ManagedStep } from "@/lib/types";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -26,101 +36,259 @@ import {
 
 interface StepItemProps {
   step: ManagedStep;
-  onExecuteStep: (stepId: string) => void;
-  isLast: boolean;
+  isLastStep: boolean;
+  onExecuteStepAction: (stepId: string) => void;
+  canRunGlobal: boolean;
 }
 
 export function StepItem({
   step,
-  onExecuteStep,
-  isLast: _isLast,
+  isLastStep,
+  onExecuteStepAction,
+  canRunGlobal,
 }: StepItemProps) {
+  const dispatch = useAppDispatch();
   const allStepsStatus = useAppSelector((state) => state.setupSteps.steps);
 
-  const prerequisitesMet =
-    step.requires?.every(
-      (reqId) => allStepsStatus[reqId]?.status === "completed"
-    ) ?? true;
+  const prerequisitesMet = React.useMemo(() => {
+    return (
+      step.requires?.every(
+        (reqId) => allStepsStatus[reqId]?.status === "completed"
+      ) ?? true
+    );
+  }, [step.requires, allStepsStatus]);
 
-  const isRunnable = step.automatable && prerequisitesMet;
-  const allowRetry = step.status === "failed";
-  const isButtonDisabled =
-    step.status === "in_progress" ||
-    (step.status === "completed" && !step.metadata?.preExisting);
-
-  const getStatusIcon = () => {
+  const getStatusVisuals = () => {
     switch (step.status) {
       case "completed":
-        return <CheckCircle2Icon className="h-5 w-5 text-green-500" />;
+        return {
+          icon: <CheckCircle2Icon className="h-5 w-5 text-green-500" />,
+          badgeVariant: "default" as const,
+          textColor: "text-green-700 dark:text-green-400",
+        };
       case "in_progress":
-        return <Loader2Icon className="h-5 w-5 animate-spin text-blue-500" />;
+        return {
+          icon: <Loader2Icon className="h-5 w-5 animate-spin text-blue-500" />,
+          badgeVariant: "secondary" as const,
+          textColor: "text-blue-700 dark:text-blue-400",
+        };
       case "failed":
-        return <AlertCircleIcon className="h-5 w-5 text-destructive" />;
+        return {
+          icon: <AlertCircleIcon className="h-5 w-5 text-red-500" />,
+          badgeVariant: "destructive" as const,
+          textColor: "text-red-700 dark:text-red-400",
+        };
+      case "pending":
       default:
-        return <CircleIcon className="h-5 w-5 text-muted-foreground/60" />;
+        return {
+          icon: (
+            <CircleIcon className="h-5 w-5 text-slate-400 dark:text-slate-600" />
+          ),
+          badgeVariant: "outline" as const,
+          textColor: "text-slate-500 dark:text-slate-400",
+        };
     }
   };
 
+  const { icon: statusIcon, badgeVariant } = getStatusVisuals();
+
+  const handleMarkAsComplete = () => {
+    dispatch(
+      updateStep({
+        id: step.id,
+        status: "completed",
+        message: step.message || "Manually marked as completed.",
+        metadata: {
+          ...step.metadata,
+          preExisting: false,
+          completedAt: new Date().toISOString(),
+        },
+      })
+    );
+  };
+
+  const isStepEffectivelyDisabled = !canRunGlobal || !prerequisitesMet;
+  const runButtonDisabledReason = !canRunGlobal
+    ? "Global prerequisites (auth/config) not met."
+    : !prerequisitesMet
+    ? "Prerequisite steps not completed."
+    : undefined;
+
+  const allowRetryForAutomated =
+    step.automatable &&
+    (step.status === "failed" ||
+      (step.status === "completed" && step.metadata?.preExisting === true));
+
   return (
-    <li className="mb-10 ml-6">
-      <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-background ring-8 ring-background">
-        {getStatusIcon()}
-      </span>
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="font-semibold">{step.title}</h4>
-          <p className="text-sm text-muted-foreground">{step.description}</p>
+    <li className="flex gap-x-3">
+      <div
+        className={`relative last:after:hidden after:absolute after:top-7 after:bottom-0 after:w-px ${
+          isLastStep ? "" : "after:bg-slate-200 dark:after:bg-slate-700"
+        }`}
+      >
+        <div
+          className={`relative flex h-6 w-6 items-center justify-center rounded-full bg-card dark:bg-slate-800 ring-1 ring-slate-300 dark:ring-slate-600`}
+        >
+          {statusIcon}
         </div>
-        <div className="flex items-center gap-2">
-          {step.metadata?.resourceUrl && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" asChild>
+      </div>
+
+      <Card className="flex-grow mb-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="pb-3 pt-4 px-4">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-md font-semibold leading-snug">
+              {step.title}
+            </CardTitle>
+            <Badge
+              variant={badgeVariant}
+              className="capitalize text-xs h-fit py-0.5 whitespace-nowrap"
+            >
+              {step.status.replace("_", " ")}
+            </Badge>
+          </div>
+          {step.description && ( // Check if description exists
+            <CardDescription className="text-xs mt-1 leading-relaxed">
+              {step.description}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="px-4 pb-4 space-y-3">
+          {!step.automatable && ( // For Manual Steps
+            <div className="p-3 border rounded-md bg-slate-50 dark:bg-slate-800/50 space-y-2">
+              <h5 className="font-medium text-sm text-slate-700 dark:text-slate-300">
+                Manual Action Required:
+              </h5>
+              {step.message && ( // Check if message exists
+                <p className="text-xs text-muted-foreground whitespace-pre-line">
+                  {step.message}
+                </p>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                {step.metadata?.resourceUrl && (
+                  <Button variant="outline" size="sm" asChild>
                     <a
                       href={step.metadata.resourceUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                     >
-                      <ExternalLinkIcon className="h-4 w-4" />
+                      <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" /> Open
+                      Guidance / Link
                     </a>
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>View Resource</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                )}
+                {step.status !== "completed" && (
+                  <Button
+                    size="sm"
+                    onClick={handleMarkAsComplete}
+                    disabled={isStepEffectivelyDisabled && !canRunGlobal}
+                    title={
+                      isStepEffectivelyDisabled && !canRunGlobal
+                        ? runButtonDisabledReason
+                        : undefined
+                    }
+                  >
+                    <ClipboardCheckIcon className="mr-1.5 h-4 w-4" /> Mark as
+                    Complete
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
 
-          {step.automatable && (
-            <Button
-              size="sm"
-              onClick={() => onExecuteStep(step.id)}
-              disabled={!isRunnable || isButtonDisabled}
-              variant={allowRetry ? "secondary" : "default"}
-            >
-              {allowRetry ? (
-                <RotateCcwIcon className="mr-2 h-4 w-4" />
-              ) : (
-                <PlayIcon className="mr-2 h-4 w-4" />
+          {step.automatable &&
+            (step.status === "pending" || allowRetryForAutomated) && ( // Action Button for Automatable Steps
+              <TooltipProvider>
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={isStepEffectivelyDisabled ? 0 : undefined}>
+                      <Button
+                        size="sm"
+                        onClick={() => onExecuteStepAction(step.id)}
+                        disabled={
+                          isStepEffectivelyDisabled ||
+                          step.status === "in_progress" ||
+                          (step.status === "completed" &&
+                            !step.metadata?.preExisting)
+                        }
+                        variant={
+                          step.status === "failed" ? "destructive" : "default"
+                        }
+                        className="w-full sm:w-auto"
+                      >
+                        {step.status === "in_progress" ? (
+                          <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                        ) : allowRetryForAutomated &&
+                          step.status !== "pending" ? (
+                          <RotateCcwIcon className="mr-2 h-4 w-4" />
+                        ) : (
+                          <PlayIcon className="mr-2 h-4 w-4" />
+                        )}
+                        {step.status === "in_progress"
+                          ? "Running..."
+                          : allowRetryForAutomated && step.status !== "pending"
+                          ? step.status === "failed"
+                            ? "Retry Step"
+                            : "Re-run Check"
+                          : "Run Step"}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {isStepEffectivelyDisabled && runButtonDisabledReason && (
+                    <TooltipContent>
+                      <p>{runButtonDisabledReason}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+          {step.status === "completed" && ( // Info for Completed Steps
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              {step.metadata?.preExisting && (
+                <Badge
+                  variant="outline"
+                  className="text-xs font-normal border-blue-400 text-blue-700 dark:border-blue-600 dark:text-blue-300"
+                >
+                  <InfoIcon className="mr-1 h-3 w-3" /> Pre-existing
+                </Badge>
               )}
-              {allowRetry ? "Retry" : "Run"}
-            </Button>
+              {step.metadata?.resourceUrl && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  asChild
+                  className="h-auto p-0 text-xs"
+                >
+                  <a
+                    href={step.metadata.resourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Configured Resource{" "}
+                    <ExternalLinkIcon className="ml-1 h-3 w-3" />
+                  </a>
+                </Button>
+              )}
+              {step.message &&
+                !step.error &&
+                step.automatable && ( // Only show step.message for automated completed steps if it's not an error
+                  <p className="text-xs text-muted-foreground italic w-full">
+                    {step.message}
+                  </p>
+                )}
+            </div>
           )}
-        </div>
-      </div>
-      {step.metadata?.preExisting && (
-        <Badge variant="outline" className="mt-2 flex w-fit items-center gap-1">
-          <InfoIcon className="h-3 w-3" />
-          Pre-existing configuration found
-        </Badge>
-      )}
-      {step.status === "failed" && step.error && (
-        <Alert variant="destructive" className="mt-3">
-          <AlertCircleIcon className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{step.error}</AlertDescription>
-        </Alert>
-      )}
+
+          {step.status === "failed" &&
+            step.error && ( // Error Display
+              <Alert variant="destructive" className="mt-2 text-xs">
+                <AlertCircleIcon className="h-4 w-4" />
+                <AlertTitle className="font-medium">Error</AlertTitle>
+                <AlertDescription>{step.error}</AlertDescription>
+              </Alert>
+            )}
+        </CardContent>
+      </Card>
     </li>
   );
 }
