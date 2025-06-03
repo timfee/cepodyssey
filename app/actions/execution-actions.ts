@@ -7,6 +7,11 @@ import { APIError } from "@/lib/api/utils";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
+import { validateRequiredOutputs } from "@/lib/utils";
+
+// Azure Portal URL Structure
+// - Microsoft_AAD_RegisteredApps/ApplicationMenuBlade -> App Registration view
+// - Microsoft_AAD_IAM/ManagedAppMenuBlade -> Enterprise Application view
 
 /**
  * Convert an unexpected error into a standardized execution result.
@@ -234,6 +239,18 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+      OUTPUT_KEYS.IDP_ENTITY_ID,
+      OUTPUT_KEYS.IDP_SSO_URL,
+      OUTPUT_KEYS.IDP_CERTIFICATE_BASE64,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const profileFullName = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
@@ -242,16 +259,6 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
     const certificate = context.outputs[
       OUTPUT_KEYS.IDP_CERTIFICATE_BASE64
     ] as string;
-
-    if (!profileFullName || !idpEntityId || !ssoUrl || !certificate) {
-      return {
-        success: false,
-        error: {
-          message:
-            "Required IdP SAML details or Google profile name missing from context. Ensure G-5 and M-8 outputs are available.",
-        },
-      };
-    }
 
     await google.updateSamlProfile(googleToken, profileFullName, {
       idpConfig: {
@@ -281,16 +288,18 @@ export async function executeG7AssignGoogleSamlToRootOu(
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const profileFullName = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
-    if (!profileFullName)
-      return {
-        success: false,
-        error: {
-          message: "Google SAML Profile full name missing from context.",
-        },
-      };
 
     await google.assignSamlToOrgUnits(googleToken, profileFullName, [
       { orgUnitId: "/", ssoMode: "SAML_SSO_ENABLED" },
@@ -314,6 +323,15 @@ export async function executeG8ExcludeAutomationOuFromSso(
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const profileFullName = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
@@ -321,11 +339,6 @@ export async function executeG8ExcludeAutomationOuFromSso(
       OUTPUT_KEYS.AUTOMATION_OU_ID
     ] as string;
 
-    if (!profileFullName)
-      return {
-        success: false,
-        error: { message: "Google SAML Profile name missing." },
-      };
     if (!automationOuId)
       return {
         success: true,
@@ -374,7 +387,10 @@ export async function executeM1CreateProvisioningApp(
           existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
-          const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${existingApp.id}`;
+          const resourceUrl =
+            process.env.SHOW_APP_REGISTRATIONS === "true"
+              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
+              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for provisioning already exists.`,
@@ -395,7 +411,10 @@ export async function executeM1CreateProvisioningApp(
     return {
       success: true,
       message: `Enterprise app '${appName}' created.`,
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.application.id}`,
+      resourceUrl:
+        process.env.SHOW_APP_REGISTRATIONS === "true"
+          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
+          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: result.application.id,
@@ -415,27 +434,28 @@ export async function executeM2ConfigureProvisioningAppProperties(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      OUTPUT_KEYS.PROVISIONING_APP_ID,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const spObjectId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
-    if (!spObjectId)
-      return {
-        success: false,
-        error: {
-          message:
-            "Provisioning Service Principal Object ID (from M-1) not found.",
-        },
-      };
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
     await microsoft.patchServicePrincipal(microsoftToken, spObjectId, {
       accountEnabled: true,
     });
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
-      | string
-      | undefined;
-    const resourceUrl = appId
-      ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${appId}/objectId/${spObjectId}`
-      : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spObjectId}`;
+    const resourceUrl =
+      process.env.SHOW_APP_REGISTRATIONS === "true"
+        ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`
+        : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
       message: "Provisioning app service principal enabled.",
@@ -455,25 +475,24 @@ export async function executeM3AuthorizeProvisioningConnection(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN,
+      OUTPUT_KEYS.PROVISIONING_APP_ID,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const spObjectId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
     const googleSecretToken = context.outputs[
       OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN
     ] as string;
-
-    if (!spObjectId)
-      return {
-        success: false,
-        error: { message: "Provisioning SP Object ID (from M-1) not found." },
-      };
-    if (!googleSecretToken)
-      return {
-        success: false,
-        error: {
-          message: "Google Provisioning Secret Token (from G-S0) not found.",
-        },
-      };
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
     let jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
       | string
@@ -509,10 +528,8 @@ export async function executeM3AuthorizeProvisioningConnection(
       },
     ]);
 
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
-      | string
-      | undefined;
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}/appId/${appId ?? ""}`;
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
       message:
@@ -536,18 +553,22 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      OUTPUT_KEYS.PROVISIONING_JOB_ID,
+      OUTPUT_KEYS.PROVISIONING_APP_ID,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const spObjectId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-
-    if (!spObjectId || !jobId)
-      return {
-        success: false,
-        error: {
-          message: "Provisioning SP Object ID or Job ID (from M-3) not found.",
-        },
-      };
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
     const attributeMappingSourceTypeAttribute =
       "Attribute" as MicrosoftGraph.AttributeMappingSourceType;
@@ -637,10 +658,8 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
       jobId,
       schemaPayload,
     );
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
-      | string
-      | undefined;
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}/appId/${appId ?? ""}`;
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
       message:
@@ -661,24 +680,25 @@ export async function executeM5StartProvisioningJob(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      OUTPUT_KEYS.PROVISIONING_JOB_ID,
+      OUTPUT_KEYS.PROVISIONING_APP_ID,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const spObjectId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-
-    if (!spObjectId || !jobId)
-      return {
-        success: false,
-        error: {
-          message: "Provisioning SP Object ID or Job ID (from M-3) not found.",
-        },
-      };
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
     await microsoft.startProvisioningJob(microsoftToken, spObjectId, jobId);
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
-      | string
-      | undefined;
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}/appId/${appId ?? ""}`;
+    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
       message:
@@ -718,10 +738,14 @@ export async function executeM6CreateSamlSsoApp(
           existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
+          const resourceUrl =
+            process.env.SHOW_APP_REGISTRATIONS === "true"
+              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
+              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for SAML SSO already exists.`,
-            resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${existingApp.id}`,
+            resourceUrl,
             outputs: {
               [OUTPUT_KEYS.SAML_SSO_APP_ID]: existingApp.appId,
               [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: existingApp.id,
@@ -738,7 +762,10 @@ export async function executeM6CreateSamlSsoApp(
     return {
       success: true,
       message: `Enterprise app '${appName}' for SAML SSO created.`,
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.application.id}`,
+      resourceUrl:
+        process.env.SHOW_APP_REGISTRATIONS === "true"
+          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
+          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.application.id,
@@ -758,9 +785,28 @@ export async function executeM7ConfigureAzureSamlAppSettings(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID,
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+      OUTPUT_KEYS.SAML_SSO_APP_ID,
+      OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,
+      OUTPUT_KEYS.GOOGLE_SAML_ACS_URL,
+    ]);
+    if (!validation.valid || !context.domain) {
+      const missing = [...validation.missing];
+      if (!context.domain) missing.push("domain");
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${missing.join(", ")}` },
+      };
+    }
     const appObjectId = context.outputs[
       OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID
     ] as string;
+    const spObjectId = context.outputs[
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID
+    ] as string;
+    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
     const googleSpEntityId = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
     ] as string;
@@ -768,27 +814,6 @@ export async function executeM7ConfigureAzureSamlAppSettings(
       OUTPUT_KEYS.GOOGLE_SAML_ACS_URL
     ] as string;
     const primaryDomain = context.domain;
-
-    if (!appObjectId)
-      return {
-        success: false,
-        error: { message: "SAML SSO App Object ID (from M-6) not found." },
-      };
-    if (!googleSpEntityId)
-      return {
-        success: false,
-        error: { message: "Google SP Entity ID (from G-5) not found." },
-      };
-    if (!googleAcsUrl)
-      return {
-        success: false,
-        error: { message: "Google ACS URL (from G-5) not found." },
-      };
-    if (!primaryDomain)
-      return {
-        success: false,
-        error: { message: "Primary domain not configured." },
-      };
 
     const appPatchPayload: Partial<microsoft.Application> = {
       identifierUris: [googleSpEntityId, `https://${primaryDomain}`],
@@ -810,7 +835,7 @@ export async function executeM7ConfigureAzureSamlAppSettings(
       message:
         "Azure AD SAML app (Identifier URIs, Reply URL) configured. Verify 'User Attributes & Claims' (NameID should be UPN) manually in Azure Portal.",
       outputs: { [OUTPUT_KEYS.FLAG_M7_SAML_APP_SETTINGS_CONFIGURED]: true },
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${appObjectId}/~/SingleSignOn`,
+      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spObjectId}`,
     };
   } catch (e) {
     return handleExecutionError(e, "M-7");
@@ -825,20 +850,21 @@ export async function executeM8RetrieveAzureIdpMetadata(
 ): Promise<StepExecutionResult> {
   try {
     const { tenantId } = await getTokens();
-    const samlSsoAppId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    if (!samlSsoAppId)
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.SAML_SSO_APP_ID,
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+    ]);
+    if (!validation.valid) {
       return {
         success: false,
-        error: { message: "SAML SSO App (Client) ID (from M-6) not found." },
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
       };
+    }
+    const samlSsoAppId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
+    const spObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string;
 
     const metadata = await microsoft.getSamlMetadata(tenantId, samlSsoAppId);
-    const appObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID] as
-      | string
-      | undefined;
-    const resourceUrl = appObjectId
-      ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${appObjectId}/~/SingleSignOn`
-      : undefined;
+    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${samlSsoAppId}/objectId/${spObjectId}`;
     return {
       success: true,
       message:
@@ -862,24 +888,25 @@ export async function executeM9AssignUsersToAzureSsoApp(
   context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+      OUTPUT_KEYS.SAML_SSO_APP_ID,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
     const ssoSpObjectId = context.outputs[
       OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID
     ] as string;
-    if (!ssoSpObjectId)
-      return {
-        success: false,
-        error: {
-          message: "SAML SSO Service Principal Object ID (from M-6) not found.",
-        },
-      };
-    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as
-      | string
-      | undefined;
+    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
     return {
       success: true,
       message:
         "Guidance: Assign users/groups to the 'Google Workspace SAML SSO' app in Azure AD via its 'Users and groups' section to grant them SSO access.",
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/UsersAndGroups/servicePrincipalId/${ssoSpObjectId}/appId/${appId ?? ""}`,
+      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${ssoSpObjectId}/appId/${appId}`,
     };
   } catch (e) {
     return handleExecutionError(e, "M-9");
