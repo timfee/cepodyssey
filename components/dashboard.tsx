@@ -1,38 +1,52 @@
-// ./components/setup/AutomationDashboard.tsx
+// ./components/dashboard.tsx
 "use client";
 
-import { AlertTriangleIcon, Loader2Icon, PlayIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  Loader2Icon,
+  PlayIcon,
+} from "lucide-react"; // Added CheckCircleIcon
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react"; // Imported React
 import { useStore } from "react-redux";
 import { toast } from "sonner";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { loadProgress, saveProgress } from "@/lib/redux/persistence";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux"; // Corrected path based on your components.json
+import {
+  loadProgress,
+  saveProgress,
+  type PersistedProgress,
+} from "@/lib/redux/persistence";
+import {
+  addOutputs,
+  initializeConfig, // Use the dedicated initializer
+} from "@/lib/redux/slices/app-config"; // Corrected slice name based on your AGENTS.md and project-code.md
+import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps"; // Corrected slice name
 import type { RootState } from "@/lib/redux/store";
-import { allStepDefinitions, getStepActions } from "@/lib/steps"; // Corrected import
+import { allStepDefinitions, getStepActions } from "@/lib/steps";
 import type {
+  AppConfigState as AppConfigTypeFromTypes,
   StepCheckResult,
   StepContext,
-  StepDefinition,
   StepExecutionResult,
-} from "@/lib/types";
+} from "@/lib/types"; // Updated path based on your project-code.md
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AuthStatus } from "./auth";
-import { ConfigForm } from "./form";
-import { ProgressVisualizer } from "./progress";
+import { AuthStatus } from "./auth"; // Path from your project-code.md
+import { ConfigForm } from "./form"; // Path from your project-code.md
+import { ProgressVisualizer } from "./progress"; // Path from your project-code.md
 
 interface AutomationDashboardProps {
-  serverSession: Session | null; // Passed from server component for initial render
+  serverSession: Session; // Passed from server component for initial render
+  initialConfig?: Partial<AppConfigTypeFromTypes>;
 }
 
 export function AutomationDashboard({
   serverSession,
+  initialConfig,
 }: AutomationDashboardProps) {
   const { data: session, status } = useSession({
     required: true, // Ensures user is authenticated or redirects
@@ -40,41 +54,90 @@ export function AutomationDashboard({
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state) => state.appConfig);
-  const stepsStatusMap = useAppSelector((state) => state.setupSteps.steps);
+  const appConfig = useAppSelector((state: RootState) => state.appConfig);
+  const stepsStatusMap = useAppSelector(
+    (state: RootState) => state.setupSteps.steps
+  );
 
   const isLoadingSession = status === "loading";
-  // Use live session if available, otherwise fall back to server-provided session for initial load.
   const currentSession = session ?? serverSession;
 
-  // Effect for initializing state from localStorage when the domain changes or on initial load.
+  // Effect 1: Initialize Redux config from server-provided initialConfig or login page's localStorage
   useEffect(() => {
-    if (appConfig.domain) {
-      const persisted = loadProgress(appConfig.domain);
-      if (persisted) {
-        dispatch(initializeSteps(persisted.steps));
-        dispatch(addOutputs(persisted.outputs)); // Make sure outputs are initialized
-        toast.info("Loaded saved progress for this domain.");
-      } else {
-        // If no persisted progress, ensure steps are initialized to pending
-        const initialStatuses: Record<string, { status: "pending" }> = {};
-        allStepDefinitions.forEach((def) => {
-          initialStatuses[def.id] = { status: "pending" };
-        });
-        dispatch(initializeSteps(initialStatuses));
+    if (initialConfig && (initialConfig.domain || initialConfig.tenantId)) {
+      console.log(
+        "AutomationDashboard: Initializing Redux with server config:",
+        initialConfig
+      );
+      dispatch(
+        initializeConfig({
+          domain: initialConfig.domain ?? null,
+          tenantId: initialConfig.tenantId ?? null,
+          outputs: initialConfig.outputs ?? {},
+        })
+      );
+      // Clear login page localStorage items once config is sourced from server
+      localStorage.removeItem("loginPageDomain");
+      localStorage.removeItem("loginPageTenantId");
+    } else if (!appConfig.domain && !appConfig.tenantId) {
+      // Only if Redux is still empty and no server config
+      const loginDomain = localStorage.getItem("loginPageDomain");
+      const loginTenantId = localStorage.getItem("loginPageTenantId");
+      if (loginDomain || loginTenantId) {
+        console.log(
+          "AutomationDashboard: Initializing Redux with loginPage localStorage (fallback):",
+          { domain: loginDomain, tenantId: loginTenantId }
+        );
+        dispatch(
+          initializeConfig({
+            domain: loginDomain,
+            tenantId: loginTenantId,
+            outputs: {}, // Outputs are loaded separately by domain key later
+          })
+        );
+        // Optionally clear these after use too, or rely on login page to clear them on successful dual auth + server save.
       }
     }
-  }, [appConfig.domain, dispatch]);
+  }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]); // Rerun if initialConfig changes or if Redux domain/tenantId were initially null
 
-  // Effect for persisting Redux state (steps and outputs) to localStorage.
+  // Effect 2: Load step progress & step-specific outputs from localStorage, keyed by domain.
   useEffect(() => {
-    if (appConfig.domain) {
+    if (appConfig.domain && appConfig.domain !== "") {
+      console.log(
+        "AutomationDashboard: Domain available in Redux, attempting to load progress for domain:",
+        appConfig.domain
+      );
+      const persisted: PersistedProgress | null = loadProgress(
+        appConfig.domain
+      );
+      if (persisted) {
+        dispatch(initializeSteps(persisted.steps));
+        dispatch(addOutputs(persisted.outputs || {}));
+        toast.info("Loaded saved step progress for this domain.", {
+          duration: 2000,
+        });
+      } else {
+        const initialStepStatuses: Record<string, { status: "pending" }> = {};
+        allStepDefinitions.forEach((def) => {
+          initialStepStatuses[def.id] = { status: "pending" };
+        });
+        dispatch(initializeSteps(initialStepStatuses));
+        console.log(
+          "AutomationDashboard: No persisted progress for domain, initialized steps to pending."
+        );
+      }
+    }
+  }, [appConfig.domain, dispatch]); // Runs when appConfig.domain is set/changed in Redux
+
+  // Effect 3: Persist current Redux state (steps and outputs) to localStorage whenever they change.
+  useEffect(() => {
+    if (appConfig.domain && appConfig.domain !== "") {
       saveProgress(appConfig.domain, {
         steps: stepsStatusMap,
         outputs: appConfig.outputs,
       });
     }
-  }, [appConfig.domain, stepsStatusMap, appConfig.outputs]);
+  }, [appConfig.domain, appConfig.outputs, stepsStatusMap]);
 
   const canRunAutomation = useMemo(
     () =>
@@ -98,12 +161,12 @@ export function AutomationDashboard({
         toast.error("Please complete configuration and authentication first.");
         return;
       }
-
-      const definition = allStepDefinitions.find((s) => s.id === stepId); // Corrected usage
+      const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
         toast.error(`Step definition '${stepId}' not found.`);
         dispatch(
           updateStep({
+            // Changed from setStepStatus to updateStep
             id: stepId,
             status: "failed",
             error: "Step definition not found.",
@@ -111,7 +174,6 @@ export function AutomationDashboard({
         );
         return;
       }
-
       const stepActionImplementations = getStepActions(stepId);
       if (!stepActionImplementations?.execute) {
         toast.error(`Execute function for step '${stepId}' not found.`);
@@ -136,7 +198,6 @@ export function AutomationDashboard({
       const toastId = `step-exec-${stepId}-${Date.now()}`;
       toast.loading(`Running: ${definition.title}...`, { id: toastId });
 
-      // Ensure context has domain and tenantId, otherwise it's a programming error for `canRunAutomation` to be true
       if (!appConfig.domain || !appConfig.tenantId) {
         toast.error("Domain or Tenant ID is missing in configuration.", {
           id: toastId,
@@ -153,23 +214,26 @@ export function AutomationDashboard({
       const context: StepContext = {
         domain: appConfig.domain,
         tenantId: appConfig.tenantId,
-        outputs: store.getState().appConfig.outputs, // Get latest outputs
+        outputs: store.getState().appConfig.outputs,
       };
 
       try {
-        // Run pre-check if defined for the step
-        if (stepActionImplementations.check) {
+        if (definition.automatable && stepActionImplementations.check) {
+          // Only run check if automatable
           const checkResult: StepCheckResult =
             await stepActionImplementations.check(context);
           if (checkResult.outputs) dispatch(addOutputs(checkResult.outputs));
-
           if (checkResult.completed) {
             dispatch(
               updateStep({
                 id: stepId,
                 status: "completed",
                 message: checkResult.message || "Already completed.",
-                metadata: { preExisting: true, ...(checkResult.outputs || {}) },
+                metadata: {
+                  preExisting: true,
+                  completedAt: new Date().toISOString(),
+                  ...(checkResult.outputs || {}),
+                },
               })
             );
             toast.success(`${definition.title}: Checked - Already complete.`, {
@@ -178,12 +242,9 @@ export function AutomationDashboard({
             return;
           }
         }
-
-        // Execute the main action
         const result: StepExecutionResult =
           await stepActionImplementations.execute(context);
         if (result.outputs) dispatch(addOutputs(result.outputs));
-
         if (result.success) {
           dispatch(
             updateStep({
@@ -192,6 +253,7 @@ export function AutomationDashboard({
               message: result.message,
               metadata: {
                 resourceUrl: result.resourceUrl,
+                completedAt: new Date().toISOString(),
                 ...(result.outputs || {}),
               },
             })
@@ -221,7 +283,7 @@ export function AutomationDashboard({
         const message = err instanceof Error ? err.message : String(err);
         dispatch(updateStep({ id: stepId, status: "failed", error: message }));
         toast.error(
-          `${definition.title}: An unexpected error occurred during execution. ${message}`,
+          `${definition.title}: An unexpected error occurred. ${message}`,
           {
             id: toastId,
             duration: 10000,
@@ -243,10 +305,7 @@ export function AutomationDashboard({
       duration: 5000,
     });
     let anyStepFailed = false;
-
     for (const step of allStepDefinitions) {
-      // Corrected usage
-      // Check current Redux state for the step
       const currentStepState = store.getState().setupSteps.steps[step.id];
       if (
         step.automatable &&
@@ -255,14 +314,13 @@ export function AutomationDashboard({
           currentStepState.status === "failed")
       ) {
         await executeStep(step.id);
-        // Re-fetch status after execution for accurate check
         if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
           toast.error("Automation stopped due to a failed step.", {
             description: `Please review the error for step: ${step.title}`,
             duration: 10000,
           });
           anyStepFailed = true;
-          break; // Stop processing further steps
+          break;
         }
       }
     }
@@ -273,7 +331,7 @@ export function AutomationDashboard({
     }
   }, [executeStep, store, canRunAutomation]);
 
-  if (isLoadingSession) {
+  if (isLoadingSession && !currentSession) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2Icon className="h-12 w-12 animate-spin text-primary" />
@@ -297,23 +355,55 @@ export function AutomationDashboard({
         <ConfigForm />
         <AuthStatus />
 
-        {!canRunAutomation && (
-          <Card className="border-orange-400 bg-orange-50 dark:border-orange-600 dark:bg-orange-900/30">
-            <CardHeader className="flex-row items-center gap-3 space-y-0 p-4">
-              <AlertTriangleIcon className="h-6 w-6 shrink-0 text-orange-600 dark:text-orange-400" />
-              <CardTitle className="text-lg text-orange-800 dark:text-orange-200">
-                Action Required
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 text-sm text-orange-700 dark:text-orange-300">
-              <p>
-                Please complete all configuration fields above and connect to
-                both Google and Microsoft accounts to enable the automation
-                steps.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {(!appConfig.domain ||
+          !appConfig.tenantId ||
+          !currentSession?.hasGoogleAuth ||
+          !currentSession?.hasMicrosoftAuth) &&
+          !isLoadingSession && (
+            <Card className="border-orange-400 bg-orange-50 dark:border-orange-600 dark:bg-orange-900/30">
+              <CardHeader className="flex-row items-center gap-3 space-y-0 p-4">
+                <AlertTriangleIcon className="h-6 w-6 shrink-0 text-orange-600 dark:text-orange-400" />
+                <CardTitle className="text-lg text-orange-800 dark:text-orange-200">
+                  Action Required
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 text-sm text-orange-700 dark:text-orange-300">
+                <ul className="list-disc space-y-1 pl-5">
+                  {!appConfig.domain && (
+                    <li>
+                      Provide your Google Workspace primary domain in the
+                      configuration form.
+                    </li>
+                  )}
+                  {!appConfig.tenantId && (
+                    <li>
+                      Provide your Microsoft Entra ID Tenant ID in the
+                      configuration form.
+                    </li>
+                  )}
+                  {appConfig.domain &&
+                    appConfig.tenantId &&
+                    !currentSession?.hasGoogleAuth && (
+                      <li>
+                        Connect to Google Workspace using the 'Authentication
+                        Status' section.
+                      </li>
+                    )}
+                  {appConfig.domain &&
+                    appConfig.tenantId &&
+                    !currentSession?.hasMicrosoftAuth && (
+                      <li>
+                        Connect to Microsoft Entra ID using the 'Authentication
+                        Status' section.
+                      </li>
+                    )}
+                </ul>
+                <p className="mt-2">
+                  All these must be completed to enable the automation steps.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
         <div className="flex justify-end pt-4">
           <Button

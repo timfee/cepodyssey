@@ -36,7 +36,7 @@ export function AuthStatus() {
     if (provider === "google") options.hd = domain!;
     if (provider === "microsoft-entra-id") options.tenant = tenantId!;
 
-    signIn(provider, { callbackUrl: "/dashboard" }, options);
+    signIn(provider, { callbackUrl: "/" }, options);
   };
 
   const renderPill = (

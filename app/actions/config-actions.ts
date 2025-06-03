@@ -3,80 +3,78 @@
 import { auth } from "@/app/(auth)/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+// Assuming ActionResult is defined in a shared types file, or define it here
+// For this example, assuming it's similar to what was in your project-code.md for this file
+export interface ActionResult<TData = Record<string, unknown> | null> {
+  success: boolean;
+  data?: TData;
+  error?: { message: string; code?: string };
+  message?: string;
+}
 
 const DOMAIN_REGEX =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
-// This matches the structure expected by getConfig in app/dashboard/page.tsx
-// and aligns with AppConfigState in Redux for consistency.
 interface AppConfig {
   domain: string;
   tenantId: string;
-  outputs?: Record<string, unknown>; // Added to store step outputs
+  outputs?: Record<string, unknown>;
 }
 
 const ConfigSchema = z.object({
   domain: z.string().regex(DOMAIN_REGEX, "Invalid domain format."),
   tenantId: z.string().uuid("Tenant ID must be a valid UUID."),
-  outputs: z.record(z.unknown()).optional(), // Outputs from steps
+  outputs: z.record(z.unknown()).optional(),
 });
 
-interface ActionResult {
-  success: boolean;
-  message?: string;
-  error?: string;
-}
-
-// In-memory store for demonstration, as per the original project structure for these actions.
-// For a multi-instance production app, a database (e.g., Redis, Postgres) would be used.
+const CONFIG_STORE_KEY = "admin_user_app_config"; // Fixed key for the single admin user concept
 const serverSideConfigStore = new Map<string, AppConfig>();
 
-/**
- * Saves the application configuration (domain, tenantId, and step outputs)
- * for the authenticated user to an in-memory store.
- */
 export async function saveConfig(data: AppConfig): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const session = await auth(); // Still useful to ensure an authenticated context
+  if (!session?.user) {
+    // Check for a valid session user, even if key is fixed
     return {
       success: false,
-      error: "User not authenticated or email missing.",
+      error: { message: "User not authenticated." },
     };
   }
 
   const result = ConfigSchema.safeParse(data);
   if (!result.success) {
-    const errorMessage = result.error.errors.map((e) => e.message).join(" ");
-    return { success: false, error: errorMessage };
+    const errorMessage = result.error.errors
+      .map((e) => `${e.path.join(".")}: ${e.message}`)
+      .join(" ");
+    return { success: false, error: { message: errorMessage } };
   }
 
-  serverSideConfigStore.set(session.user.email, result.data);
-  console.log(`Configuration saved for ${session.user.email}:`, result.data);
+  serverSideConfigStore.set(CONFIG_STORE_KEY, result.data);
+  console.log(
+    `Configuration saved with key '${CONFIG_STORE_KEY}':`,
+    result.data
+  );
 
-  // Revalidate the dashboard path so getConfig in DashboardPage can pick up changes.
-  revalidatePath("/dashboard");
+  revalidatePath("/"); // Revalidate the root/dashboard page
 
   return { success: true, message: "Configuration saved successfully." };
 }
 
-/**
- * Retrieves the application configuration for the authenticated user
- * from the in-memory store.
- */
 export async function getConfig(): Promise<AppConfig | null> {
-  const session = await auth();
-  if (!session?.user?.email) {
-    console.log("getConfig: No session or user email found.");
+  const session = await auth(); // Ensure an authenticated context before allowing config retrieval
+  if (!session?.user) {
+    console.log("getConfig: No session or user found. Cannot retrieve config.");
     return null;
   }
-
-  const config = serverSideConfigStore.get(session.user.email);
+  const config = serverSideConfigStore.get(CONFIG_STORE_KEY);
   if (config) {
-    console.log(`Configuration retrieved for ${session.user.email}:`, config);
+    console.log(
+      `Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
+      config
+    );
     return config;
   } else {
     console.log(
-      `No configuration found in server-side store for ${session.user.email}.`
+      `No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`
     );
     return null;
   }
