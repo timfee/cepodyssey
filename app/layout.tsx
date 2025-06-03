@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangleIcon } from "lucide-react";
 import localFont from "next/font/local";
 
 const inter = localFont({
@@ -35,6 +37,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <Alert className="sticky top-0 z-50 !border-none bg-amber-100 text-amber-800">
+          <AlertDescription className="flex items-center">
+            <AlertTriangleIcon />
+            <strong className="ml-2 mr-4">Proof of Concept</strong>
+            <span>
+              Do not use this for any production environment. Google OAuth
+              requires allowlisting; contact{" "}
+              <a className="underline" href="mailto:timfee@google.com">
+                timfee@
+              </a>{" "}
+              for access.
+            </span>
+          </AlertDescription>
+        </Alert>
         <Providers>
           {children}
           <Toaster richColors />
