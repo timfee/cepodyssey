@@ -31,6 +31,15 @@ export const appConfigSlice = createSlice({
     addOutputs(state, action: PayloadAction<Record<string, unknown>>) {
       state.outputs = { ...state.outputs, ...action.payload };
     },
+    resetAuthState(state) {
+      state.outputs = {};
+      console.log("Auth state reset due to session expiration");
+    },
+    clearAllData(state) {
+      state.domain = null;
+      state.tenantId = null;
+      state.outputs = {};
+    },
   },
 });
 
@@ -40,6 +49,8 @@ export const {
   setTenantId,
   addOutput,
   addOutputs,
+  resetAuthState,
+  clearAllData,
 } = appConfigSlice.actions;
 
 export default appConfigSlice.reducer;

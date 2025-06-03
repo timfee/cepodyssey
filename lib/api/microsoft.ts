@@ -1,7 +1,15 @@
 import type * as MicrosoftGraph from "microsoft-graph";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import { wrapAuthError } from "./auth-interceptor";
 
 const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
+
+function handleMicrosoftError(error: unknown): never {
+  if (error instanceof APIError && error.status === 401) {
+    throw wrapAuthError(error, "microsoft");
+  }
+  throw error;
+}
 
 export type ServicePrincipal = MicrosoftGraph.ServicePrincipal;
 export type Application = MicrosoftGraph.Application;
@@ -19,20 +27,24 @@ export async function listApplications(
   token: string,
   filter?: string,
 ): Promise<Application[]> {
-  let url = `${GRAPH_BASE_URL}/applications`;
-  if (filter) {
-    url += `?$filter=${encodeURIComponent(filter)}`;
+  try {
+    let url = `${GRAPH_BASE_URL}/applications`;
+    if (filter) {
+      url += `?$filter=${encodeURIComponent(filter)}`;
+    }
+    const res = await fetchWithAuth(url, token);
+    const result = await handleApiResponse<{ value: Application[] }>(res);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+    ) {
+      return [];
+    }
+    return result.value ?? [];
+  } catch (error) {
+    handleMicrosoftError(error);
   }
-  const res = await fetchWithAuth(url, token);
-  const result = await handleApiResponse<{ value: Application[] }>(res);
-  if (
-    typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-  ) {
-    return [];
-  }
-  return result.value ?? [];
 }
 
 /**
@@ -43,19 +55,23 @@ export async function getServicePrincipalByAppId(
   token: string,
   appId: string,
 ): Promise<ServicePrincipal | null> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`,
-    token,
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<{ value: ServicePrincipal[] }>(res);
-  if (
-    typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-  )
-    return null;
-  return result.value[0] ?? null;
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`,
+      token,
+    );
+    if (res.status === 404) return null;
+    const result = await handleApiResponse<{ value: ServicePrincipal[] }>(res);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+    )
+      return null;
+    return result.value[0] ?? null;
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -66,17 +82,21 @@ export async function getServicePrincipalDetails(
   token: string,
   spObjectId: string,
 ): Promise<ServicePrincipal | null> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${spObjectId}?$select=id,appId,displayName,accountEnabled`,
-    token,
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<ServicePrincipal>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${spObjectId}?$select=id,appId,displayName,accountEnabled`,
+      token,
+    );
+    if (res.status === 404) return null;
+    const result = await handleApiResponse<ServicePrincipal>(res);
+    return typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+      ? null
+      : result;
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -87,17 +107,21 @@ export async function getApplicationDetails(
   token: string,
   applicationObjectId: string,
 ): Promise<Application | null> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/applications/${applicationObjectId}?$select=id,appId,displayName,identifierUris,web`,
-    token,
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<Application>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/applications/${applicationObjectId}?$select=id,appId,displayName,identifierUris,web`,
+      token,
+    );
+    if (res.status === 404) return null;
+    const result = await handleApiResponse<Application>(res);
+    return typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+      ? null
+      : result;
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -112,15 +136,19 @@ export async function createEnterpriseApp(
   | { application: Application; servicePrincipal: ServicePrincipal }
   | { alreadyExists: true }
 > {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/applicationTemplates/${templateId}/instantiate`,
-    token,
-    {
-      method: "POST",
-      body: JSON.stringify({ displayName }),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/applicationTemplates/${templateId}/instantiate`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ displayName }),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -133,15 +161,19 @@ export async function patchServicePrincipal(
   servicePrincipalId: string,
   body: Partial<ServicePrincipal>,
 ): Promise<void | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}`,
-    token,
-    {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}`,
+      token,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -153,15 +185,19 @@ export async function updateApplication(
   applicationObjectId: string,
   body: Partial<Application>,
 ): Promise<void | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/applications/${applicationObjectId}`,
-    token,
-    {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/applications/${applicationObjectId}`,
+      token,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -173,15 +209,19 @@ export async function createProvisioningJob(
   token: string,
   servicePrincipalId: string,
 ): Promise<SynchronizationJob | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
-    token,
-    {
-      method: "POST",
-      body: JSON.stringify({ templateId: "GoogleApps" }),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ templateId: "GoogleApps" }),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -192,19 +232,23 @@ export async function listSynchronizationJobs(
   token: string,
   servicePrincipalId: string,
 ): Promise<SynchronizationJob[]> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
-    token,
-  );
-  const result = await handleApiResponse<{ value: SynchronizationJob[] }>(res);
-  if (
-    typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-  ) {
-    return [];
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
+      token,
+    );
+    const result = await handleApiResponse<{ value: SynchronizationJob[] }>(res);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+    ) {
+      return [];
+    }
+    return result.value ?? [];
+  } catch (error) {
+    handleMicrosoftError(error);
   }
-  return result.value ?? [];
 }
 
 /**
@@ -216,17 +260,21 @@ export async function getProvisioningJob(
   servicePrincipalId: string,
   jobId: string,
 ): Promise<SynchronizationJob | null> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}`,
-    token,
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<SynchronizationJob>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}`,
+      token,
+    );
+    if (res.status === 404) return null;
+    const result = await handleApiResponse<SynchronizationJob>(res);
+    return typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+      ? null
+      : result;
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -238,17 +286,21 @@ export async function getSynchronizationSchema(
   servicePrincipalId: string,
   jobId: string,
 ): Promise<SynchronizationSchema | null> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
-    token,
-  );
-  if (res.status === 404) return null;
-  const result = await handleApiResponse<SynchronizationSchema>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? null
-    : result;
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
+      token,
+    );
+    if (res.status === 404) return null;
+    const result = await handleApiResponse<SynchronizationSchema>(res);
+    return typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+      ? null
+      : result;
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -260,15 +312,19 @@ export async function updateProvisioningCredentials(
   servicePrincipalId: string,
   credentials: { key: string; value: string }[],
 ): Promise<void | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/secrets`,
-    token,
-    {
-      method: "PUT",
-      body: JSON.stringify({ value: credentials }),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/secrets`,
+      token,
+      {
+        method: "PUT",
+        body: JSON.stringify({ value: credentials }),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -281,12 +337,16 @@ export async function startProvisioningJob(
   servicePrincipalId: string,
   jobId: string,
 ): Promise<void | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/start`,
-    token,
-    { method: "POST" },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/start`,
+      token,
+      { method: "POST" },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -301,15 +361,19 @@ export async function configureAttributeMappings(
     | { synchronizationRules: MicrosoftGraph.SynchronizationRule[] }
     | Partial<SynchronizationSchema>,
 ): Promise<SynchronizationSchema | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
-    token,
-    {
-      method: "PUT",
-      body: JSON.stringify(schemaPayload),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
+      token,
+      {
+        method: "PUT",
+        body: JSON.stringify(schemaPayload),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -322,19 +386,23 @@ export async function assignUsersToApp(
   principalId: string,
   appRoleId: string,
 ): Promise<AppRoleAssignment | { alreadyExists: true }> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/appRoleAssignedTo`,
-    token,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        principalId,
-        resourceId: servicePrincipalId,
-        appRoleId,
-      }),
-    },
-  );
-  return handleApiResponse(res);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/appRoleAssignedTo`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          principalId,
+          resourceId: servicePrincipalId,
+          appRoleId,
+        }),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 /**
@@ -344,16 +412,20 @@ export async function listAppRoleAssignments(
   token: string,
   servicePrincipalObjectId: string,
 ): Promise<AppRoleAssignment[]> {
-  const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalObjectId}/appRoleAssignedTo`,
-    token,
-  );
-  const result = await handleApiResponse<{ value: AppRoleAssignment[] }>(res);
-  return typeof result === "object" &&
-    result !== null &&
-    "alreadyExists" in result
-    ? []
-    : (result.value ?? []);
+  try {
+    const res = await fetchWithAuth(
+      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalObjectId}/appRoleAssignedTo`,
+      token,
+    );
+    const result = await handleApiResponse<{ value: AppRoleAssignment[] }>(res);
+    return typeof result === "object" &&
+      result !== null &&
+      "alreadyExists" in result
+      ? []
+      : result.value ?? [];
+  } catch (error) {
+    handleMicrosoftError(error);
+  }
 }
 
 export interface SamlMetadata {

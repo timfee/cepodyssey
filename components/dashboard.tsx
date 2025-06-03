@@ -1,8 +1,10 @@
 "use client";
 
-import { AlertTriangleIcon, Loader2Icon, PlayIcon } from "lucide-react";
+import { AlertTriangleIcon, Loader2Icon, PlayIcon, LogInIcon } from "lucide-react";
 import type { Session } from "next-auth";
-import { useSession } from "next-auth/react";
+import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { useSessionSync } from "@/hooks/use-session-sync";
+import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useStore } from "react-redux";
 import { toast } from "sonner";
@@ -31,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
+import { SessionWarning } from "./session-warning";
 
 interface AutomationDashboardProps {
   serverSession: Session;
@@ -44,7 +47,8 @@ export function AutomationDashboard({
   serverSession,
   initialConfig,
 }: AutomationDashboardProps) {
-  const { data: session, status } = useSession({ required: true });
+  const { session, status } = useSessionSync();
+  const router = useRouter();
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
@@ -251,6 +255,23 @@ export function AutomationDashboard({
           );
         }
       } catch (err) {
+        if (isAuthenticationError(err)) {
+          toast.error(err.message, {
+            duration: 10000,
+            action: {
+              label: "Sign In",
+              onClick: () => router.push("/login"),
+            },
+          });
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: "Authentication expired. Please sign in again.",
+            }),
+          );
+          return;
+        }
         const message = err instanceof Error ? err.message : String(err);
         dispatch(updateStep({ id: stepId, status: "failed", error: message }));
         toast.error(`${definition.title}: Unexpected error. ${message}`, {
@@ -259,7 +280,14 @@ export function AutomationDashboard({
         });
       }
     },
-    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId],
+    [
+      canRunAutomation,
+      dispatch,
+      store,
+      appConfig.domain,
+      appConfig.tenantId,
+      router,
+    ],
   );
 
   const executeCheck = useCallback(
@@ -401,6 +429,30 @@ export function AutomationDashboard({
       !currentSession?.hasMicrosoftAuth) &&
     !isLoadingSession;
 
+  if (
+    status === "authenticated" &&
+    (!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) &&
+    (appConfig.domain || appConfig.tenantId)
+  ) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">
+        <div className="max-w-2xl mx-auto">
+          <Alert variant="destructive">
+            <AlertTriangleIcon className="h-5 w-5" />
+            <AlertTitle>Authentication Required</AlertTitle>
+            <AlertDescription>
+              Your session has expired. Please sign in again to continue automation.
+            </AlertDescription>
+          </Alert>
+          <Button onClick={() => router.push("/login") } className="mt-4 w-full" size="lg">
+            <LogInIcon className="mr-2 h-5 w-5" />
+            Return to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <main className="container mx-auto max-w-5xl space-y-8 p-4 py-8 md:p-8">
@@ -412,6 +464,7 @@ export function AutomationDashboard({
             Automate Google Workspace & Microsoft Entra ID Integration
           </p>
         </header>
+        <SessionWarning />
         <ConfigForm />
         <AuthStatus />
         <ProgressSummary />

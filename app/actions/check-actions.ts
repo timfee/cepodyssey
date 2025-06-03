@@ -4,9 +4,26 @@ import { auth } from "@/app/(auth)/auth";
 import * as google from "@/lib/api/google";
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
+import { AuthenticationError } from "@/lib/api/auth-interceptor";
 import type { StepCheckResult } from "@/lib/types";
+import type { Session } from "next-auth";
 import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
+
+function validateTokens(session: Session | null): asserts session is Session {
+  if (!session) {
+    throw new AuthenticationError("No session found", "google");
+  }
+  if (session.error === "RefreshTokenError") {
+    throw new AuthenticationError("Session expired - refresh failed", "google");
+  }
+  if (!session.googleToken) {
+    throw new AuthenticationError("Google authentication required", "google");
+  }
+  if (!session.microsoftToken) {
+    throw new AuthenticationError("Microsoft authentication required", "microsoft");
+  }
+}
 /**
  * Retrieve auth tokens for the requested providers from the session.
  */
@@ -15,24 +32,16 @@ async function getAuthenticatedTokens(
   providers: ("google" | "microsoft")[] = ["google", "microsoft"],
 ) {
   const session = await auth();
-  if (!session) throw new APIError("User not authenticated.", 401);
+  validateTokens(session);
   const tokens: { googleToken?: string; microsoftToken?: string } = {};
   if (providers.includes("google")) {
     if (!session.googleToken)
-      throw new APIError(
-        "Google authentication required for this check.",
-        401,
-        "GOOGLE_AUTH_REQUIRED",
-      );
+      throw new AuthenticationError("Google authentication required", "google");
     tokens.googleToken = session.googleToken;
   }
   if (providers.includes("microsoft")) {
     if (!session.microsoftToken)
-      throw new APIError(
-        "Microsoft authentication required for this check.",
-        401,
-        "MS_AUTH_REQUIRED",
-      );
+      throw new AuthenticationError("Microsoft authentication required", "microsoft");
     tokens.microsoftToken = session.microsoftToken;
   }
   return tokens;

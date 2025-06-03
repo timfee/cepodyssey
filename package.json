@@ -28,12 +28,12 @@
     "react-redux": "^9.2.0",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
-    "zod": "^3.25.49"
+    "zod": "^3.25.49",
+    "@reduxjs/toolkit": "^2.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/eslint-plugin-next": "^15.3.3",
-    "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/microsoft-graph": "^2.40.1",
     "@types/node": "^22.15.29",
