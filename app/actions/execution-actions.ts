@@ -47,6 +47,10 @@ async function handleExecutionError(
         message: error.message,
         code: "AUTH_EXPIRED",
       },
+      outputs: {
+        errorCode: "AUTH_EXPIRED",
+        errorProvider: error.provider,
+      },
     };
   }
   if (error instanceof APIError) {

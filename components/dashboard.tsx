@@ -196,6 +196,10 @@ export function AutomationDashboard({
               status: "failed",
               error: result.error?.message ?? "Unknown error during execution.",
               message: result.message,
+              metadata: {
+                ...(result.outputs || {}),
+                resourceUrl: result.resourceUrl,
+              },
             }),
           );
           toast.error(`${definition.title}: ${result.error?.message ?? "Failed"}`, {
@@ -217,6 +221,10 @@ export function AutomationDashboard({
               id: stepId,
               status: "failed",
               error: "Authentication expired. Please sign in again.",
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: err.provider,
+              },
             }),
           );
           return;
