@@ -1,18 +1,4 @@
 import {
-  checkDomainVerified,
-  checkGoogleSamlProfileDetails,
-  checkMicrosoftAppAssignments,
-  checkMicrosoftAttributeMappingsApplied,
-  checkMicrosoftProvisioningJobDetails,
-  checkMicrosoftSamlAppSettingsApplied,
-  checkMicrosoftServicePrincipal,
-  checkMicrosoftServicePrincipalEnabled,
-  checkOrgUnitExists,
-  checkServiceAccountExists,
-  checkServiceAccountIsAdmin,
-} from "@/app/actions/check-actions";
-
-import {
   executeG1CreateAutomationOu,
   executeG2CreateServiceAccount,
   executeG3GrantAdminPrivileges,
@@ -33,7 +19,6 @@ import {
 } from "@/app/actions/execution-actions";
 
 import type {
-  StepCheckResult,
   StepContext,
   StepDefinition,
   StepExecutionResult,
@@ -54,8 +39,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: [],
-    check: (_context: StepContext): Promise<StepCheckResult> =>
-      checkOrgUnitExists("/Automation"),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG1CreateAutomationOu(context),
     adminUrls: {
@@ -71,16 +54,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-1"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string | undefined;
-      if (!serviceAccountEmail) {
-        return {
-          completed: false,
-          message: "Service account not yet created.",
-        };
-      }
-      return checkServiceAccountExists(serviceAccountEmail);
-    },
     execute: async (context: StepContext): Promise<StepExecutionResult> =>
       executeG2CreateServiceAccount(context),
     adminUrls: {
@@ -99,16 +72,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-2"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string | undefined;
-      if (!serviceAccountEmail) {
-        return {
-          completed: false,
-          message: "Service account email not found. Complete G-2 first.",
-        };
-      }
-      return checkServiceAccountIsAdmin(serviceAccountEmail);
-    },
     execute: async (context: StepContext): Promise<StepExecutionResult> =>
       executeG3GrantAdminPrivileges(context),
     adminUrls: {
@@ -127,19 +90,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: false,
     requires: ["G-3"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      return context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]
-        ? {
-            completed: true,
-            message:
-              "Secret Token for Google Workspace provisioning is noted as provided.",
-          }
-        : {
-            completed: false,
-            message:
-              "Secret Token needed. Follow instructions to retrieve and enter it into this tool.",
-          };
-    },
     execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
       success: true,
       message:
@@ -171,14 +121,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-3"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      if (!context.domain)
-        return {
-          completed: false,
-          message: "Primary domain not configured in this tool.",
-        };
-      return checkDomainVerified(context.domain);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG4AddAndVerifyDomain(context),
     adminUrls: {
@@ -194,8 +136,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-4"],
-    check: (_context: StepContext): Promise<StepCheckResult> =>
-      checkGoogleSamlProfileDetails("Azure AD SSO", true, undefined),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG5InitiateGoogleSamlProfile(context),
     adminUrls: {
@@ -213,18 +153,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: [],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
-        | string
-        | undefined;
-      if (!appId)
-        return {
-          completed: false,
-          message:
-            "Provisioning App ID (from previous run or manual setup) must be in this tool's outputs to check.",
-        };
-      return checkMicrosoftServicePrincipal(appId);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM1CreateProvisioningApp(context),
     adminUrls: {
@@ -250,18 +178,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-1"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const spObjectId = context.outputs[
-        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-      ] as string | undefined;
-      if (!spObjectId)
-        return {
-          completed: false,
-          message:
-            "Provisioning App's Service Principal Object ID not available to check status.",
-        };
-      return checkMicrosoftServicePrincipalEnabled(spObjectId);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM2ConfigureProvisioningAppProperties(context),
     adminUrls: {
@@ -287,28 +203,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-2", "G-S0"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      if (!context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]) {
-        return {
-          completed: false,
-          message:
-            "Google Secret Token (from step G-S0) must be provided to check this step.",
-        };
-      }
-      const spObjectId = context.outputs[
-        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-      ] as string | undefined;
-      if (!spObjectId)
-        return {
-          completed: false,
-          message:
-            "Provisioning App's Service Principal Object ID not available.",
-        };
-      return checkMicrosoftProvisioningJobDetails(
-        spObjectId,
-        context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string | undefined,
-      );
-    },
     execute: async (context: StepContext): Promise<StepExecutionResult> => {
       if (!context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]) {
         return {
@@ -344,20 +238,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-3"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const spObjectId = context.outputs[
-        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-      ] as string | undefined;
-      const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
-        | string
-        | undefined;
-      if (!spObjectId || !jobId)
-        return {
-          completed: false,
-          message: "Provisioning App's SP Object ID or Job ID not available.",
-        };
-      return checkMicrosoftAttributeMappingsApplied(spObjectId, jobId);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM4ConfigureProvisioningAttributeMappings(context),
     adminUrls: {
@@ -383,36 +263,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-4"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const spObjectId = context.outputs[
-        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-      ] as string | undefined;
-      const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
-        | string
-        | undefined;
-      if (!spObjectId || !jobId)
-        return {
-          completed: false,
-          message:
-            "Provisioning SP Object ID or Job ID not found for status check.",
-        };
-      const jobStatus = await checkMicrosoftProvisioningJobDetails(
-        spObjectId,
-        jobId,
-      );
-      if (
-        jobStatus.completed &&
-        jobStatus.outputs?.provisioningJobState === "Active"
-      ) {
-        return { completed: true, message: "Provisioning job is active." };
-      }
-      return {
-        completed: false,
-        message:
-          jobStatus.message ||
-          "Provisioning job is not active or status unknown.",
-      };
-    },
     execute: async (context: StepContext): Promise<StepExecutionResult> => {
       const result = await executeM5StartProvisioningJob(context);
       if (result.success) {
@@ -447,18 +297,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: [],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as
-        | string
-        | undefined;
-      if (!appId)
-        return {
-          completed: false,
-          message:
-            "SAML SSO App ID from a prior run must be in outputs to check.",
-        };
-      return checkMicrosoftServicePrincipal(appId);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM6CreateSamlSsoApp(context),
     adminUrls: {
@@ -484,29 +322,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["M-6", "G-5"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const appObjectId = context.outputs[
-        OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID
-      ] as string | undefined;
-      const googleSpEntityId = context.outputs[
-        OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
-      ] as string | undefined;
-      const googleAcsUrl = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] as
-        | string
-        | undefined;
-      if (!appObjectId || !googleSpEntityId || !googleAcsUrl) {
-        return {
-          completed: false,
-          message:
-            "Required IDs/URLs for SAML config check not found in outputs (from G-5 and M-6).",
-        };
-      }
-      return checkMicrosoftSamlAppSettingsApplied(
-        appObjectId,
-        googleSpEntityId,
-        googleAcsUrl,
-      );
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM7ConfigureAzureSamlAppSettings(context),
     adminUrls: {
@@ -532,21 +347,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["M-7"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      return context.outputs[OUTPUT_KEYS.IDP_CERTIFICATE_BASE64] &&
-        context.outputs[OUTPUT_KEYS.IDP_SSO_URL] &&
-        context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID]
-        ? {
-            completed: true,
-            message:
-              "Azure AD IdP SAML metadata is present in this tool's outputs.",
-          }
-        : {
-            completed: false,
-            message:
-              "Azure AD IdP SAML metadata not yet retrieved by this tool.",
-          };
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM8RetrieveAzureIdpMetadata(context),
     adminUrls: {
@@ -574,31 +374,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-5", "M-8"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const profileFullName = context.outputs[
-        OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-      ] as string | undefined;
-      const expectedIdpEntityId = context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID] as
-        | string
-        | undefined;
-      if (!profileFullName)
-        return {
-          completed: false,
-          message:
-            "Google SAML Profile name (from G-5) not found to check configuration.",
-        };
-      if (!expectedIdpEntityId)
-        return {
-          completed: false,
-          message:
-            "Expected Azure AD IdP Entity ID (from M-8) not found in outputs.",
-        };
-      return checkGoogleSamlProfileDetails(
-        profileFullName,
-        false,
-        expectedIdpEntityId,
-      );
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG6UpdateGoogleSamlWithAzureIdp(context),
     adminUrls: {
@@ -614,37 +389,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-6"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const profileFullName = context.outputs[
-        OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-      ] as string | undefined;
-      if (!profileFullName)
-        return {
-          completed: false,
-          message: "Google SAML Profile name not found.",
-        };
-      const profileDetailsCheck = await checkGoogleSamlProfileDetails(
-        profileFullName,
-        false,
-        undefined,
-      );
-      if (
-        profileDetailsCheck.completed &&
-        profileDetailsCheck.outputs?.ssoMode === "SAML_SSO_ENABLED"
-      ) {
-        // This check confirms the profile is enabled. A more specific check would verify actual OU assignment.
-        return {
-          completed: true,
-          message:
-            "Google SAML Profile is enabled. Assignment to Root OU is applied by execute action.",
-        };
-      }
-      return {
-        completed: false,
-        message:
-          "Google SAML profile not enabled or assignment status unknown. Run/re-run to assign to Root OU.",
-      };
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG7AssignGoogleSamlToRootOu(context),
     adminUrls: {
@@ -660,24 +404,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-1", "G-7"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const automationOuId = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_ID] as
-        | string
-        | undefined;
-      if (!automationOuId)
-        return {
-          completed: true,
-          message:
-            "Automation OU not configured or ID missing; this step is effectively skipped.",
-        };
-      // A specific check for an OU's SAML settings being "SSO_OFF" is complex.
-      // We rely on re-execution to ensure this state.
-      return {
-        completed: false,
-        message:
-          "Run/re-run to ensure SAML is disabled for Automation OU (if it exists).",
-      };
-    },
     execute: async (context: StepContext): Promise<StepExecutionResult> => {
       const automationOuId = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_ID] as
         | string
@@ -705,18 +431,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true, // The action provides a link; actual assignment is manual in Azure.
     requires: ["M-6"],
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      const ssoSpObjectId = context.outputs[
-        OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID
-      ] as string | undefined;
-      if (!ssoSpObjectId)
-        return {
-          completed: false,
-          message:
-            "Azure SAML SSO App SP Object ID not found to check assignments.",
-        };
-      return checkMicrosoftAppAssignments(ssoSpObjectId);
-    },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM9AssignUsersToAzureSsoApp(context),
     adminUrls: {
@@ -744,11 +458,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: false,
     requires: ["G-7", "M-9"],
-    check: async (_context: StepContext): Promise<StepCheckResult> => ({
-      completed: false,
-      message:
-        "Manual verification by administrator is required for SSO testing.",
-    }),
     execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
       success: true,
       message:
@@ -776,11 +485,10 @@ export const stepDefinitionMap = new Map<string, StepDefinition>(
  */
 export function getStepActions(stepId: string):
   | {
-      check?: (context: StepContext) => Promise<StepCheckResult>;
       execute: (context: StepContext) => Promise<StepExecutionResult>;
     }
   | undefined {
   const step = allStepDefinitions.find((s) => s.id === stepId);
   if (!step) return undefined;
-  return { check: step.check, execute: step.execute };
+  return { execute: step.execute };
 }
