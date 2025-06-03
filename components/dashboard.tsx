@@ -267,7 +267,11 @@ export function AutomationDashboard({
             updateStep({
               id: stepId,
               status: "failed",
-              error: "Authentication expired. Please sign in again.",
+              error: err.message,
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: err.provider,
+              },
             }),
           );
           return;
