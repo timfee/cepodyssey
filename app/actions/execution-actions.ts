@@ -146,7 +146,8 @@ export async function executeG2CreateServiceAccount(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-1 completed successfully.`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-1 (Create Automation OU) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -217,7 +218,10 @@ export async function executeG3GrantAdminPrivileges(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-2 (Create Service Account) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
+        },
       };
     }
     const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
@@ -389,7 +393,8 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-8 (Retrieve Azure Idp Metadata) and G-5 completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -437,7 +442,8 @@ export async function executeG7AssignGoogleSamlToRootOu(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-6 (Update Google SAML Profile with Azure IdP) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -474,7 +480,8 @@ export async function executeG8ExcludeAutomationOuFromSso(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-7 (Assign Google SAML Profile to Root OU) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -534,9 +541,7 @@ export async function executeM1CreateProvisioningApp(
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl =
-            process.env.SHOW_APP_REGISTRATIONS === "true"
-              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
-              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for provisioning already exists.`,
@@ -558,9 +563,7 @@ export async function executeM1CreateProvisioningApp(
       success: true,
       message: `Enterprise app '${appName}' created.`,
       resourceUrl:
-        process.env.SHOW_APP_REGISTRATIONS === "true"
-          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
-          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+        `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: result.application.id,
@@ -588,7 +591,8 @@ export async function executeM2ConfigureProvisioningAppProperties(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-1 (Create Provisioning App) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -601,9 +605,7 @@ export async function executeM2ConfigureProvisioningAppProperties(
       accountEnabled: true,
     });
     const resourceUrl =
-      process.env.SHOW_APP_REGISTRATIONS === "true"
-        ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`
-        : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${appId}/objectId/${spObjectId}`;
+      `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spObjectId}/appId/${appId}`;
     return {
       success: true,
       message: "Provisioning app service principal enabled.",
@@ -632,7 +634,8 @@ export async function executeM3AuthorizeProvisioningConnection(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-S0 (Get Google Secret Token) and M-2 completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -711,7 +714,8 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-3 (Authorize Provisioning Connection) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -839,7 +843,8 @@ export async function executeM5StartProvisioningJob(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-4 (Configure Provisioning Attribute Mappings) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -891,9 +896,7 @@ export async function executeM6CreateSamlSsoApp(
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl =
-            process.env.SHOW_APP_REGISTRATIONS === "true"
-              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
-              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for SAML SSO already exists.`,
@@ -915,9 +918,7 @@ export async function executeM6CreateSamlSsoApp(
       success: true,
       message: `Enterprise app '${appName}' for SAML SSO created.`,
       resourceUrl:
-        process.env.SHOW_APP_REGISTRATIONS === "true"
-          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
-          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+        `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.application.id,
@@ -949,7 +950,10 @@ export async function executeM7ConfigureAzureSamlAppSettings(
       if (!context.domain) missing.push("domain");
       return {
         success: false,
-        error: { message: `Missing required outputs: ${missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${missing.join(", ")}. Ensure M-6 (Create SAML SSO App) and G-5 completed successfully.`,
+          code: "MISSING_DEPENDENCY",
+        },
       };
     }
     const appObjectId = context.outputs[
@@ -1010,7 +1014,8 @@ export async function executeM8RetrieveAzureIdpMetadata(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-7 (Configure Azure SAML App Settings) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
@@ -1052,7 +1057,8 @@ export async function executeM9AssignUsersToAzureSsoApp(
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure M-6 (Create SAML SSO App) completed successfully.`,
+          code: "MISSING_DEPENDENCY",
         },
       };
     }
