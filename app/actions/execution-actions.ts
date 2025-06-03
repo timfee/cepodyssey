@@ -671,6 +671,17 @@ export async function executeM3AuthorizeProvisioningConnection(
     ] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
+    if (googleSecretToken.length < 50 || googleSecretToken.includes(" ")) {
+      return {
+        success: false,
+        error: {
+          message:
+            "The Google provisioning token appears to be invalid. Please ensure you copied the entire token without any spaces.",
+          code: "INVALID_TOKEN_FORMAT",
+        },
+      };
+    }
+
     let jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
       | string
       | undefined;
@@ -721,7 +732,7 @@ export async function executeM3AuthorizeProvisioningConnection(
     return {
       success: true,
       message:
-        "Provisioning job created/found and connection authorized. Use 'Test Connection' in Azure Portal to verify.",
+        "Provisioning job created/found and connection authorized. The connection will be tested when you start the provisioning job. If the test fails, verify the token was copied correctly.",
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_JOB_ID]: jobId,
         [OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED]: true,
@@ -729,6 +740,16 @@ export async function executeM3AuthorizeProvisioningConnection(
       resourceUrl,
     };
   } catch (e) {
+    if (e instanceof APIError && e.message?.includes("InvalidCredentials")) {
+      return {
+        success: false,
+        error: {
+          message:
+            "The Google provisioning token is invalid or expired. Please get a new token from Google Admin Console (step G-S0) and try again.",
+          code: "INVALID_CREDENTIALS",
+        },
+      };
+    }
     return handleExecutionError(e, "M-3");
   }
 }
