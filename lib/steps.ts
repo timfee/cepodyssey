@@ -51,6 +51,10 @@ export const allStepDefinitions: StepDefinition[] = [
       checkOrgUnitExists("/Automation"),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG1CreateAutomationOu(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/orgunits",
+      verify: "https://admin.google.com/ac/orgunits",
+    },
   },
   {
     id: "G-S0",
@@ -79,6 +83,10 @@ export const allStepDefinitions: StepDefinition[] = [
         "In Google Workspace Admin Console (admin.google.com):\n1. Navigate: Apps > Web and mobile apps.\n2. Click 'Add app' > 'Add custom SAML app' (this path often leads to provisioning settings, or search directly for 'Automatic user provisioning').\n3. Find and enable 'Automatic user provisioning'.\n4. Securely copy the generated 'Access token' (this is the 'Secret Token').\n5. The 'Tenant URL' for Azure AD setup will be 'https://www.googleapis.com/admin/directory/v1.12/scim'.\n6. Input the copied Access Token into this tool's UI for step M-3 (the UI for this step should handle saving it to outputs).",
       resourceUrl: "https://admin.google.com/ac/apps/unified#/settings/scim",
     }),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/apps/unified#/settings/scim",
+      verify: "https://admin.google.com/ac/apps/unified#/settings/scim",
+    },
   },
   {
     id: "G-4",
@@ -98,6 +106,10 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG4AddAndVerifyDomain(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/domains/manage",
+      verify: "https://admin.google.com/ac/domains/manage",
+    },
   },
   {
     id: "G-5",
@@ -111,6 +123,10 @@ export const allStepDefinitions: StepDefinition[] = [
       checkGoogleSamlProfileDetails("Azure AD SSO", true, undefined),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG5InitiateGoogleSamlProfile(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/sso",
+      verify: "https://admin.google.com/ac/sso",
+    },
   },
 
   // --- Phase 2: Azure AD - App 1 (User Provisioning) ---
@@ -136,6 +152,17 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM1CreateProvisioningApp(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] &&
+        outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]}`
+          : "https://portal.azure.com/#view/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/~/AppAppsPreview",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
+          : null,
+    },
   },
   {
     id: "M-2",
@@ -159,6 +186,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM2ConfigureProvisioningAppProperties(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] && outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
+          : null,
+    },
   },
   {
     id: "M-3",
@@ -202,6 +239,16 @@ export const allStepDefinitions: StepDefinition[] = [
       }
       return executeM3AuthorizeProvisioningConnection(context);
     },
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+    },
   },
   {
     id: "M-4",
@@ -227,6 +274,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM4ConfigureProvisioningAttributeMappings(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+    },
   },
   {
     id: "M-5",
@@ -275,6 +332,16 @@ export const allStepDefinitions: StepDefinition[] = [
       }
       return result;
     },
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}`
+          : null,
+    },
   },
 
   // --- Phase 3: Azure AD - App 2 (SAML SSO) ---
@@ -300,6 +367,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM6CreateSamlSsoApp(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] && outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]}`
+          : null,
+    },
   },
   {
     id: "M-7",
@@ -334,6 +411,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM7ConfigureAzureSamlAppSettings(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}/~/SingleSignOn`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}/~/SingleSignOn`
+          : null,
+    },
   },
   {
     id: "M-8",
@@ -360,6 +447,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM8RetrieveAzureIdpMetadata(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}/~/SingleSignOn`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}/~/SingleSignOn`
+          : null,
+    },
   },
 
   // --- Phase 4: Finalize SSO in Google Workspace ---
@@ -398,6 +495,10 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG6UpdateGoogleSamlWithAzureIdp(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/sso",
+      verify: "https://admin.google.com/ac/sso",
+    },
   },
   {
     id: "G-7",
@@ -440,6 +541,10 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG7AssignGoogleSamlToRootOu(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/sso",
+      verify: "https://admin.google.com/ac/sso",
+    },
   },
   {
     id: "G-8",
@@ -479,6 +584,10 @@ export const allStepDefinitions: StepDefinition[] = [
         };
       return executeG8ExcludeAutomationOuFromSso(context);
     },
+    adminUrls: {
+      configure: "https://admin.google.com/ac/sso",
+      verify: "https://admin.google.com/ac/sso",
+    },
   },
 
   // --- Phase 5: Azure AD - Finalize SSO App ---
@@ -504,6 +613,16 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM9AssignUsersToAzureSsoApp(context),
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/UsersAndGroups/servicePrincipalId/${outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}`
+          : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/UsersAndGroups/servicePrincipalId/${outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}`
+          : null,
+    },
   },
 
   // --- Phase 6: Testing ---
@@ -526,6 +645,10 @@ export const allStepDefinitions: StepDefinition[] = [
         "Test SSO: \n1. Open a new Incognito/Private browser window. \n2. Navigate to a Google service (e.g., mail.google.com for Workspace, or console.cloud.google.com for GCP). \n3. When prompted for login, enter the full email address (UPN) of an Azure AD user assigned to the SAML SSO application in Azure AD (and ideally provisioned to Google Workspace). \n4. You should be redirected to Azure AD for login. \n5. After successful Azure AD login, you should be redirected back and logged into the Google service. \nVerify access and correct user identity.",
       resourceUrl: "https://myapps.microsoft.com",
     }),
+    adminUrls: {
+      configure: "https://myapps.microsoft.com",
+      verify: "https://myapps.microsoft.com",
+    },
   },
 ];
 

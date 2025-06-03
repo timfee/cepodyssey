@@ -70,6 +70,19 @@ export interface StepDefinition {
   requires?: string[];
   check?: (context: StepContext) => Promise<StepCheckResult>;
   execute: (context: StepContext) => Promise<StepExecutionResult>;
+  /**
+   * Optional deep links to relevant admin console locations. These may be
+   * provided as static strings or as functions that derive URLs from any
+   * previously captured step outputs.
+   */
+  adminUrls?: {
+    configure?:
+      | string
+      | ((outputs: Record<string, unknown>) => string | null | undefined);
+    verify?:
+      | string
+      | ((outputs: Record<string, unknown>) => string | null | undefined);
+  };
 }
 
 /**

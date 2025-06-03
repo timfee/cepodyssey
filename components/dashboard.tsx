@@ -17,6 +17,7 @@ import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
 import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions, getStepActions } from "@/lib/steps";
+import { useAutoCheck } from "@/hooks/use-auto-check";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
   StepCheckResult,
@@ -259,6 +260,49 @@ export function AutomationDashboard({
     },
     [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId]
   );
+
+  const executeCheck = useCallback(
+    async (stepId: string) => {
+      const definition = allStepDefinitions.find((s) => s.id === stepId);
+      if (!definition?.check) return;
+
+      if (!appConfig.domain || !appConfig.tenantId) return;
+
+      const context: StepContext = {
+        domain: appConfig.domain,
+        tenantId: appConfig.tenantId,
+        outputs: store.getState().appConfig.outputs,
+      };
+
+      try {
+        const checkResult = await definition.check(context);
+
+        if (checkResult.outputs) {
+          dispatch(addOutputs(checkResult.outputs));
+        }
+
+        if (checkResult.completed) {
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: 'completed',
+              message: checkResult.message || 'Pre-existing resource found',
+              metadata: {
+                preExisting: true,
+                checkedAt: new Date().toISOString(),
+                ...(checkResult.outputs || {}),
+              },
+            })
+          );
+        }
+      } catch (error) {
+        console.error(`Auto-check failed for ${stepId}:`, error);
+      }
+    },
+    [appConfig.domain, appConfig.tenantId, dispatch, store]
+  );
+
+  useAutoCheck(executeCheck);
 
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) {
