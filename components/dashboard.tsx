@@ -315,6 +315,12 @@ export function AutomationDashboard({
     const completedSteps = Object.values(stepsStatusMap).filter(
       (s) => s.status === "completed",
     ).length;
+
+    const manualSteps = allStepDefinitions.filter((s) => !s.automatable);
+    const completedManualSteps = manualSteps.filter(
+      (s) => stepsStatusMap[s.id]?.status === "completed",
+    ).length;
+
     const progressPercent = (completedSteps / totalSteps) * 100;
 
     return (
@@ -328,6 +334,11 @@ export function AutomationDashboard({
               <div className="flex justify-between text-sm mb-2">
                 <span>
                   {completedSteps} of {totalSteps} steps completed
+                  {manualSteps.length > 0 && (
+                    <span className="text-muted-foreground ml-2">
+                      ({completedManualSteps}/{manualSteps.length} manual)
+                    </span>
+                  )}
                 </span>
                 <span className="font-medium">
                   {Math.round(progressPercent)}%
