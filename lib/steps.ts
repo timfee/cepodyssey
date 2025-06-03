@@ -53,7 +53,7 @@ export const allStepDefinitions: StepDefinition[] = [
       "Creates an Organizational Unit (OU) named 'Automation' in Google Workspace. This can be useful for applying specific settings or housing accounts related to automated processes, although this tool primarily operates using the logged-in administrator's permissions.",
     category: "Google",
     automatable: true,
-    requires: ["G-3"],
+    requires: [],
     check: (_context: StepContext): Promise<StepCheckResult> =>
       checkOrgUnitExists("/Automation"),
     execute: (context: StepContext): Promise<StepExecutionResult> =>

@@ -11,14 +11,46 @@ export class AuthenticationError extends APIError {
   }
 }
 
+// More comprehensive error patterns
+const AUTH_ERROR_PATTERNS = {
+  google: [
+    /invalid authentication credentials/i,
+    /OAuth 2 access token/i,
+    /login cookie or other valid authentication credential/i,
+    /Token has been expired or revoked/i,
+    /Request had insufficient authentication scopes/i,
+    /401 Unauthorized/i,
+  ],
+  microsoft: [
+    /InvalidAuthenticationToken/i,
+    /Access token validation failure/i,
+    /Token expired/i,
+    /CompactToken parsing failed/i,
+    /unauthorized_client/i,
+    /invalid_grant/i,
+  ],
+} as const;
+
 export function isAuthenticationError(error: unknown): error is AuthenticationError {
-  return (
-    error instanceof AuthenticationError ||
-    (error instanceof APIError &&
-      (error.status === 401 ||
-        error.message?.includes("invalid authentication credentials") ||
-        error.message?.includes("OAuth 2 access token")))
-  );
+  if (error instanceof AuthenticationError) return true;
+
+  if (error instanceof APIError) {
+    // Check numeric and string status codes
+    if (error.status === 401 || error.code === "401" || Number(error.code) === 401) {
+      return true;
+    }
+
+    // Check error message patterns
+    if (error.message) {
+      const errorMessage = error.message.toLowerCase();
+      return (
+        AUTH_ERROR_PATTERNS.google.some((pattern) => pattern.test(errorMessage)) ||
+        AUTH_ERROR_PATTERNS.microsoft.some((pattern) => pattern.test(errorMessage))
+      );
+    }
+  }
+
+  return false;
 }
 
 export function wrapAuthError(error: unknown, provider: "google" | "microsoft"): AuthenticationError {
