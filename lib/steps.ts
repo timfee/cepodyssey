@@ -143,8 +143,20 @@ export const allStepDefinitions: StepDefinition[] = [
     execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
       success: true,
       message:
-        "In Google Workspace Admin Console (admin.google.com):\n1. Navigate: Apps > Web and mobile apps.\n2. Click 'Add app' > 'Add custom SAML app' (this path often leads to provisioning settings, or search directly for 'Automatic user provisioning').\n3. Find and enable 'Automatic user provisioning'.\n4. Securely copy the generated 'Access token' (this is the 'Secret Token').\n5. The 'Tenant URL' for Azure AD setup will be 'https://www.googleapis.com/admin/directory/v1.12/scim'.\n6. Input the copied Access Token into this tool's UI for step M-3 (the UI for this step should handle saving it to outputs).",
-      resourceUrl: "https://admin.google.com/ac/apps/unified#/settings/scim",
+        "To get the Google Secret Token for provisioning:\n\n" +
+        "1. Sign in to Google Admin Console (admin.google.com)\n" +
+        "2. Navigate to: Apps > Web and mobile apps\n" +
+        "3. Click 'Add app' > 'Add custom SAML app'\n" +
+        "4. Enter a temporary name (e.g., 'Azure AD Provisioning Setup')\n" +
+        "5. On 'Google Identity Provider details', click 'Continue'\n" +
+        "6. On 'Service provider details', click 'Continue'\n" +
+        "7. On 'Attribute mapping', click 'Continue'\n" +
+        "8. On the final page, look for 'Automatic user provisioning' section\n" +
+        "9. Click 'SET UP AUTOMATIC USER PROVISIONING'\n" +
+        "10. Copy the 'Authorization token' value - this is your Secret Token\n" +
+        "11. Save this token securely - you'll need it for step M-3\n\n" +
+        "Note: The app you create here is temporary. The actual SSO will be configured later.",
+      resourceUrl: "https://admin.google.com/ac/apps/unified",
     }),
     adminUrls: {
       configure: "https://admin.google.com/ac/apps/unified#/settings/scim",

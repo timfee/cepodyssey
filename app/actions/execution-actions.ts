@@ -10,9 +10,19 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
 import { validateRequiredOutputs } from "@/lib/utils";
 
-// Azure Portal URL Structure
-// - Microsoft_AAD_RegisteredApps/ApplicationMenuBlade -> App Registration view
-// - Microsoft_AAD_IAM/ManagedAppMenuBlade -> Enterprise Application view
+/**
+ * Azure Portal URL Reference:
+ *
+ * Gallery apps from Azure AD create both an App Registration and Enterprise Application.
+ * ALL configuration for gallery apps happens in the Enterprise Application interface:
+ *
+ * - Overview: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/{spId}/appId/{appId}
+ * - Provisioning: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/{appId}/objectId/{spId}
+ * - Single Sign-On: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/{appId}/objectId/{spId}
+ * - Users/Groups: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/{spId}/appId/{appId}
+ *
+ * Note: Microsoft uses inconsistent parameter names (servicePrincipalId vs objectId) across blades.
+ */
 
 /**
  * Convert an unexpected error into a standardized execution result.
@@ -100,9 +110,14 @@ export async function executeG1CreateAutomationOu(
     if (typeof result === "object" && "alreadyExists" in result) {
       const existingOu = await google.getOrgUnit(googleToken, "/Automation");
       if (!existingOu?.orgUnitId || !existingOu?.orgUnitPath) {
-        throw new Error(
-          "OU 'Automation' reported as existing but could not be fetched.",
-        );
+        return {
+          success: false,
+          error: {
+            message:
+              "Google reported the 'Automation' organizational unit already exists, but its details could not be retrieved. Delete any partial OU in the Admin console and rerun step G-1.",
+            code: "OU_FETCH_FAILED",
+          },
+        };
       }
       const resourceUrl = existingOu.orgUnitPath
         ? `https://admin.google.com/ac/orgunits#path=${encodeURIComponent(existingOu.orgUnitPath)}`
@@ -323,9 +338,13 @@ export async function executeG5InitiateGoogleSamlProfile(
         !existingProfile.spConfig?.spEntityId ||
         !existingProfile.spConfig?.assertionConsumerServiceUrl
       ) {
-        throw new Error(
-          `SAML Profile '${profileDisplayName}' reported existing but details (name, SP Entity ID, ACS URL) not fetched.`,
-        );
+        return {
+          success: false,
+          error: {
+            message: `SAML Profile '${profileDisplayName}' appears to exist but required details could not be retrieved from Google. Remove any partial profile in the Admin Console and rerun step G-5.`,
+            code: "SAML_PROFILE_FETCH_FAILED",
+          },
+        };
       }
       const profileId = existingProfile.name.split("/").pop();
       const resourceUrl = profileId
@@ -350,9 +369,14 @@ export async function executeG5InitiateGoogleSamlProfile(
       !result.spConfig?.spEntityId ||
       !result.spConfig?.assertionConsumerServiceUrl
     ) {
-      throw new Error(
-        "Created Google SAML profile is missing expected details (name, SP Entity ID, ACS URL).",
-      );
+      return {
+        success: false,
+        error: {
+          message:
+            "Google did not return the expected SAML profile details after creation. Delete the profile in the Admin Console and rerun step G-5.",
+          code: "SAML_PROFILE_MISSING_DETAILS",
+        },
+      };
     }
     const profileId = result.name.split("/").pop();
     const resourceUrl = profileId
@@ -662,13 +686,25 @@ export async function executeM3AuthorizeProvisioningConnection(
         );
         const googleAppsJob = jobs.find((j) => j.templateId === "GoogleApps");
         if (!googleAppsJob?.id)
-          throw new Error(
-            "Provisioning job reported as existing but its ID could not be determined.",
-          );
+          return {
+            success: false,
+            error: {
+              message:
+                "Azure reported a provisioning job already exists but its ID could not be retrieved. Delete any existing job in the Azure portal or clear this tool's state, then rerun step M-3.",
+              code: "PROV_JOB_ID_NOT_FOUND",
+            },
+          };
         jobId = googleAppsJob.id;
       } else {
         if (!jobResult.id)
-          throw new Error("Provisioning job creation did not return an ID.");
+          return {
+            success: false,
+            error: {
+              message:
+                "Provisioning job was created but Azure did not return a job ID. Delete the provisioning job in Azure and retry step M-3.",
+              code: "PROV_JOB_ID_MISSING",
+            },
+          };
         jobId = jobResult.id;
       }
     }

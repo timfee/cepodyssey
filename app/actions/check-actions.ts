@@ -362,7 +362,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
       completed: false,
       message: sp
         ? "Service Principal is not enabled."
-        : "Service Principal not found.",
+        : "Service Principal not found. Ensure step M-1 (Create Provisioning App) completed successfully. If the Enterprise Application was removed in Azure, clear this tool's state and start over.",
     };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
