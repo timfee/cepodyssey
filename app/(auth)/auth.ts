@@ -352,9 +352,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       const now = Date.now();
       let tokenNeedsUpdateInStore = false;
+      const bufferTime = 5 * 60 * 1000;
       if (
         finalToken.googleAccessToken &&
-        (finalToken.googleExpiresAt ?? 0) < now
+        (finalToken.googleExpiresAt ?? 0) - bufferTime < now
       ) {
         if (finalToken.googleRefreshToken) {
           finalToken = await refreshGoogleToken(finalToken);
@@ -366,7 +367,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       if (
         finalToken.microsoftAccessToken &&
-        (finalToken.microsoftExpiresAt ?? 0) < now
+        (finalToken.microsoftExpiresAt ?? 0) - bufferTime < now
       ) {
         if (finalToken.microsoftRefreshToken) {
           finalToken = await refreshMicrosoftToken(finalToken);

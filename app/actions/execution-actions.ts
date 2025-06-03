@@ -4,6 +4,7 @@ import { auth } from "@/app/(auth)/auth";
 import * as google from "@/lib/api/google";
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
+import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
@@ -29,6 +30,15 @@ async function handleExecutionError(
     `Execution Action Failed (Step ${stepId || "Unknown"}):`,
     error,
   );
+  if (isAuthenticationError(error)) {
+    return {
+      success: false,
+      error: {
+        message: error.message,
+        code: "AUTH_EXPIRED",
+      },
+    };
+  }
   if (error instanceof APIError) {
     return {
       success: false,
