@@ -47,7 +47,7 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: [],
-    check: (context: StepContext): Promise<StepCheckResult> =>
+    check: (_context: StepContext): Promise<StepCheckResult> =>
       checkOrgUnitExists("/Automation"),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG1CreateAutomationOu(context),
@@ -73,7 +73,7 @@ export const allStepDefinitions: StepDefinition[] = [
               "Secret Token needed. Follow instructions to retrieve and enter it into this tool.",
           };
     },
-    execute: async (context: StepContext): Promise<StepExecutionResult> => ({
+    execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
       success: true,
       message:
         "In Google Workspace Admin Console (admin.google.com):\n1. Navigate: Apps > Web and mobile apps.\n2. Click 'Add app' > 'Add custom SAML app' (this path often leads to provisioning settings, or search directly for 'Automatic user provisioning').\n3. Find and enable 'Automatic user provisioning'.\n4. Securely copy the generated 'Access token' (this is the 'Secret Token').\n5. The 'Tenant URL' for Azure AD setup will be 'https://www.googleapis.com/admin/directory/v1.12/scim'.\n6. Input the copied Access Token into this tool's UI for step M-3 (the UI for this step should handle saving it to outputs).",
@@ -107,7 +107,7 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-4"],
-    check: (context: StepContext): Promise<StepCheckResult> =>
+    check: (_context: StepContext): Promise<StepCheckResult> =>
       checkGoogleSamlProfileDetails("Azure AD SSO", true, undefined),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeG5InitiateGoogleSamlProfile(context),
@@ -515,12 +515,12 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: false,
     requires: ["G-7", "M-9"],
-    check: async (context: StepContext): Promise<StepCheckResult> => ({
+    check: async (_context: StepContext): Promise<StepCheckResult> => ({
       completed: false,
       message:
         "Manual verification by administrator is required for SSO testing.",
     }),
-    execute: async (context: StepContext): Promise<StepExecutionResult> => ({
+    execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
       success: true,
       message:
         "Test SSO: \n1. Open a new Incognito/Private browser window. \n2. Navigate to a Google service (e.g., mail.google.com for Workspace, or console.cloud.google.com for GCP). \n3. When prompted for login, enter the full email address (UPN) of an Azure AD user assigned to the SAML SSO application in Azure AD (and ideally provisioned to Google Workspace). \n4. You should be redirected to Azure AD for login. \n5. After successful Azure AD login, you should be redirected back and logged into the Google service. \nVerify access and correct user identity.",

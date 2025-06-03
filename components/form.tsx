@@ -3,18 +3,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
-import React, { useEffect, useState, useTransition } from "react"; // Imported React
+import React, { useEffect, useState, useTransition } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { lookupTenantId } from "@/app/actions/auth-actions";
 import { saveConfig } from "@/app/actions/config-actions";
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux"; // Corrected path
-import {
-  setDomain, // Corrected import name from appConfigSlice
-  setTenantId, // Corrected import name from appConfigSlice
-} from "@/lib/redux/slices/app-config"; // Corrected slice name
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { setDomain, setTenantId } from "@/lib/redux/slices/app-config";
 import type { RootState } from "@/lib/redux/store";
 
 import { Button } from "@/components/ui/button";
@@ -38,7 +35,7 @@ const configFormSchema = z.object({
     .regex(DOMAIN_REGEX, "Invalid domain format. Example: yourcompany.com"),
   tenantId: z
     .string()
-    .min(1, "Tenant ID is required.") // Making Tenant ID effectively required for saving.
+    .min(1, "Tenant ID is required.")
     .uuid("Invalid Tenant ID format. Must be a UUID."),
 });
 type ConfigFormData = z.infer<typeof configFormSchema>;
@@ -53,50 +50,75 @@ export function ConfigForm() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
 
-  const form = useForm<ConfigFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    setError,
+    clearErrors,
+    reset,
+    formState: { errors, isDirty, isValid: isFormValid },
+  } = useForm<ConfigFormData>({
     resolver: zodResolver(configFormSchema),
     defaultValues: {
-      // defaultValues are only used for the initial render.
-      domain: currentAppConfig.domain ?? "",
-      tenantId: currentAppConfig.tenantId ?? "",
+      // Set initial defaults
+      domain: "",
+      tenantId: "",
     },
     mode: "onBlur",
   });
 
-  // Effect to explicitly update/reset form values when Redux state changes.
-  // This ensures the form displays the Redux state if it's populated from server/login.
   useEffect(() => {
-    if (!form.formState.isDirty) {
-      // Only reset if user isn't actively editing
-      form.reset({
-        domain: currentAppConfig.domain ?? "",
-        tenantId: currentAppConfig.tenantId ?? "",
-      });
+    console.log(
+      "ConfigForm: currentAppConfig changed in Redux:",
+      currentAppConfig
+    );
+    // Only reset if the form is not dirty, or if the Redux values are substantially different
+    // and might have come from a server load.
+    if (currentAppConfig.domain || currentAppConfig.tenantId) {
+      // Only reset if there's something to set
+      if (
+        !isDirty ||
+        currentAppConfig.domain !== watch("domain") ||
+        currentAppConfig.tenantId !== watch("tenantId")
+      ) {
+        console.log("ConfigForm: Resetting form with values from Redux:", {
+          domain: currentAppConfig.domain ?? "",
+          tenantId: currentAppConfig.tenantId ?? "",
+        });
+        reset({
+          domain: currentAppConfig.domain ?? "",
+          tenantId: currentAppConfig.tenantId ?? "",
+        });
+      }
     }
   }, [
     currentAppConfig.domain,
     currentAppConfig.tenantId,
-    form,
-    form.formState.isDirty,
+    reset,
+    isDirty,
+    watch,
+    currentAppConfig,
   ]);
 
-  const watchedDomain = form.watch("domain");
+  const watchedDomain = watch("domain");
 
   const handleLookup = async () => {
-    const currentDomainValue = form.getValues("domain");
+    const currentDomainValue = watch("domain"); // Use watched value
     if (!currentDomainValue || !DOMAIN_REGEX.test(currentDomainValue)) {
       toast.error("Please enter a valid domain to look up the Tenant ID.");
-      form.setError("domain", {
+      setError("domain", {
         type: "manual",
         message: "Valid domain required for lookup.",
       });
       return;
     }
-    form.clearErrors("domain");
+    clearErrors("domain");
     setIsLookingUp(true);
     const result = await lookupTenantId(currentDomainValue);
     if (result.success && result.tenantId) {
-      form.setValue("tenantId", result.tenantId, {
+      setValue("tenantId", result.tenantId, {
         shouldValidate: true,
         shouldDirty: true,
       });
@@ -104,7 +126,7 @@ export function ConfigForm() {
       toast.success(result.message || "Tenant ID discovered!");
     } else {
       toast.error(result.message || "Tenant ID lookup failed.");
-      form.setError("tenantId", {
+      setError("tenantId", {
         type: "lookup",
         message: result.message || "Could not auto-discover.",
       });
@@ -114,25 +136,13 @@ export function ConfigForm() {
   };
 
   const onSubmit: SubmitHandler<ConfigFormData> = (data) => {
-    // Ensure tenantId is truly a UUID string if provided, or handle optional case if schema allows
-    if (!data.tenantId && !process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID) {
-      toast.error(
-        "Microsoft Tenant ID is required. Please enter or look it up."
-      );
-      form.setError("tenantId", {
-        type: "manual",
-        message: "Tenant ID is required.",
-      });
-      return;
-    }
-
     startSubmitTransition(async () => {
       dispatch(setDomain(data.domain));
-      dispatch(setTenantId(data.tenantId)); // Dispatch the validated tenantId
+      dispatch(setTenantId(data.tenantId));
 
       const serverSaveResult = await saveConfig({
         domain: data.domain,
-        tenantId: data.tenantId, // Send the validated tenantId
+        tenantId: data.tenantId,
         outputs: currentAppConfig.outputs, // Persist existing outputs
       });
 
@@ -140,7 +150,7 @@ export function ConfigForm() {
         toast.success(
           serverSaveResult.message ?? "Configuration saved successfully!"
         );
-        form.reset(data); // Reset form with submitted data, clearing isDirty
+        reset(data); // Reset form to clear dirty state after successful save
       } else {
         toast.error(
           serverSaveResult.error?.message ??
@@ -152,33 +162,30 @@ export function ConfigForm() {
 
   return (
     <Card className="mb-6">
-      {" "}
-      {/* Added mb-6 as per your new `project-code.md` which showed it on auth-status */}
       <CardHeader>
         <CardTitle className="text-xl">Initial Configuration</CardTitle>
         <CardDescription>
           Provide your primary Google Workspace domain and Microsoft Entra ID
-          Tenant ID. This information is required to proceed with the
-          automation.
+          Tenant ID.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-1.5">
             <Label htmlFor="domain">Primary Google Workspace Domain</Label>
             <Input
               id="domain"
               placeholder="yourcompany.com"
-              {...form.register("domain")}
+              {...register("domain")}
               className={
-                form.formState.errors.domain
+                errors.domain
                   ? "border-destructive focus-visible:ring-destructive"
                   : ""
               }
             />
-            {form.formState.errors.domain && (
+            {errors.domain && (
               <p className="text-sm text-destructive mt-1">
-                {form.formState.errors.domain.message}
+                {errors.domain.message}
               </p>
             )}
           </div>
@@ -190,21 +197,21 @@ export function ConfigForm() {
                 <Input
                   id="tenantId"
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                  {...form.register("tenantId")}
+                  {...register("tenantId")}
                   className={`${
-                    form.formState.errors.tenantId
+                    errors.tenantId
                       ? "border-destructive focus-visible:ring-destructive"
                       : ""
                   } ${
-                    isTenantDiscovered && !form.formState.errors.tenantId
+                    isTenantDiscovered && !errors.tenantId
                       ? "border-green-500"
                       : ""
                   }`}
                   onInput={() => setIsTenantDiscovered(false)}
                 />
-                {form.formState.errors.tenantId && (
+                {errors.tenantId && (
                   <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.tenantId.message}
+                    {errors.tenantId.message}
                   </p>
                 )}
               </div>
@@ -216,7 +223,7 @@ export function ConfigForm() {
                   isSubmitting ||
                   isLookingUp ||
                   !watchedDomain ||
-                  !!form.formState.errors.domain
+                  !!errors.domain
                 }
                 className="shrink-0"
               >
@@ -230,15 +237,13 @@ export function ConfigForm() {
               currentAppConfig.tenantId ===
                 process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Tenant ID is pre-configured for this application instance.
+                  Tenant ID is pre-configured for this application.
                 </p>
               )}
           </div>
           <Button
             type="submit"
-            disabled={
-              isSubmitting || !form.formState.isDirty || !form.formState.isValid
-            }
+            disabled={isSubmitting || !isDirty || !isFormValid}
           >
             {isSubmitting && (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />

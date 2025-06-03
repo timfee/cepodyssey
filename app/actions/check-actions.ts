@@ -1,11 +1,12 @@
+// ./app/actions/check-actions.ts
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
-import * as google from "@/lib/api/google";
+import * as google from "@/lib/api/google"; // Assumes API helpers are in lib/api/
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
 import type { StepCheckResult } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types"; // Corrected import path
 import type * as MicrosoftGraph from "microsoft-graph";
 
 async function getAuthenticatedTokens(
@@ -81,7 +82,12 @@ export async function checkDomainVerified(
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
     const domainDetails = await google.getDomain(googleToken!, domain);
-    const isVerified = !!domainDetails?.verified;
+    const isVerified = !!(
+      typeof domainDetails === "object" &&
+      domainDetails &&
+      "verified" in domainDetails &&
+      domainDetails.verified
+    );
     return {
       completed: isVerified,
       message: isVerified
@@ -103,36 +109,52 @@ export async function checkDomainVerified(
 }
 
 export async function checkGoogleSamlProfileDetails(
-  profileDisplayName: string,
+  profileDisplayNameOrFullName: string,
   checkExistsOnly: boolean,
   expectedIdpEntityId?: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
-    const profiles = await google.listSamlProfiles(googleToken!);
-    const profile = profiles.find((p) => p.displayName === profileDisplayName);
+    let profile: google.InboundSamlSsoProfile | null = null;
+
+    if (profileDisplayNameOrFullName.startsWith("inboundSamlSsoProfiles/")) {
+      profile = await google.getSamlProfile(
+        googleToken!,
+        profileDisplayNameOrFullName
+      );
+    } else {
+      const profiles = await google.listSamlProfiles(googleToken!);
+      profile =
+        profiles.find((p) => p.displayName === profileDisplayNameOrFullName) ??
+        null;
+    }
 
     if (!profile?.name) {
       return {
         completed: false,
-        message: `SAML Profile named '${profileDisplayName}' not found.`,
+        message: `SAML Profile '${profileDisplayNameOrFullName}' not found.`,
       };
     }
 
-    const outputs = {
+    const outputs: Record<string, unknown> = {
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
-      [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: profile.spConfig?.spEntityId,
-      [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
-        profile.spConfig?.assertionConsumerServiceUrl,
       ssoMode: profile.ssoMode,
       idpEntityId: profile.idpConfig?.idpEntityId,
     };
+    if (profile.spConfig?.spEntityId) {
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] =
+        profile.spConfig.spEntityId;
+    }
+    if (profile.spConfig?.assertionConsumerServiceUrl) {
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] =
+        profile.spConfig.assertionConsumerServiceUrl;
+    }
 
     if (checkExistsOnly) {
       return {
         completed: true,
-        message: `SAML Profile '${profileDisplayName}' exists.`,
+        message: `SAML Profile '${profile.displayName}' exists.`,
         outputs,
       };
     }
@@ -148,7 +170,7 @@ export async function checkGoogleSamlProfileDetails(
     if (!isConfigured) {
       return {
         completed: false,
-        message: `SAML Profile '${profileDisplayName}' found but is not fully configured with IdP details or not enabled.`,
+        message: `SAML Profile '${profile.displayName}' found but is not fully configured with IdP details or not enabled.`,
         outputs,
       };
     }
@@ -159,14 +181,14 @@ export async function checkGoogleSamlProfileDetails(
     ) {
       return {
         completed: false,
-        message: `SAML Profile '${profileDisplayName}' is configured with IdP '${profile.idpConfig?.idpEntityId}', not the expected '${expectedIdpEntityId}'.`,
+        message: `SAML Profile '${profile.displayName}' is configured with IdP '${profile.idpConfig?.idpEntityId}', not the expected '${expectedIdpEntityId}'.`,
         outputs,
       };
     }
 
     return {
       completed: true,
-      message: `SAML Profile '${profileDisplayName}' is correctly configured${
+      message: `SAML Profile '${profile.displayName}' is correctly configured${
         expectedIdpEntityId ? ` with IdP '${expectedIdpEntityId}'` : ""
       } and enabled.`,
       outputs,
@@ -174,50 +196,51 @@ export async function checkGoogleSamlProfileDetails(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check SAML Profile '${profileDisplayName}'.`
+      `Failed to check SAML Profile '${profileDisplayNameOrFullName}'.`
     );
   }
 }
 
 export async function checkMicrosoftServicePrincipal(
-  appId: string
+  appClientId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const sp = await microsoft.getServicePrincipalByAppId(
       microsoftToken!,
-      appId
+      appClientId
     );
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
       const applications = await microsoft.listApplications(
         microsoftToken!,
-        `appId eq '${appId}'`
+        `appId eq '${appClientId}'`
       );
       if (applications[0]?.id) {
         appObjectId = applications[0].id;
       }
+      // These outputs are generic for any SP found by appClientId.
+      // The calling lambda in lib/steps.ts will map these to specific OUTPUT_KEYS (e.g., PROVISIONING_SP_OBJECT_ID or SAML_SSO_SP_OBJECT_ID).
+      const outputs = {
+        spId: sp.id,
+        retrievedAppId: sp.appId,
+        appObjectId: appObjectId,
+        displayName: sp.displayName,
+      };
       return {
         completed: true,
-        message: `Service Principal for App ID '${appId}' found: ${sp.displayName}.`,
-        outputs: {
-          // Using dynamic keys based on App ID might be complex to consume.
-          // Consider using fixed keys if these outputs are for different types of apps (prov vs sso)
-          // For now, using a prefix based on the purpose, assuming appId is passed correctly.
-          [`${appId}_spId`]: sp.id,
-          [`${appId}_appId`]: sp.appId,
-          [`${appId}_appObjectId`]: appObjectId,
-        },
+        message: `Service Principal for App Client ID '${appClientId}' found: ${sp.displayName}.`,
+        outputs: outputs,
       };
     }
     return {
       completed: false,
-      message: `Service Principal for App ID '${appId}' not found.`,
+      message: `Service Principal for App Client ID '${appClientId}' not found.`,
     };
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check for Service Principal with App ID '${appId}'.`
+      `Failed to check for Service Principal with App Client ID '${appClientId}'.`
     );
   }
 }
@@ -278,24 +301,28 @@ export async function checkMicrosoftProvisioningJobDetails(
 
     if (jobToInspect?.id) {
       const jobState = jobToInspect.schedule?.state ?? "Unknown";
-      const lastExecutionError = jobToInspect.status?.lastExecution?.error; // Corrected property
+      const lastExecutionError = jobToInspect.status?.lastExecution?.error;
       let message = `Provisioning job '${jobToInspect.id}' found. State: ${jobState}.`;
       if (lastExecutionError?.message) {
         message += ` Last execution error: ${lastExecutionError.message}`;
       }
 
-      const credentialsLikelyOk = !lastExecutionError?.message
+      const credentialsLikelyOk = !lastExecutionError?.code
         ?.toLowerCase()
         .includes("invalidcredentials");
       const jobEffectivelyConfigured = !!jobToInspect.id && credentialsLikelyOk;
 
+      // Use the fixed OUTPUT_KEYS.PROVISIONING_JOB_ID for the job ID output.
+      // The calling step (e.g., M-3 or M-5 check) is specifically about the main provisioning app.
+      const outputs = {
+        [OUTPUT_KEYS.PROVISIONING_JOB_ID]: jobToInspect.id,
+        provisioningJobState: jobState,
+      };
+
       return {
         completed: jobEffectivelyConfigured,
         message,
-        outputs: {
-          [OUTPUT_KEYS.PROVISIONING_JOB_ID]: jobToInspect.id,
-          provisioningJobState: jobState,
-        },
+        outputs,
       };
     }
     return {
@@ -311,13 +338,12 @@ export async function checkMicrosoftProvisioningJobDetails(
     ) {
       return {
         completed: false,
-        message:
-          "Provisioning not configured for this application (no sync schema/job).",
+        message: "Provisioning not configured (no sync job/schema).",
       };
     }
     return handleCheckError(
       e,
-      `Failed to check provisioning job details for SP '${spObjectId}'.`
+      `Failed to check provisioning job for SP '${spObjectId}'.`
     );
   }
 }
@@ -361,7 +387,8 @@ export async function checkMicrosoftAttributeMappingsApplied(
     if (hasUserPrincipalNameToUserName && hasMailToEmail) {
       return {
         completed: true,
-        message: "Key default attribute mappings appear to be configured.",
+        message:
+          "Key default attribute mappings (UPN to userName, mail to work email) appear to be configured.",
       };
     }
     return {
@@ -427,28 +454,35 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 }
 
 export async function checkMicrosoftAppAssignments(
-  servicePrincipalId: string
+  servicePrincipalObjectId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const assignments = await microsoft.listAppRoleAssignments(
       microsoftToken!,
-      servicePrincipalId
+      servicePrincipalObjectId
     );
     const hasAssignments = assignments && assignments.length > 0;
     return {
       completed: hasAssignments,
       message: hasAssignments
         ? "Application has user/group assignments."
-        : "Application currently has no user/group assignments. Users must be assigned to use this application for SSO.",
+        : "Application currently has no user/group assignments. Users must be assigned for SSO access.",
     };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
       return {
         completed: false,
-        message: `Service Principal '${servicePrincipalId}' not found for checking assignments.`,
+        message: `Service Principal '${servicePrincipalObjectId}' not found for checking assignments.`,
       };
     }
-    return handleCheckError(e, "Failed to check app assignments.");
+    return handleCheckError(
+      e,
+      "Failed to check app assignments for SP " + servicePrincipalObjectId
+    );
   }
 }
+
+// Removed checkUserExists and checkRoleAssigned from here as they were Google specific
+// and not directly used by the refined federation steps' checks.
+// Admin permission checks are handled in app/(auth)/auth.ts during signIn.

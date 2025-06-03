@@ -27,11 +27,7 @@ import { Label } from "@/components/ui/label";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
 export default function LoginPage() {
-  const {
-    data: session,
-    status: sessionStatus,
-    update: updateSession,
-  } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -195,7 +191,7 @@ export default function LoginPage() {
 
   const onMicrosoftSignIn = () => {
     const currentDomain = domain || localStorage.getItem("loginPageDomain");
-    let effectiveTenantId =
+    const effectiveTenantId =
       tenantId ||
       localStorage.getItem("loginPageTenantId") ||
       process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
@@ -217,6 +213,7 @@ export default function LoginPage() {
   useEffect(() => {
     const savedDomain = localStorage.getItem("loginPageDomain");
     const savedTenantId = localStorage.getItem("loginPageTenantId");
+
     if (savedDomain && !domain) setDomain(savedDomain);
     if (
       savedTenantId &&
@@ -224,9 +221,7 @@ export default function LoginPage() {
       !process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID
     )
       setTenantId(savedTenantId);
-    // If NEXT_PUBLIC_MICROSOFT_TENANT_ID is set, it initializes `tenantId` state, so don't override with localStorage unless localStorage is different and more specific.
-    // This logic is a bit tricky if env var should always take precedence. Current logic pre-fills from env, then localStorage can fill if env is not there.
-  }, []);
+  }, [domain, tenantId]);
 
   const isLoadingButtons =
     sessionStatus === "loading" ||

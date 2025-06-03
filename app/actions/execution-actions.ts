@@ -62,16 +62,16 @@ async function getTokens(): Promise<{
 
 // --- Google Execution Actions ---
 export async function executeG1CreateAutomationOu(
-  context: StepContext
+  _context: StepContext
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
     const result = await google.createOrgUnit(googleToken, "Automation", "/");
     if (typeof result === "object" && "alreadyExists" in result) {
-      const existingOu = await google.getOrgUnit(googleToken, "/Automation");
+      const existingOu = await google.getOrgUnit(googleToken, "/Automation"); // Verify path for existing
       if (!existingOu?.orgUnitId || !existingOu?.orgUnitPath) {
         throw new Error(
-          "OU 'Automation' reported as existing but could not be fetched to confirm details."
+          "OU 'Automation' reported as existing but could not be fetched."
         );
       }
       return {
@@ -117,7 +117,7 @@ export async function executeG4AddAndVerifyDomain(
     }
     return {
       success: true,
-      message: `Domain '${context.domain}' added to Google Workspace. Please ensure it is verified in your Google Workspace Admin console for SAML SSO to function correctly.`,
+      message: `Domain '${context.domain}' added. Please ensure it is verified in your Google Workspace Admin console for SAML SSO.`,
       resourceUrl: "https://admin.google.com/ac/domains/manage",
     };
   } catch (e) {
@@ -126,7 +126,7 @@ export async function executeG4AddAndVerifyDomain(
 }
 
 export async function executeG5InitiateGoogleSamlProfile(
-  context: StepContext
+  _context: StepContext
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
@@ -147,12 +147,12 @@ export async function executeG5InitiateGoogleSamlProfile(
         !existingProfile.spConfig?.assertionConsumerServiceUrl
       ) {
         throw new Error(
-          `SAML Profile '${profileDisplayName}' reported as existing but essential details could not be fetched.`
+          `SAML Profile '${profileDisplayName}' reported existing but details (name, SP Entity ID, ACS URL) not fetched.`
         );
       }
       return {
         success: true,
-        message: `SAML Profile '${profileDisplayName}' already exists. Retrieved its details.`,
+        message: `SAML Profile '${profileDisplayName}' already exists. Using its details.`,
         resourceUrl: "https://admin.google.com/ac/sso",
         outputs: {
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: existingProfile.displayName,
@@ -169,13 +169,14 @@ export async function executeG5InitiateGoogleSamlProfile(
       !result.spConfig?.spEntityId ||
       !result.spConfig?.assertionConsumerServiceUrl
     ) {
+      // result is InboundSamlSsoProfile
       throw new Error(
-        "Created SAML profile is missing expected configuration details (name, SP Entity ID, ACS URL)."
+        "Created Google SAML profile is missing expected details (name, SP Entity ID, ACS URL)."
       );
     }
     return {
       success: true,
-      message: `SAML Profile '${profileDisplayName}' created successfully in Google Workspace.`,
+      message: `SAML Profile '${profileDisplayName}' created in Google Workspace.`,
       resourceUrl: "https://admin.google.com/ac/sso",
       outputs: {
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: result.displayName,
@@ -209,7 +210,7 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
         success: false,
         error: {
           message:
-            "Required IdP SAML details or Google profile name not found in context outputs. Ensure steps G-5 and M-8 completed.",
+            "Required IdP SAML details or Google profile name missing from context. Ensure G-5 and M-8 outputs are available.",
         },
       };
     }
@@ -226,7 +227,7 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
     return {
       success: true,
       message:
-        "Google SAML Profile updated successfully with Azure AD IdP information and enabled.",
+        "Google SAML Profile updated with Azure AD IdP information and enabled.",
       resourceUrl: `https://admin.google.com/ac/sso/profile/${profileFullName
         .split("/")
         .pop()}`,
@@ -248,7 +249,7 @@ export async function executeG7AssignGoogleSamlToRootOu(
       return {
         success: false,
         error: {
-          message: "Google SAML Profile full name not found in context.",
+          message: "Google SAML Profile full name missing from context.",
         },
       };
 
@@ -258,7 +259,7 @@ export async function executeG7AssignGoogleSamlToRootOu(
     return {
       success: true,
       message:
-        "SAML profile assigned to the Root OU and enabled for all users (unless overridden by sub-OU settings). You can adjust specific OU/Group assignments in the Google Admin console.",
+        "SAML profile assigned to Root OU for all users. Specific OU/Group assignments can be adjusted in Google Admin console.",
       resourceUrl: "https://admin.google.com/ac/sso",
     };
   } catch (e) {
@@ -281,12 +282,12 @@ export async function executeG8ExcludeAutomationOuFromSso(
     if (!profileFullName)
       return {
         success: false,
-        error: { message: "Google SAML Profile name not found." },
+        error: { message: "Google SAML Profile name missing." },
       };
     if (!automationOuId)
       return {
         success: true,
-        message: "Automation OU ID not found; skipping SSO disable for it.",
+        message: "Automation OU ID missing; skipping SSO disable for it.",
       };
 
     await google.assignSamlToOrgUnits(googleToken, profileFullName, [
@@ -294,7 +295,7 @@ export async function executeG8ExcludeAutomationOuFromSso(
     ]);
     return {
       success: true,
-      message: "SAML successfully disabled for the 'Automation' OU.",
+      message: "SAML explicitly disabled for the 'Automation' OU.",
       resourceUrl: "https://admin.google.com/ac/sso",
     };
   } catch (e) {
@@ -304,11 +305,11 @@ export async function executeG8ExcludeAutomationOuFromSso(
 
 // --- Microsoft Execution Actions ---
 export async function executeM1CreateProvisioningApp(
-  context: StepContext
+  _context: StepContext
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
-    const GWS_PROVISIONING_TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5"; // Google Workspace Gallery App
+    const GWS_PROVISIONING_TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
     const appName = "Google Workspace User Provisioning";
 
     const result = await microsoft.createEnterpriseApp(
@@ -317,13 +318,11 @@ export async function executeM1CreateProvisioningApp(
       appName
     );
     if (typeof result === "object" && "alreadyExists" in result) {
-      // Attempt to fetch existing app details to populate outputs
-      const existingApp = (
-        await microsoft.listApplications(
-          microsoftToken,
-          `displayName eq '${appName}'`
-        )
-      )[0];
+      const existingApps = await microsoft.listApplications(
+        microsoftToken,
+        `displayName eq '${appName}'`
+      );
+      const existingApp = existingApps[0];
       if (existingApp?.appId) {
         const sp = await microsoft.getServicePrincipalByAppId(
           microsoftToken,
@@ -332,7 +331,7 @@ export async function executeM1CreateProvisioningApp(
         if (existingApp.id && sp?.id) {
           return {
             success: true,
-            message: `Enterprise app '${appName}' for provisioning already exists. Using existing details.`,
+            message: `Enterprise app '${appName}' for provisioning already exists.`,
             outputs: {
               [OUTPUT_KEYS.PROVISIONING_APP_ID]: existingApp.appId,
               [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: existingApp.id,
@@ -343,12 +342,12 @@ export async function executeM1CreateProvisioningApp(
       }
       return {
         success: true,
-        message: `Enterprise app '${appName}' already exists, but could not retrieve all its details.`,
+        message: `Enterprise app '${appName}' already exists, but could not retrieve its full details.`,
       };
     }
     return {
       success: true,
-      message: `Enterprise app '${appName}' for User Provisioning created successfully.`,
+      message: `Enterprise app '${appName}' created.`,
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}`,
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.application.appId,
@@ -374,7 +373,7 @@ export async function executeM2ConfigureProvisioningAppProperties(
         success: false,
         error: {
           message:
-            "Provisioning Service Principal Object ID not found (from M-1).",
+            "Provisioning Service Principal Object ID (from M-1) not found.",
         },
       };
 
@@ -383,7 +382,7 @@ export async function executeM2ConfigureProvisioningAppProperties(
     });
     return {
       success: true,
-      message: "Provisioning app's Service Principal enabled successfully.",
+      message: "Provisioning app service principal enabled.",
       outputs: { [OUTPUT_KEYS.FLAG_M2_PROV_APP_PROPS_CONFIGURED]: true },
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}`,
     };
@@ -421,7 +420,6 @@ export async function executeM3AuthorizeProvisioningConnection(
       | string
       | undefined;
     if (!jobId) {
-      // If no job ID in outputs, try to create or find existing
       const jobResult = await microsoft.createProvisioningJob(
         microsoftToken,
         spObjectId
@@ -431,7 +429,7 @@ export async function executeM3AuthorizeProvisioningConnection(
           microsoftToken,
           spObjectId
         );
-        const googleAppsJob = jobs.find((j) => j.templateId === "GoogleApps"); // Common template ID
+        const googleAppsJob = jobs.find((j) => j.templateId === "GoogleApps");
         if (!googleAppsJob?.id)
           throw new Error(
             "Provisioning job reported as existing but its ID could not be determined."
@@ -455,7 +453,7 @@ export async function executeM3AuthorizeProvisioningConnection(
     return {
       success: true,
       message:
-        "Provisioning job created/found and connection authorized with Google Workspace. Test connection in Azure Portal.",
+        "Provisioning job created/found and connection authorized. Use 'Test Connection' in Azure Portal to verify.",
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_JOB_ID]: jobId,
         [OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED]: true,
@@ -485,8 +483,8 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
         },
       };
 
-    const attributeMappingSourceTypeAttribute: MicrosoftGraph.AttributeMappingSourceType =
-      "Attribute";
+    const attributeMappingSourceTypeAttribute =
+      "Attribute" as MicrosoftGraph.AttributeMappingSourceType;
 
     const schemaPayload: {
       synchronizationRules: MicrosoftGraph.SynchronizationRule[];
@@ -562,17 +560,6 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
                 },
               ],
             },
-            // Optional Group Provisioning Mapping (ensure group object and attributes exist if enabled)
-            // {
-            //   enabled: false, // Set true to enable group provisioning
-            //   sourceObjectName: "group",
-            //   targetObjectName: "Group",
-            //   attributeMappings: [
-            //     { targetAttributeName: "displayName", source: { expression: "[displayName]", name: "displayName", type: attributeMappingSourceTypeAttribute }, matchingPriority: 1 },
-            //     { targetAttributeName: "externalId", source: { expression: "[objectId]", name: "objectId", type: attributeMappingSourceTypeAttribute }, matchingPriority: 2 },
-            //     { targetAttributeName: "members", source: { name: "members", type: attributeMappingSourceTypeAttribute } }
-            //   ]
-            // }
           ],
         },
       ],
@@ -587,7 +574,7 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
     return {
       success: true,
       message:
-        "Default attribute mappings configured for user provisioning. Review and customize in Azure Portal if needed.",
+        "Default attribute mappings configured. Review in Azure Portal; customize if specific needs exist.",
       outputs: { [OUTPUT_KEYS.FLAG_M4_PROV_MAPPINGS_CONFIGURED]: true },
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}/syncSchemaEditorV2`,
     };
@@ -618,7 +605,7 @@ export async function executeM5StartProvisioningJob(
     return {
       success: true,
       message:
-        "User provisioning job started. Monitor progress in Azure Portal. IMPORTANT: Ensure you have configured the correct provisioning scope (users/groups to sync) in the Azure Portal for this provisioning app.",
+        "User provisioning job started. Monitor its progress in the Azure Portal. Ensure user/group scope for provisioning is correctly set in Azure.",
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/Provisioning/servicePrincipalId/${spObjectId}`,
     };
   } catch (e) {
@@ -627,11 +614,11 @@ export async function executeM5StartProvisioningJob(
 }
 
 export async function executeM6CreateSamlSsoApp(
-  context: StepContext
+  _context: StepContext
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
-    const GWS_SAML_TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5"; // Google Workspace Gallery App
+    const GWS_SAML_TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
     const appName = "Google Workspace SAML SSO";
 
     const result = await microsoft.createEnterpriseApp(
@@ -640,40 +627,36 @@ export async function executeM6CreateSamlSsoApp(
       appName
     );
     if (typeof result === "object" && "alreadyExists" in result) {
-      let existingAppId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as
-        | string
-        | undefined;
-      // Logic to fetch existing app details if needed (similar to M-1 alreadyExists)
-      if (existingAppId) {
-        const existingSp = await microsoft.getServicePrincipalByAppId(
+      const existingApps = await microsoft.listApplications(
+        microsoftToken,
+        `displayName eq '${appName}'`
+      );
+      const existingApp = existingApps[0];
+      if (existingApp?.appId) {
+        const sp = await microsoft.getServicePrincipalByAppId(
           microsoftToken,
-          existingAppId
+          existingApp.appId
         );
-        const applications = await microsoft.listApplications(
-          microsoftToken,
-          `appId eq '${existingAppId}'`
-        );
-        const existingAppObjectId = applications[0]?.id;
-        if (existingSp?.id && existingAppObjectId) {
+        if (existingApp.id && sp?.id) {
           return {
             success: true,
-            message: `Enterprise app '${appName}' for SAML SSO already exists. Using existing details.`,
+            message: `Enterprise app '${appName}' for SAML SSO already exists.`,
             outputs: {
-              [OUTPUT_KEYS.SAML_SSO_APP_ID]: existingAppId,
-              [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: existingAppObjectId,
-              [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]: existingSp.id,
+              [OUTPUT_KEYS.SAML_SSO_APP_ID]: existingApp.appId,
+              [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: existingApp.id,
+              [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]: sp.id,
             },
           };
         }
       }
       return {
         success: true,
-        message: `Enterprise app '${appName}' for SAML SSO already exists, but could not confirm all its details.`,
+        message: `Enterprise app '${appName}' for SAML SSO already exists, but full details not retrieved.`,
       };
     }
     return {
       success: true,
-      message: `Enterprise app '${appName}' for SAML SSO created successfully.`,
+      message: `Enterprise app '${appName}' for SAML SSO created.`,
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}`,
       outputs: {
         [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.application.appId,
@@ -720,13 +703,11 @@ export async function executeM7ConfigureAzureSamlAppSettings(
     if (!primaryDomain)
       return {
         success: false,
-        error: {
-          message: "Primary domain (for identifier URI) not configured.",
-        },
+        error: { message: "Primary domain not configured." },
       };
 
     const appPatchPayload: Partial<microsoft.Application> = {
-      identifierUris: [googleSpEntityId, `https://${primaryDomain}`], // Per Google article and common practice
+      identifierUris: [googleSpEntityId, `https://${primaryDomain}`],
       web: {
         redirectUris: [googleAcsUrl],
         implicitGrantSettings: {
@@ -734,9 +715,6 @@ export async function executeM7ConfigureAzureSamlAppSettings(
           enableAccessTokenIssuance: false,
         },
       },
-      // Default NameID claim (UPN) is usually set by the gallery app template.
-      // For claims: check Azure Portal, "User Attributes & Claims" for the SAML App.
-      // This tool applies basic SAML config. Advanced claims are manual.
     };
     await microsoft.updateApplication(
       microsoftToken,
@@ -746,9 +724,9 @@ export async function executeM7ConfigureAzureSamlAppSettings(
     return {
       success: true,
       message:
-        "Azure AD SAML app settings (Identifier URIs, Reply URL) configured. Verify User Attributes & Claims in Azure Portal.",
+        "Azure AD SAML app (Identifier URIs, Reply URL) configured. Verify 'User Attributes & Claims' (NameID should be UPN) manually in Azure Portal.",
       outputs: { [OUTPUT_KEYS.FLAG_M7_SAML_APP_SETTINGS_CONFIGURED]: true },
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${appObjectId}/ κάτι/SingleSignOn`, // Deeplink to SSO config
+      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ApplicationBlade/objectId/${appObjectId}/~/SingleSignOn`,
     };
   } catch (e) {
     return handleExecutionError(e, "M-7");
@@ -771,7 +749,7 @@ export async function executeM8RetrieveAzureIdpMetadata(
     return {
       success: true,
       message:
-        "Azure AD IdP SAML metadata (Entity ID, SSO URL, Certificate) retrieved successfully.",
+        "Azure AD IdP SAML metadata (Entity ID, SSO URL, Certificate) retrieved.",
       outputs: {
         [OUTPUT_KEYS.IDP_CERTIFICATE_BASE64]: metadata.certificate,
         [OUTPUT_KEYS.IDP_SSO_URL]: metadata.ssoUrl,
@@ -797,13 +775,11 @@ export async function executeM9AssignUsersToAzureSsoApp(
           message: "SAML SSO Service Principal Object ID (from M-6) not found.",
         },
       };
-
-    // This step is primarily a guidance step as user/group assignment is a manual selection in Azure.
-    // The check action `checkMicrosoftAppAssignments` verifies if *any* assignments exist.
+    // This action guides the user; actual assignments are manual in Azure Portal.
     return {
       success: true,
       message:
-        "Guidance: Assign users and/or groups to the 'Google Workspace SAML SSO' application in Azure AD to enable them to use Single Sign-On. This is done in the Azure Portal under the app's 'Users and groups' section.",
+        "Guidance: Assign users/groups to the 'Google Workspace SAML SSO' app in Azure AD via its 'Users and groups' section to grant them SSO access.",
       resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/EnterpriseApplicationMenuBlade/~/UsersAndGroups/servicePrincipalId/${ssoSpObjectId}`,
     };
   } catch (e) {

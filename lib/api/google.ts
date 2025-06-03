@@ -1,12 +1,10 @@
-// ./lib/api/google.ts
 import type { admin_directory_v1 } from "googleapis";
-import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import { fetchWithAuth, handleApiResponse } from "./utils";
 
 const GWS_BASE_URL = "https://admin.googleapis.com/admin/directory/v1";
 const GCI_BASE_URL = "https://cloudidentity.googleapis.com/v1";
 const GWS_CUSTOMER_ID = "my_customer";
 
-// Type Aliases from googleapis
 export type OrgUnit = admin_directory_v1.Schema$OrgUnit;
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type Role = admin_directory_v1.Schema$Role;

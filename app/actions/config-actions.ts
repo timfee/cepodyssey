@@ -1,10 +1,11 @@
+// ./app/actions/config-actions.ts
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
 // Assuming ActionResult is defined in a shared types file, or define it here
-// For this example, assuming it's similar to what was in your project-code.md for this file
 export interface ActionResult<TData = Record<string, unknown> | null> {
   success: boolean;
   data?: TData;
@@ -16,6 +17,7 @@ const DOMAIN_REGEX =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
 interface AppConfig {
+  // This matches the Redux AppConfigState structure partially
   domain: string;
   tenantId: string;
   outputs?: Record<string, unknown>;
@@ -27,13 +29,12 @@ const ConfigSchema = z.object({
   outputs: z.record(z.unknown()).optional(),
 });
 
-const CONFIG_STORE_KEY = "admin_user_app_config"; // Fixed key for the single admin user concept
+const CONFIG_STORE_KEY = "admin_user_app_config"; // Fixed key
 const serverSideConfigStore = new Map<string, AppConfig>();
 
 export async function saveConfig(data: AppConfig): Promise<ActionResult> {
-  const session = await auth(); // Still useful to ensure an authenticated context
+  const session = await auth();
   if (!session?.user) {
-    // Check for a valid session user, even if key is fixed
     return {
       success: false,
       error: { message: "User not authenticated." },
@@ -52,15 +53,15 @@ export async function saveConfig(data: AppConfig): Promise<ActionResult> {
   console.log(
     `Configuration saved with key '${CONFIG_STORE_KEY}':`,
     result.data
-  );
+  ); // Confirmed this logs successfully
 
-  revalidatePath("/"); // Revalidate the root/dashboard page
+  revalidatePath("/"); // Revalidate the dashboard page
 
   return { success: true, message: "Configuration saved successfully." };
 }
 
 export async function getConfig(): Promise<AppConfig | null> {
-  const session = await auth(); // Ensure an authenticated context before allowing config retrieval
+  const session = await auth();
   if (!session?.user) {
     console.log("getConfig: No session or user found. Cannot retrieve config.");
     return null;
@@ -68,14 +69,14 @@ export async function getConfig(): Promise<AppConfig | null> {
   const config = serverSideConfigStore.get(CONFIG_STORE_KEY);
   if (config) {
     console.log(
-      `Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
+      `getConfig: Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
       config
-    );
+    ); // Add log here
     return config;
   } else {
     console.log(
-      `No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`
-    );
+      `getConfig: No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`
+    ); // And here
     return null;
   }
 }

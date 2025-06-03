@@ -30,7 +30,11 @@ interface StepItemProps {
   isLast: boolean;
 }
 
-export function StepItem({ step, onExecuteStep, isLast }: StepItemProps) {
+export function StepItem({
+  step,
+  onExecuteStep,
+  isLast: _isLast,
+}: StepItemProps) {
   const allStepsStatus = useAppSelector((state) => state.setupSteps.steps);
 
   const prerequisitesMet =

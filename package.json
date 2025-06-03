@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@next/eslint-plugin-next": "^15.3.3",
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/microsoft-graph": "^2.40.1",
@@ -39,6 +40,7 @@
     "@types/react-dom": "^19.1.5",
     "eslint": "^9.28.0",
     "eslint-config-next": "15.3.3",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "tailwindcss": "^4.1.8",
     "tw-animate-css": "^1.3.3",
     "typescript": "^5.8.3"

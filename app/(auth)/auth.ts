@@ -1,5 +1,5 @@
 // ./app/(auth)/auth.ts
-import type { Account, Profile, Session, User } from "next-auth";
+import type { User } from "next-auth";
 import NextAuth from "next-auth";
 import { JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
@@ -125,7 +125,7 @@ async function checkGoogleAdmin(
       try {
         const errorData = await res.json();
         console.warn("checkGoogleAdmin: API error data:", errorData);
-      } catch (e) {
+      } catch {
         console.warn("checkGoogleAdmin: Could not parse error JSON from API.");
       }
       return false;
@@ -181,7 +181,7 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
       try {
         const errorData = await res.json();
         console.warn("checkMicrosoftAdmin: API error data:", errorData);
-      } catch (e) {
+      } catch {
         console.warn(
           "checkMicrosoftAdmin: Could not parse error JSON from API."
         );
@@ -306,7 +306,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             : undefined;
           const accountTenantId =
             (profile as { tid?: string })?.tid ||
-            (account as any).tenantId ||
+            (account as { tenantId?: string }).tenantId ||
             token.microsoftTenantId;
           finalToken.microsoftTenantId =
             accountTenantId || process.env.MICROSOFT_TENANT_ID;
