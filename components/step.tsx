@@ -52,6 +52,7 @@ export function StepItem({
 }: StepItemProps) {
   const dispatch = useAppDispatch();
   const allStepsStatus = useAppSelector((state) => state.setupSteps.steps);
+  const outputs = useAppSelector((state) => state.appConfig.outputs);
 
   const prerequisitesMet = React.useMemo(() => {
     return (
@@ -167,15 +168,19 @@ export function StepItem({
                 </p>
               )}
               <div className="flex items-center gap-2 flex-wrap">
-                {step.metadata?.resourceUrl && (
+                {!step.automatable && step.adminUrls?.configure && (
                   <Button variant="outline" size="sm" asChild>
                     <a
-                      href={step.metadata.resourceUrl}
+                      href={
+                        typeof step.adminUrls.configure === 'function'
+                          ? step.adminUrls.configure(outputs) ?? '#'
+                          : step.adminUrls.configure
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" /> Open
-                      Guidance / Link
+                      Admin Console
                     </a>
                   </Button>
                 )}
@@ -257,18 +262,17 @@ export function StepItem({
               )}
               {step.metadata?.resourceUrl && (
                 <Button
-                  variant="link"
+                  variant="outline"
                   size="sm"
                   asChild
-                  className="h-auto p-0 text-xs"
+                  className="gap-1"
                 >
                   <a
                     href={step.metadata.resourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    View Configured Resource{" "}
-                    <ExternalLinkIcon className="ml-1 h-3 w-3" />
+                    <ExternalLinkIcon className="h-3 w-3" /> View in Admin Console
                   </a>
                 </Button>
               )}
