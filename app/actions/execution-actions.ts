@@ -534,9 +534,7 @@ export async function executeM1CreateProvisioningApp(
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl =
-            process.env.SHOW_APP_REGISTRATIONS === "true"
-              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
-              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for provisioning already exists.`,
@@ -558,9 +556,7 @@ export async function executeM1CreateProvisioningApp(
       success: true,
       message: `Enterprise app '${appName}' created.`,
       resourceUrl:
-        process.env.SHOW_APP_REGISTRATIONS === "true"
-          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
-          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+        `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: result.application.id,
@@ -601,9 +597,7 @@ export async function executeM2ConfigureProvisioningAppProperties(
       accountEnabled: true,
     });
     const resourceUrl =
-      process.env.SHOW_APP_REGISTRATIONS === "true"
-        ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`
-        : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${appId}/objectId/${spObjectId}`;
+      `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spObjectId}/appId/${appId}`;
     return {
       success: true,
       message: "Provisioning app service principal enabled.",
@@ -891,9 +885,7 @@ export async function executeM6CreateSamlSsoApp(
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl =
-            process.env.SHOW_APP_REGISTRATIONS === "true"
-              ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${existingApp.appId}/isMSAApp~/false`
-              : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
           return {
             success: true,
             message: `Enterprise app '${appName}' for SAML SSO already exists.`,
@@ -915,9 +907,7 @@ export async function executeM6CreateSamlSsoApp(
       success: true,
       message: `Enterprise app '${appName}' for SAML SSO created.`,
       resourceUrl:
-        process.env.SHOW_APP_REGISTRATIONS === "true"
-          ? `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${result.application.appId}/isMSAApp~/false`
-          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+        `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
       outputs: {
         [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.application.id,

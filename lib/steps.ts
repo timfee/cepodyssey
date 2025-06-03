@@ -217,17 +217,16 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM1CreateProvisioningApp(context),
     adminUrls: {
       configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
-        if (!appId)
-          return "https://portal.azure.com/#view/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/~/AppAppsPreview";
-        return `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
       verify: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
-        return spId
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId || ""}`
-          : null;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
     },
   },
@@ -255,16 +254,16 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM2ConfigureProvisioningAppProperties(context),
     adminUrls: {
       configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
-        if (!appId) return null;
-        return `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
       verify: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
-        return spId
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId || ""}`
-          : null;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
     },
   },
@@ -311,16 +310,18 @@ export const allStepDefinitions: StepDefinition[] = [
       return executeM3AuthorizeProvisioningConnection(context);
     },
     adminUrls: {
-      configure: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
+      configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
+      verify: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
     },
   },
   {
@@ -348,16 +349,18 @@ export const allStepDefinitions: StepDefinition[] = [
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM4ConfigureProvisioningAttributeMappings(context),
     adminUrls: {
-      configure: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
+      configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
+      verify: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
     },
   },
   {
@@ -408,16 +411,18 @@ export const allStepDefinitions: StepDefinition[] = [
       return result;
     },
     adminUrls: {
-      configure: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]}`
-          : null,
+      configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
+      verify: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`;
+      },
     },
   },
 
@@ -446,16 +451,16 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM6CreateSamlSsoApp(context),
     adminUrls: {
       configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        if (!appId) return null;
-        return `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
       verify: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        return spId
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId || ""}`
-          : null;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
       },
     },
   },
@@ -494,16 +499,16 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM7ConfigureAzureSamlAppSettings(context),
     adminUrls: {
       configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        if (!appId) return null;
-        return `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
       },
       verify: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        return spId
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId || ""}`
-          : null;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
       },
     },
   },
@@ -534,16 +539,16 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM8RetrieveAzureIdpMetadata(context),
     adminUrls: {
       configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        if (!appId) return null;
-        return `https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/${appId}/isMSAApp~/false`;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
       },
       verify: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
         const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
-        return spId
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId || ""}`
-          : null;
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
       },
     },
   },
@@ -703,16 +708,18 @@ export const allStepDefinitions: StepDefinition[] = [
     execute: (context: StepContext): Promise<StepExecutionResult> =>
       executeM9AssignUsersToAzureSsoApp(context),
     adminUrls: {
-      configure: (outputs) =>
-        outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}`
-          : null,
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] &&
-        outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]
-          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]}/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}`
-          : null,
+      configure: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${spId}/appId/${appId}`;
+      },
+      verify: (outputs) => {
+        const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
+        const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
+        if (!spId || !appId) return null;
+        return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${spId}/appId/${appId}`;
+      },
     },
   },
 
