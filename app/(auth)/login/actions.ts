@@ -12,12 +12,10 @@ export async function handleGoogleLogin(formData: FormData): Promise<void> {
     redirectTo: "/login?authAttempt=google",
   };
 
-  if (domain) {
-    signInOptions.hd = domain; // Pass hosted domain parameter to Google
-  }
-
   // Allow signIn() to throw NEXT_REDIRECT for Next.js to handle the actual redirect to Google
-  await signIn("google", signInOptions);
+  await signIn("google", signInOptions, {
+    hd: domain ?? "",
+  });
   // Code here might not be reached if signIn initiates a redirect.
 }
 

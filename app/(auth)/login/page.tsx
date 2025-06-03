@@ -13,7 +13,6 @@ import React, { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { lookupTenantId } from "@/app/actions/auth-actions";
-// saveConfig is no longer called from here for domain/tenantId
 import { Button } from "@/components/ui/button";
 import {
   Card,

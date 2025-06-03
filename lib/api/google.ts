@@ -61,7 +61,7 @@ export async function getDomainVerificationStatus(
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       // Corrected to fetchWithAuth
-      `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
+      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
         domainName
       )}`,
       token
@@ -88,7 +88,7 @@ export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
     // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits?type=all`,
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits?type=all`,
     token
   );
   const data = await handleApiResponse<ListOrgUnitsResponse>(res); // Corrected to handleApiResponse
@@ -104,14 +104,19 @@ export async function createOrgUnit(
 ): Promise<GoogleOrgUnit | { alreadyExists: true }> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits`,
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits`,
     token,
     {
       method: "POST",
       body: JSON.stringify({ name, parentOrgUnitPath }),
     }
   );
+  console.log("Sending request to createOrgUnit:", {
+    name,
+    parentOrgUnitPath,
+    url: `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits`,
+  });
+
   return handleApiResponse<GoogleOrgUnit>(res); // Corrected to handleApiResponse
 }
 
@@ -121,7 +126,9 @@ export async function getOrgUnit(
 ): Promise<GoogleOrgUnit | null> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
-    // Fixed: Remove leading slash from ouPath before encoding for correct API path
+    console.log(
+      `getOrgUnit: Fetching OU by path '${ouPath}' with token ${token}`
+    );
     const relativePath = ouPath.startsWith("/") ? ouPath.substring(1) : ouPath;
     if (!relativePath && ouPath === "/") {
       console.warn(
@@ -132,7 +139,7 @@ export async function getOrgUnit(
     if (!relativePath) {
       return null;
     }
-    const fetchUrl = `${baseUrl}/customers/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
+    const fetchUrl = `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
       relativePath
     )}`;
     const res = await fetchWithAuth(fetchUrl, token); // Corrected to fetchWithAuth
@@ -196,7 +203,7 @@ export async function addDomain(
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
     // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains`,
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains`,
     token,
     {
       method: "POST",
@@ -214,7 +221,7 @@ export async function getDomain(
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       // Corrected to fetchWithAuth
-      `${baseUrl}/customers/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
+      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
         domainName
       )}`,
       token
@@ -238,7 +245,7 @@ export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
     // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roles`,
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roles`,
     token
   );
   const data = await handleApiResponse<ListAdminRolesResponse>(res); // Corrected to handleApiResponse
@@ -255,7 +262,7 @@ export async function assignAdminRole(
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
     // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roleassignments`,
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments`,
     token,
     {
       method: "POST",
@@ -276,7 +283,7 @@ export async function listRoleAssignments(
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
     // Corrected to fetchWithAuth
-    `${baseUrl}/customers/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
+    `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
       userKey
     )}`,
     token

@@ -11,7 +11,6 @@ export default async function Page() {
   if (!session?.user) {
     // Simplified check: if no user, redirect to login
     redirect("/login?reason=unauthenticated");
-    return null;
   }
 
   // If partially authenticated, login page should handle guidance.
@@ -24,7 +23,6 @@ export default async function Page() {
       queryParams.set("reason", "google_auth_missing");
     else queryParams.set("reason", "microsoft_auth_missing");
     redirect(`/login?${queryParams.toString()}`);
-    return null;
   }
 
   // Prepare initialConfig for AutomationDashboard from session
