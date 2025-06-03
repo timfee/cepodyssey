@@ -55,12 +55,20 @@ export function StepItem({
   const outputs = useAppSelector((state) => state.appConfig.outputs);
 
   const prerequisitesMet = React.useMemo(() => {
+    // Auth errors override prerequisite logic to allow retrying the step
+    if (
+      step.metadata?.errorCode === "AUTH_EXPIRED" ||
+      step.error?.toLowerCase().includes("authentication expired")
+    ) {
+      return true;
+    }
+
     return (
       step.requires?.every(
         (reqId) => allStepsStatus[reqId]?.status === "completed",
       ) ?? true
     );
-  }, [step.requires, allStepsStatus]);
+  }, [step.requires, step.error, step.metadata, allStepsStatus]);
 
   const getStatusVisuals = () => {
     switch (step.status) {
@@ -111,17 +119,21 @@ export function StepItem({
     );
   };
 
-  const isStepEffectivelyDisabled = !canRunGlobal || !prerequisitesMet;
+  const isStepEffectivelyDisabled =
+    !canRunGlobal ||
+    (!prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED");
+
   const runButtonDisabledReason = !canRunGlobal
     ? "Global prerequisites (auth/config) not met."
-    : !prerequisitesMet
+    : !prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED"
       ? "Prerequisite steps not completed."
       : undefined;
 
   const allowRetryForAutomated =
     step.automatable &&
     (step.status === "failed" ||
-      (step.status === "completed" && step.metadata?.preExisting === true));
+      (step.status === "completed" && step.metadata?.preExisting === true) ||
+      step.metadata?.errorCode === "AUTH_EXPIRED");
 
   return (
     <li className="flex gap-x-3">
@@ -268,6 +280,17 @@ export function StepItem({
                 </p>
               )}
             </div>
+          )}
+
+          {step.status === "failed" && step.metadata?.errorCode === "AUTH_EXPIRED" && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Your {step.metadata.errorProvider === "google" ? "Google Workspace" : "Microsoft"}
+                {" "}session has expired. Please sign in again to continue.
+              </AlertDescription>
+            </Alert>
           )}
 
           {step.status === "failed" && step.error && (

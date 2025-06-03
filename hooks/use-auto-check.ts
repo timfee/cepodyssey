@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAppSelector } from "./use-redux";
+import { useSessionSync } from "./use-session-sync";
 
 /**
  * Runs lightweight "check" functions for a subset of steps once the
@@ -11,9 +12,21 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
   const hasChecked = useRef(false);
+  const { session } = useSessionSync();
 
   useEffect(() => {
-    if (!appConfig.domain || !appConfig.tenantId || hasChecked.current) return;
+    const authErrorPresent = Object.values(stepsStatus).some(
+      (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
+    );
+    if (
+      !session?.hasGoogleAuth ||
+      !session?.hasMicrosoftAuth ||
+      !appConfig.domain ||
+      !appConfig.tenantId ||
+      hasChecked.current ||
+      authErrorPresent
+    )
+      return;
 
     hasChecked.current = true;
     // Only run checks for steps that perform safe, read-only operations.
@@ -37,5 +50,5 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
       .map((id) => executeCheck(id));
 
     Promise.all(checkPromises).catch(console.error);
-  }, [appConfig.domain, appConfig.tenantId, stepsStatus, executeCheck]);
+  }, [appConfig.domain, appConfig.tenantId, stepsStatus, executeCheck, session]);
 }

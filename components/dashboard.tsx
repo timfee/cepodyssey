@@ -267,7 +267,11 @@ export function AutomationDashboard({
             updateStep({
               id: stepId,
               status: "failed",
-              error: "Authentication expired. Please sign in again.",
+              error: err.message,
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: err.provider,
+              },
             }),
           );
           return;
@@ -326,9 +330,35 @@ export function AutomationDashboard({
         }
       } catch (error) {
         console.error(`Auto-check failed for ${stepId}:`, error);
+        if (isAuthenticationError(error)) {
+          toast.error(error.message, {
+            duration: 10000,
+            action: {
+              label: "Sign In",
+              onClick: () => router.push("/login"),
+            },
+          });
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: error.message,
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: error.provider,
+              },
+            }),
+          );
+        } else {
+          const message = error instanceof Error ? error.message : String(error);
+          dispatch(updateStep({ id: stepId, status: "failed", error: message }));
+          toast.error(`${definition.title}: Check failed. ${message}`, {
+            duration: 10000,
+          });
+        }
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store],
+    [appConfig.domain, appConfig.tenantId, dispatch, store, router],
   );
 
   useAutoCheck(executeCheck);
