@@ -15,7 +15,7 @@ import React from "react";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { updateStep } from "@/lib/redux/slices/setup-steps";
-import type { ManagedStep } from "@/lib/types";
+import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,11 @@ export function StepItem({
   const outputs = useAppSelector((state) => state.appConfig.outputs);
 
   const prerequisitesMet = React.useMemo(() => {
+    // If already completed, prerequisites are implicitly met
+    if (step.status === "completed") {
+      return true;
+    }
+
     // Auth errors override prerequisite logic to allow retrying the step
     if (
       step.metadata?.errorCode === "AUTH_EXPIRED" ||
@@ -68,7 +73,7 @@ export function StepItem({
         (reqId) => allStepsStatus[reqId]?.status === "completed",
       ) ?? true
     );
-  }, [step.requires, step.error, step.metadata, allStepsStatus]);
+  }, [step.requires, step.status, step.error, step.metadata, allStepsStatus]);
 
   const getStatusVisuals = () => {
     switch (step.status) {
@@ -121,11 +126,15 @@ export function StepItem({
 
   const isStepEffectivelyDisabled =
     !canRunGlobal ||
-    (!prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED");
+    (!prerequisitesMet &&
+      step.status !== ("completed" as StepStatusInfo["status"]) &&
+      step.metadata?.errorCode !== "AUTH_EXPIRED");
 
   const runButtonDisabledReason = !canRunGlobal
     ? "Global prerequisites (auth/config) not met."
-    : !prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED"
+    : !prerequisitesMet &&
+        step.status !== ("completed" as StepStatusInfo["status"]) &&
+        step.metadata?.errorCode !== "AUTH_EXPIRED"
       ? "Prerequisite steps not completed."
       : undefined;
 
@@ -169,7 +178,7 @@ export function StepItem({
           )}
         </CardHeader>
         <CardContent className="px-4 pb-4 space-y-3">
-          {!step.automatable && (
+          {!step.automatable && step.status !== "completed" && (
             <div className="p-3 border rounded-md bg-blue-50 dark:bg-blue-950/30 space-y-2">
               <h5 className="font-medium text-sm text-blue-900 dark:text-blue-100">
                 Manual Action Required
@@ -191,7 +200,7 @@ export function StepItem({
                     </a>
                   </Button>
                 )}
-                {step.status !== "completed" && (
+                {step.status !== ("completed" as StepStatusInfo["status"]) && (
                   <Button
                     size="sm"
                     onClick={handleMarkAsComplete}
@@ -206,7 +215,8 @@ export function StepItem({
           )}
 
           {step.automatable &&
-            (step.status === "pending" || allowRetryForAutomated) && (
+            (step.status === "pending" || allowRetryForAutomated) &&
+            step.status !== ("completed" as StepStatusInfo["status"]) && (
               <TooltipProvider>
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
@@ -217,7 +227,7 @@ export function StepItem({
                         disabled={
                           isStepEffectivelyDisabled ||
                           step.status === "in_progress" ||
-                          (step.status === "completed" &&
+                          (step.status === ("completed" as StepStatusInfo["status"]) &&
                             !step.metadata?.preExisting)
                         }
                         variant={
