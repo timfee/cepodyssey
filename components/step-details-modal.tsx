@@ -17,6 +17,10 @@ interface StepDetailsModalProps {
   onClose: () => void;
   outputs: Record<string, unknown>;
 }
+/**
+ * Modal dialog displaying full details and admin links for a step.
+ * Allows navigation to configure or verify URLs when available.
+ */
 
 export function StepDetailsModal({
   step,

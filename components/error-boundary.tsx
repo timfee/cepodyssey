@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
 
+/**
+ * Display a fallback UI when a child component throws an error.
+ * Provides a retry button that invokes the passed reset handler.
+ */
 export default function ErrorBoundary({
   error,
   reset,

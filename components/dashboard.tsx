@@ -412,7 +412,7 @@ export function AutomationDashboard({
             Automate Google Workspace & Microsoft Entra ID Integration
           </p>
         </header>
-        <ConfigForm /> {/* ConfigForm is now read-only for domain/tenantId */}
+        <ConfigForm />
         <AuthStatus />
         <ProgressSummary />
         {showActionRequired && (

@@ -10,7 +10,11 @@ export type AppRoleAssignment = MicrosoftGraph.AppRoleAssignment;
 export type SynchronizationSchema = MicrosoftGraph.SynchronizationSchema;
 export type SynchronizationRule = MicrosoftGraph.SynchronizationRule;
 
-/** List Azure AD applications matching an optional filter. */
+/**
+ * List Azure AD applications.
+ * Optional OData filter narrows results, returning an empty array
+ * if no applications match.
+ */
 export async function listApplications(
   token: string,
   filter?: string,
@@ -31,7 +35,10 @@ export async function listApplications(
   return result.value ?? [];
 }
 
-/** Get a service principal using its application client ID. */
+/**
+ * Retrieve a service principal using its application client ID.
+ * Returns null if no matching service principal exists.
+ */
 export async function getServicePrincipalByAppId(
   token: string,
   appId: string,
@@ -51,7 +58,10 @@ export async function getServicePrincipalByAppId(
   return result.value[0] ?? null;
 }
 
-/** Fetch detailed information for a service principal. */
+/**
+ * Fetch detailed information for a service principal by object ID.
+ * Returns null when the principal cannot be found.
+ */
 export async function getServicePrincipalDetails(
   token: string,
   spObjectId: string,
@@ -69,7 +79,10 @@ export async function getServicePrincipalDetails(
     : result;
 }
 
-/** Retrieve application details by object ID. */
+/**
+ * Retrieve application details using the object ID.
+ * Returns null when the application cannot be found.
+ */
 export async function getApplicationDetails(
   token: string,
   applicationObjectId: string,
@@ -87,7 +100,10 @@ export async function getApplicationDetails(
     : result;
 }
 
-/** Instantiate an application from a gallery template. */
+/**
+ * Instantiate an enterprise application from a gallery template.
+ * Returns `{ alreadyExists: true }` if the app has been created previously.
+ */
 export async function createEnterpriseApp(
   token: string,
   templateId: string,
@@ -107,7 +123,11 @@ export async function createEnterpriseApp(
   return handleApiResponse(res);
 }
 
-/** Patch properties on a service principal. */
+/**
+ * Update an existing service principal with partial data.
+ * Returns `{ alreadyExists: true }` when the patch conflicts with
+ * a duplicate property.
+ */
 export async function patchServicePrincipal(
   token: string,
   servicePrincipalId: string,
@@ -124,7 +144,10 @@ export async function patchServicePrincipal(
   return handleApiResponse(res);
 }
 
-/** Update an Azure AD application. */
+/**
+ * Patch an existing Azure AD application.
+ * Returns `{ alreadyExists: true }` on conflicting updates.
+ */
 export async function updateApplication(
   token: string,
   applicationObjectId: string,
@@ -141,7 +164,11 @@ export async function updateApplication(
   return handleApiResponse(res);
 }
 
-/** Create a new provisioning job for a service principal. */
+/**
+ * Create a new synchronization job for a service principal using the
+ * GoogleApps template. Returns `{ alreadyExists: true }` when a job
+ * already exists.
+ */
 export async function createProvisioningJob(
   token: string,
   servicePrincipalId: string,
@@ -157,7 +184,10 @@ export async function createProvisioningJob(
   return handleApiResponse(res);
 }
 
-/** List provisioning jobs for a service principal. */
+/**
+ * List provisioning jobs for a service principal.
+ * Returns an empty array when no jobs exist.
+ */
 export async function listSynchronizationJobs(
   token: string,
   servicePrincipalId: string,
@@ -177,7 +207,10 @@ export async function listSynchronizationJobs(
   return result.value ?? [];
 }
 
-/** Retrieve details for a specific provisioning job. */
+/**
+ * Retrieve details for a specific provisioning job.
+ * Returns null if the job no longer exists.
+ */
 export async function getProvisioningJob(
   token: string,
   servicePrincipalId: string,
@@ -196,7 +229,10 @@ export async function getProvisioningJob(
     : result;
 }
 
-/** Fetch the synchronization schema for a provisioning job. */
+/**
+ * Fetch the synchronization schema for a provisioning job.
+ * Returns null if the schema has not been created.
+ */
 export async function getSynchronizationSchema(
   token: string,
   servicePrincipalId: string,
@@ -215,7 +251,10 @@ export async function getSynchronizationSchema(
     : result;
 }
 
-/** Update credentials used for the provisioning job. */
+/**
+ * Replace credentials used for the provisioning job.
+ * Returns `{ alreadyExists: true }` when conflicts occur.
+ */
 export async function updateProvisioningCredentials(
   token: string,
   servicePrincipalId: string,
@@ -232,7 +271,11 @@ export async function updateProvisioningCredentials(
   return handleApiResponse(res);
 }
 
-/** Start a provisioning job that has been configured. */
+/**
+ * Start an existing provisioning job.
+ * Returns `{ alreadyExists: true }` for race conditions when the job is
+ * already running.
+ */
 export async function startProvisioningJob(
   token: string,
   servicePrincipalId: string,
@@ -246,7 +289,10 @@ export async function startProvisioningJob(
   return handleApiResponse(res);
 }
 
-/** Configure attribute mappings for a provisioning job. */
+/**
+ * Configure attribute mappings for a provisioning job. Accepts either
+ * full synchronization rules or partial schema patches.
+ */
 export async function configureAttributeMappings(
   token: string,
   servicePrincipalId: string,
@@ -266,7 +312,10 @@ export async function configureAttributeMappings(
   return handleApiResponse(res);
 }
 
-/** Assign a user or group to an enterprise application. */
+/**
+ * Assign a user or group to an enterprise application.
+ * Returns `{ alreadyExists: true }` when the assignment is duplicated.
+ */
 export async function assignUsersToApp(
   token: string,
   servicePrincipalId: string,
@@ -288,7 +337,9 @@ export async function assignUsersToApp(
   return handleApiResponse(res);
 }
 
-/** List assignments for an application service principal. */
+/**
+ * List role assignments for an application's service principal.
+ */
 export async function listAppRoleAssignments(
   token: string,
   servicePrincipalObjectId: string,

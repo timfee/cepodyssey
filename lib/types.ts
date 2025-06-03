@@ -1,5 +1,3 @@
-// ./lib/types.ts
-
 /**
  * Defines the dynamic status and metadata of a step, typically stored in Redux.
  */

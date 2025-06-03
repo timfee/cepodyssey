@@ -13,6 +13,10 @@ interface CollapsibleStepProps {
   canRunGlobal: boolean;
 }
 
+/**
+ * Collapsible container for a single automation step.
+ * Expands automatically when a step is in progress or failed.
+ */
 export function CollapsibleStep({
   step,
   isLastStep,

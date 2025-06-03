@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Directory Setup Assistant",
   description: "Automate Google Workspace and Microsoft Entra ID Integration",
 };
+/**
+ * Root layout wrapping the entire application with providers and global styles.
+ */
 
 export default function RootLayout({
   children,

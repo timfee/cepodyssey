@@ -58,7 +58,6 @@ function getCloudIdentityApiBaseUrl(): string {
 /**
  * Check whether a domain is verified in Google Workspace.
  */
-/** Check whether a domain is verified in Google Workspace. */
 export async function getDomainVerificationStatus(
   token: string,
   domainName: string,
@@ -105,7 +104,6 @@ export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
 /**
  * Create an organizational unit under the given parent path.
  */
-/** Create an organizational unit under the given parent path. */
 export async function createOrgUnit(
   token: string,
   name: string,

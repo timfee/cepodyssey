@@ -8,6 +8,14 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
 
+/**
+ * Convert an unexpected error into a standardized execution result.
+ * Logs the failure with the associated step when provided.
+ *
+ * @param error - The thrown error or rejection value
+ * @param stepId - Optional step identifier for context
+ * @returns Failed StepExecutionResult with error message
+ */
 async function handleExecutionError(
   error: unknown,
   stepId?: string,
@@ -29,6 +37,10 @@ async function handleExecutionError(
   return { success: false, error: { message } };
 }
 
+/**
+ * Retrieve both provider tokens and the tenant ID from the session.
+ * Throws a descriptive APIError when any required value is missing.
+ */
 async function getTokens(): Promise<{
   googleToken: string;
   microsoftToken: string;
@@ -60,7 +72,7 @@ async function getTokens(): Promise<{
   };
 }
 
-// --- Google Execution Actions ---
+// Google Execution Actions
 /**
  * G-1: Create the Automation organizational unit if it does not exist.
  */
@@ -333,7 +345,7 @@ export async function executeG8ExcludeAutomationOuFromSso(
   }
 }
 
-// --- Microsoft Execution Actions ---
+// Microsoft Execution Actions
 /**
  * M-1: Create the provisioning Enterprise application in Azure.
  */
