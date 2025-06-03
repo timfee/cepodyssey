@@ -18,6 +18,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
     const authErrorPresent = Object.values(stepsStatus).some(
       (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
     );
+
     if (
       !session?.hasGoogleAuth ||
       !session?.hasMicrosoftAuth ||
