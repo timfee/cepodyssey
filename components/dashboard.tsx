@@ -27,6 +27,7 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
@@ -341,6 +342,45 @@ export function AutomationDashboard({
     }
   }, [executeStep, store, canRunAutomation]);
 
+  const ProgressSummary = () => {
+    const totalSteps = allStepDefinitions.length;
+    const completedSteps = Object.values(stepsStatusMap).filter(
+      s => s.status === "completed"
+    ).length;
+    const progressPercent = (completedSteps / totalSteps) * 100;
+
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Setup Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>{completedSteps} of {totalSteps} steps completed</span>
+                <span className="font-medium">{Math.round(progressPercent)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {canRunAutomation && completedSteps < totalSteps && (
+              <Button onClick={runAllPending} className="w-full" size="lg">
+                <PlayIcon className="mr-2 h-5 w-5" />
+                Run All Pending Steps ({totalSteps - completedSteps} remaining)
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   if (isLoadingSession && !currentSession) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -370,6 +410,7 @@ export function AutomationDashboard({
         </header>
         <ConfigForm /> {/* ConfigForm is now read-only for domain/tenantId */}
         <AuthStatus />
+        <ProgressSummary />
         {showActionRequired && (
           <Alert
             variant="default"
@@ -408,16 +449,6 @@ export function AutomationDashboard({
             </AlertDescription>
           </Alert>
         )}
-        <div className="flex justify-end pt-4">
-          <Button
-            onClick={runAllPending}
-            disabled={!canRunAutomation || isLoadingSession}
-            size="lg"
-          >
-            <PlayIcon className="mr-2 h-5 w-5" />
-            Run All Pending Automatable Steps
-          </Button>
-        </div>
         <ProgressVisualizer onExecuteStep={executeStep} />
       </main>
     </div>

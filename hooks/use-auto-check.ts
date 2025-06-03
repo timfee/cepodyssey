@@ -18,15 +18,14 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
     hasChecked.current = true;
     // Only run checks for steps that perform safe, read-only operations.
     const autoCheckSteps = [
-      'G-1', // Check Automation OU exists
-      'G-4', // Domain added/verified
-      'G-5', // SAML profile present
-      'M-1', // Provisioning app exists
-      'M-2', // Provisioning SP enabled
-      'M-6', // SSO app exists
-      'M-7', // SAML settings applied
-      'M-8', // IdP metadata retrieved
+      'G-1',  // Check OU exists
+      'G-4',  // Domain verified
+      'G-5',  // SAML profile exists
+      'M-1',  // Provisioning app exists
+      'M-6',  // SSO app exists
     ];
+    // Don't auto-check these as they might have side effects:
+    // M-2, M-7, M-8 - These might modify state
 
     const checkPromises = autoCheckSteps
       .filter((stepId) => {
