@@ -100,6 +100,10 @@ export const OUTPUT_KEYS = {
   AUTOMATION_OU_ID: "g1AutomationOuId",
   // Google - G-S0: Get Secret Token for Provisioning
   GOOGLE_PROVISIONING_SECRET_TOKEN: "gs0GoogleProvisioningSecretToken",
+  SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
+  SERVICE_ACCOUNT_ID: "g2ServiceAccountId",
+  SERVICE_ACCOUNT_PASSWORD: "g2ServiceAccountPassword",
+  SUPER_ADMIN_ROLE_ID: "g3SuperAdminRoleId",
   // Google - G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "g5GoogleSsoProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "g5GoogleSsoProfileFullName",

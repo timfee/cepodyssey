@@ -8,10 +8,14 @@ import {
   checkMicrosoftServicePrincipal,
   checkMicrosoftServicePrincipalEnabled,
   checkOrgUnitExists,
+  checkServiceAccountExists,
+  checkServiceAccountIsAdmin,
 } from "@/app/actions/check-actions";
 
 import {
   executeG1CreateAutomationOu,
+  executeG2CreateServiceAccount,
+  executeG3GrantAdminPrivileges,
   executeG4AddAndVerifyDomain,
   executeG5InitiateGoogleSamlProfile,
   executeG6UpdateGoogleSamlWithAzureIdp,
@@ -49,7 +53,7 @@ export const allStepDefinitions: StepDefinition[] = [
       "Creates an Organizational Unit (OU) named 'Automation' in Google Workspace. This can be useful for applying specific settings or housing accounts related to automated processes, although this tool primarily operates using the logged-in administrator's permissions.",
     category: "Google",
     automatable: true,
-    requires: [],
+    requires: ["G-3"],
     check: (_context: StepContext): Promise<StepCheckResult> =>
       checkOrgUnitExists("/Automation"),
     execute: (context: StepContext): Promise<StepExecutionResult> =>
@@ -60,13 +64,69 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
   {
+    id: "G-2",
+    title: "Create Service Account in Automation OU",
+    description:
+      "Creates a dedicated service account user in the Automation OU for administrative operations. This account can be used for API access and automated tasks.",
+    category: "Google",
+    automatable: true,
+    requires: ["G-1"],
+    check: async (context: StepContext): Promise<StepCheckResult> => {
+      const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string | undefined;
+      if (!serviceAccountEmail) {
+        return {
+          completed: false,
+          message: "Service account not yet created.",
+        };
+      }
+      return checkServiceAccountExists(serviceAccountEmail);
+    },
+    execute: async (context: StepContext): Promise<StepExecutionResult> =>
+      executeG2CreateServiceAccount(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/users",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]}`
+          : null,
+    },
+  },
+  {
+    id: "G-3",
+    title: "Grant Service Account Admin Privileges",
+    description:
+      "Assigns Super Admin role to the service account, enabling it to perform all administrative operations in Google Workspace.",
+    category: "Google",
+    automatable: true,
+    requires: ["G-2"],
+    check: async (context: StepContext): Promise<StepCheckResult> => {
+      const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string | undefined;
+      if (!serviceAccountEmail) {
+        return {
+          completed: false,
+          message: "Service account email not found. Complete G-2 first.",
+        };
+      }
+      return checkServiceAccountIsAdmin(serviceAccountEmail);
+    },
+    execute: async (context: StepContext): Promise<StepExecutionResult> =>
+      executeG3GrantAdminPrivileges(context),
+    adminUrls: {
+      configure: "https://admin.google.com/ac/roles",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]}`
+          : null,
+    },
+  },
+  {
     id: "G-S0",
     title: "Get Google Secret Token for User Provisioning",
     description:
       "Manual: Enable 'Automated user provisioning' in Google Workspace Admin console and copy the generated OAuth Bearer Token (Secret Token). This token is required by Azure AD to provision users into your Google Workspace. Input this token when prompted by this tool.",
     category: "Google",
     automatable: false,
-    requires: [],
+    requires: ["G-3"],
     check: async (context: StepContext): Promise<StepCheckResult> => {
       return context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]
         ? {
@@ -98,7 +158,7 @@ export const allStepDefinitions: StepDefinition[] = [
       "Ensures the primary domain you intend to federate with Azure AD (as configured in this tool) is added and verified within your Google Workspace account. This is essential for SAML-based Single Sign-On.",
     category: "Google",
     automatable: true,
-    requires: [],
+    requires: ["G-3"],
     check: async (context: StepContext): Promise<StepCheckResult> => {
       if (!context.domain)
         return {

@@ -124,6 +124,136 @@ export async function executeG1CreateAutomationOu(
   }
 }
 
+export async function executeG2CreateServiceAccount(
+  context: StepContext,
+): Promise<StepExecutionResult> {
+  try {
+    const { googleToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.AUTOMATION_OU_PATH,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-1 completed successfully.`,
+        },
+      };
+    }
+    const automationOuPath = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string;
+    const domain = context.domain;
+    const timestamp = Date.now();
+    const serviceAccountEmail = `automation-${timestamp}@${domain}`;
+    const password = generateSecurePassword();
+    const userPayload = {
+      primaryEmail: serviceAccountEmail,
+      name: { givenName: "Automation", familyName: "Service Account" },
+      password,
+      orgUnitPath: automationOuPath,
+      changePasswordAtNextLogin: false,
+    } as Partial<google.DirectoryUser>;
+
+    const result = await google.createUser(googleToken, userPayload);
+
+    if (typeof result === "object" && "alreadyExists" in result) {
+      const users = await google.listUsers(googleToken, {
+        query: `orgUnitPath='${automationOuPath}' email:automation-*`,
+      });
+      const existingServiceAccount = users.find(
+        (u) => u.primaryEmail?.startsWith("automation-") && u.orgUnitPath === automationOuPath,
+      );
+      if (existingServiceAccount) {
+        return {
+          success: true,
+          message: `Service account '${existingServiceAccount.primaryEmail}' already exists in Automation OU.`,
+          outputs: {
+            [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: existingServiceAccount.primaryEmail,
+            [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: existingServiceAccount.id,
+          },
+          resourceUrl: `https://admin.google.com/ac/users/${existingServiceAccount.primaryEmail}`,
+        };
+      }
+      return {
+        success: false,
+        error: {
+          message: "Service account creation reported as duplicate but could not find existing account.",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      message: `Service account '${result.primaryEmail}' created successfully. Password stored securely in outputs.`,
+      outputs: {
+        [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: result.primaryEmail,
+        [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: result.id,
+        [OUTPUT_KEYS.SERVICE_ACCOUNT_PASSWORD]: password,
+      },
+      resourceUrl: `https://admin.google.com/ac/users/${result.primaryEmail}`,
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-2");
+  }
+}
+
+export async function executeG3GrantAdminPrivileges(
+  context: StepContext,
+): Promise<StepExecutionResult> {
+  try {
+    const { googleToken } = await getTokens();
+    const validation = validateRequiredOutputs(context.outputs, [
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+    ]);
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+      };
+    }
+    const serviceAccountEmail = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
+    const roles = await google.listAdminRoles(googleToken);
+    const superAdminRole = roles.find(
+      (r) => r.roleName === "_SEED_ADMIN_ROLE" || r.roleId === "3",
+    );
+    if (!superAdminRole?.roleId) {
+      return {
+        success: false,
+        error: { message: "Could not find Super Admin role in Google Workspace." },
+      };
+    }
+    const result = await google.assignAdminRole(
+      googleToken,
+      serviceAccountEmail,
+      superAdminRole.roleId,
+    );
+    if (typeof result === "object" && "alreadyExists" in result) {
+      return {
+        success: true,
+        message: `Service account '${serviceAccountEmail}' already has admin privileges.`,
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: superAdminRole.roleId },
+        resourceUrl: "https://admin.google.com/ac/roles/admins",
+      };
+    }
+    return {
+      success: true,
+      message: `Super Admin role assigned to service account '${serviceAccountEmail}'.`,
+      outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: superAdminRole.roleId },
+      resourceUrl: "https://admin.google.com/ac/roles/admins",
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-3");
+  }
+}
+
+function generateSecurePassword(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < 20; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 /**
  * G-4: Add the primary domain to Google Workspace and notify for verification.
  */
