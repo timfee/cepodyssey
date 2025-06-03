@@ -439,24 +439,28 @@ export async function getSamlMetadata(
   tenantId: string,
   appId: string,
 ): Promise<SamlMetadata> {
-  const url = `https://login.microsoftonline.com/${tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid=${appId}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new APIError(
-      `Failed to fetch SAML metadata: ${res.statusText}`,
-      res.status,
-    );
+  try {
+    const url = `https://login.microsoftonline.com/${tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid=${appId}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new APIError(
+        `Failed to fetch SAML metadata: ${res.statusText}`,
+        res.status,
+      );
+    }
+    const xml = await res.text();
+    const entityIdMatch = /entityID="([^"]+)"/.exec(xml);
+    const ssoUrlMatch = /SingleSignOnService[^>]*Location="([^"]+)"/.exec(xml);
+    const certMatch = /<X509Certificate>([^<]+)<\/X509Certificate>/.exec(xml);
+    if (!entityIdMatch?.[1] || !ssoUrlMatch?.[1] || !certMatch?.[1]) {
+      throw new APIError("Could not parse SAML metadata XML.", 500);
+    }
+    return {
+      entityId: entityIdMatch[1],
+      ssoUrl: ssoUrlMatch[1],
+      certificate: certMatch[1],
+    };
+  } catch (error) {
+    handleMicrosoftError(error);
   }
-  const xml = await res.text();
-  const entityIdMatch = /entityID="([^"]+)"/.exec(xml);
-  const ssoUrlMatch = /SingleSignOnService[^>]*Location="([^"]+)"/.exec(xml);
-  const certMatch = /<X509Certificate>([^<]+)<\/X509Certificate>/.exec(xml);
-  if (!entityIdMatch?.[1] || !ssoUrlMatch?.[1] || !certMatch?.[1]) {
-    throw new APIError("Could not parse SAML metadata XML.", 500);
-  }
-  return {
-    entityId: entityIdMatch[1],
-    ssoUrl: ssoUrlMatch[1],
-    certificate: certMatch[1],
-  };
 }
