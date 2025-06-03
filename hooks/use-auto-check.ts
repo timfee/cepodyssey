@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { debounce } from "@/lib/utils";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
 import { useSessionSync } from "./use-session-sync";
-import { validateSessionTokens } from "@/lib/api/session-validator";
-import { debounce } from "@/lib/utils";
 
 /**
  * Runs lightweight "check" functions for a subset of steps once the
@@ -40,7 +39,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
 
       // Check for existing auth errors
       const authErrorPresent = Object.values(stepsStatus).some(
-        (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
+        (s) => s.metadata?.errorCode === "AUTH_EXPIRED"
       );
       if (authErrorPresent) {
         console.log("Skipping auto-check due to existing auth errors");
@@ -50,10 +49,16 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
       setIsValidating(true);
 
       try {
-        // Validate session tokens before proceeding
-        const validation = await validateSessionTokens();
-        if (!validation.valid) {
-          console.warn("Session validation failed:", validation.error);
+        // Check if session has required tokens
+        if (!session.googleToken || !session.microsoftToken) {
+          console.warn("Session missing required tokens, skipping auto-check");
+          setIsValidating(false);
+          return;
+        }
+
+        // Check for refresh token error
+        if (session.error === "RefreshTokenError") {
+          console.warn("Session has refresh token error, skipping auto-check");
           setIsValidating(false);
           return;
         }
@@ -94,7 +99,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
         setIsValidating(false);
       }
     }, 2000),
-    [appConfig, stepsStatus, session, status, executeCheck, isValidating],
+    [appConfig, stepsStatus, session, status, executeCheck, isValidating]
   );
 
   // Trigger debounced check when dependencies change

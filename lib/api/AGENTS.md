@@ -11,14 +11,14 @@ This document describes the API contracts and integration patterns used in the D
 **Base URL**: `https://admin.googleapis.com/admin/directory/v1`
 **Authentication**: OAuth 2.0 Bearer Token with admin scopes
 
-#### Key Endpoints:
+#### Key Endpoints
 
 - `GET/POST /customer/{customerId}/orgunits` - Manage organizational units
 - `GET/POST /users` - Manage users
 - `GET/POST /customer/{customerId}/domains` - Manage domains
 - `GET/POST /customer/{customerId}/roles` - Manage admin roles
 
-#### Required Scopes:
+#### Required Scopes
 
 ```
 https://www.googleapis.com/auth/admin.directory.orgunit
@@ -32,12 +32,12 @@ https://www.googleapis.com/auth/admin.directory.rolemanagement
 **Base URL**: `https://cloudidentity.googleapis.com/v1`
 **Authentication**: OAuth 2.0 Bearer Token
 
-#### Key Endpoints:
+#### Key Endpoints
 
 - `GET/POST /inboundSamlSsoProfiles` - Manage SAML SSO profiles
 - `POST /{profileName}:assignToOrgUnits` - Assign SAML profiles to OUs
 
-#### Important Notes:
+#### Important Notes
 
 - Customer ID is typically "my_customer" for the authenticated admin's domain
 - SAML profile names follow format: `inboundSamlSsoProfiles/{profileId}`
@@ -58,7 +58,7 @@ https://www.googleapis.com/auth/admin.directory.rolemanagement
 - **Enterprise Application**: The service principal (`/servicePrincipals`)
 - Gallery apps create both objects simultaneously
 
-#### Key Endpoints:
+#### Key Endpoints
 
 - `POST /applicationTemplates/{templateId}/instantiate` - Create gallery app
 - `GET/PATCH /applications/{id}` - Manage app registrations
@@ -67,7 +67,7 @@ https://www.googleapis.com/auth/admin.directory.rolemanagement
 
 ### Provisioning Configuration
 
-#### Synchronization Jobs:
+#### Synchronization Jobs
 
 ```typescript
 interface SynchronizationJob {
@@ -83,7 +83,7 @@ interface SynchronizationJob {
 }
 ```
 
-#### Required Credentials:
+#### Required Credentials
 
 ```typescript
 [
@@ -97,13 +97,13 @@ interface SynchronizationJob {
 
 ### SAML Configuration
 
-#### Metadata Endpoint:
+#### Metadata Endpoint
 
 ```
 GET https://login.microsoftonline.com/{tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid={appId}
 ```
 
-#### Required App Configuration:
+#### Required App Configuration
 
 ```typescript
 {
