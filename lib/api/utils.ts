@@ -1,3 +1,9 @@
+/**
+ * Error thrown when an API call fails.
+ * @param message human readable error message
+ * @param status HTTP status returned by the API
+ * @param code optional error code provided by the API
+ */
 export class APIError extends Error {
   constructor(message: string, public status: number, public code?: string) {
     super(message);
@@ -5,6 +11,10 @@ export class APIError extends Error {
   }
 }
 
+/**
+ * Run an async operation with exponential backoff retries.
+ * Client-side API errors are rethrown without retrying.
+ */
 export async function withRetry<T>(
   operation: () => Promise<T>,
   retries = 3
@@ -29,6 +39,9 @@ export async function withRetry<T>(
   throw lastError;
 }
 
+/**
+ * Perform a fetch request with a bearer token and JSON headers.
+ */
 export async function fetchWithAuth(
   url: string,
   token: string,
@@ -46,6 +59,9 @@ export async function fetchWithAuth(
   );
 }
 
+/**
+ * Parse a JSON API response and throw APIError on failure.
+ */
 export async function handleApiResponse<T>(
   res: Response
 ): Promise<T | { alreadyExists: true }> {

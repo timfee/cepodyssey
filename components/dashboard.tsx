@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  AlertTriangleIcon,
-  CheckCircleIcon,
-  Loader2Icon,
-  PlayIcon,
-} from "lucide-react";
+import { AlertTriangleIcon, Loader2Icon, PlayIcon } from "lucide-react";
 import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useMemo } from "react";
@@ -31,23 +26,23 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming Card is still wanted
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
 
 interface AutomationDashboardProps {
   serverSession: Session;
-  initialConfig?: Partial<AppConfigTypeFromTypes>; // Now sourced from session by app/page.tsx
+  initialConfig?: Partial<AppConfigTypeFromTypes>;
 }
+/**
+ * Main dashboard component handling setup progress and automation actions.
+ */
 
 export function AutomationDashboard({
   serverSession,
-  initialConfig, // This prop now contains domain/tenantId from the session
+  initialConfig,
 }: AutomationDashboardProps) {
-  const { data: session, status } = useSession({
-    required: true, // Ensures we have a client-side session
-  });
+  const { data: session, status } = useSession({ required: true });
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
@@ -59,9 +54,9 @@ export function AutomationDashboard({
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
 
-  // Effect 1: Initialize Redux config from initialConfig prop (sourced from session by server component)
+  // Effect: initialize Redux config from server session values.
   useEffect(() => {
-    // This should only run if Redux domain/tenantId are not yet set, or if initialConfig has new values.
+    // Only run when Redux lacks domain/tenant or new values are provided.
     if (
       initialConfig &&
       (initialConfig.domain !== appConfig.domain ||
@@ -77,7 +72,7 @@ export function AutomationDashboard({
         initializeConfig({
           domain: initialConfig.domain ?? null,
           tenantId: initialConfig.tenantId ?? null,
-          outputs: initialConfig.outputs ?? {}, // Server doesn't persist outputs in this model
+          outputs: initialConfig.outputs ?? {},
         })
       );
     } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
@@ -87,7 +82,7 @@ export function AutomationDashboard({
     }
   }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
 
-  // Effect 2: Load step progress & step-specific outputs from domain-keyed localStorage.
+  // Effect: load saved progress from localStorage.
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       const persisted: PersistedProgress | null = loadProgress(
@@ -95,8 +90,7 @@ export function AutomationDashboard({
       );
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
-        // Merge outputs: Redux outputs might have just been initialized (empty)
-        // from initialConfig. Persisted outputs are step-specific.
+        // Merge outputs saved for this domain.
         dispatch(addOutputs(persisted.outputs || {}));
         toast.info("Loaded saved step progress for this domain.", {
           duration: 2000,
@@ -111,7 +105,7 @@ export function AutomationDashboard({
     }
   }, [appConfig.domain, dispatch]);
 
-  // Effect 3: Persist Redux state (steps and outputs) to domain-keyed localStorage.
+  // Effect: persist Redux state for this domain.
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       saveProgress(appConfig.domain, {

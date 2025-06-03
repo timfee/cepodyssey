@@ -1,20 +1,20 @@
-// ./app/page.tsx (Main Dashboard Page)
 import { auth } from "@/app/(auth)/auth";
-// getConfig is no longer needed here for domain/tenantId
 import { AutomationDashboard } from "@/components/dashboard";
 import type { AppConfigState as AppConfigTypeFromTypes } from "@/lib/types";
 import { redirect } from "next/navigation";
 
+/**
+ * Server component that renders the automation dashboard once both providers
+ * are authenticated.
+ */
 export default async function Page() {
   const session = await auth();
 
   if (!session?.user) {
-    // Simplified check: if no user, redirect to login
     redirect("/login?reason=unauthenticated");
   }
 
-  // If partially authenticated, login page should handle guidance.
-  // If fully authenticated, proceed to dashboard.
+  // Redirect if either provider is missing.
   if (!session.hasGoogleAuth || !session.hasMicrosoftAuth) {
     const queryParams = new URLSearchParams();
     if (!session.hasGoogleAuth && !session.hasMicrosoftAuth)
@@ -25,11 +25,11 @@ export default async function Page() {
     redirect(`/login?${queryParams.toString()}`);
   }
 
-  // Prepare initialConfig for AutomationDashboard from session
+  // Prepare configuration for the dashboard from the session
   const initialConfig: Partial<AppConfigTypeFromTypes> = {
-    domain: session.authFlowDomain ?? null, // From Google 'hd' claim in JWT
-    tenantId: session.microsoftTenantId ?? null, // From Microsoft 'tid' claim in JWT
-    outputs: {}, // Outputs will be loaded from domain-keyed localStorage on client
+    domain: session.authFlowDomain ?? null,
+    tenantId: session.microsoftTenantId ?? null,
+    outputs: {},
   };
   console.log(
     "app/page.tsx: Passing initialConfig to dashboard from session:",

@@ -33,6 +33,7 @@ export interface InboundSamlSsoProfile {
 
 const GWS_CUSTOMER_ID = "my_customer";
 
+/** Build the base URL for Directory API calls. */
 function getDirectoryApiBaseUrl(): string {
   const envBase = process.env.GOOGLE_API_BASE;
   if (!envBase) {
@@ -42,6 +43,7 @@ function getDirectoryApiBaseUrl(): string {
   return `${envBase}/admin/directory/v1`;
 }
 
+/** Build the base URL for Cloud Identity API calls. */
 function getCloudIdentityApiBaseUrl(): string {
   const envBase = process.env.GOOGLE_IDENTITY_BASE;
   if (!envBase) {
@@ -53,6 +55,10 @@ function getCloudIdentityApiBaseUrl(): string {
   return `${envBase}/v1`;
 }
 
+/**
+ * Check whether a domain is verified in Google Workspace.
+ */
+/** Check whether a domain is verified in Google Workspace. */
 export async function getDomainVerificationStatus(
   token: string,
   domainName: string
@@ -60,14 +66,13 @@ export async function getDomainVerificationStatus(
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      // Corrected to fetchWithAuth
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
         domainName
       )}`,
       token
     );
     if (res.status === 404) return false;
-    const data = await handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
+    const data = await handleApiResponse<GoogleDomain>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return false;
     return Boolean(data.verified);
@@ -84,19 +89,23 @@ export async function getDomainVerificationStatus(
 interface ListOrgUnitsResponse {
   organizationUnits?: GoogleOrgUnit[];
 }
+/** List all organizational units. */
 export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits?type=all`,
     token
   );
-  const data = await handleApiResponse<ListOrgUnitsResponse>(res); // Corrected to handleApiResponse
+  const data = await handleApiResponse<ListOrgUnitsResponse>(res);
   if (typeof data === "object" && data !== null && "alreadyExists" in data)
     return [];
   return data.organizationUnits ?? [];
 }
 
+/**
+ * Create an organizational unit under the given parent path.
+ */
+/** Create an organizational unit under the given parent path. */
 export async function createOrgUnit(
   token: string,
   name: string,
@@ -117,9 +126,10 @@ export async function createOrgUnit(
     url: `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits`,
   });
 
-  return handleApiResponse<GoogleOrgUnit>(res); // Corrected to handleApiResponse
+  return handleApiResponse<GoogleOrgUnit>(res);
 }
 
+/** Get a single organizational unit by path. */
 export async function getOrgUnit(
   token: string,
   ouPath: string
@@ -142,12 +152,12 @@ export async function getOrgUnit(
     const fetchUrl = `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
       relativePath
     )}`;
-    const res = await fetchWithAuth(fetchUrl, token); // Corrected to fetchWithAuth
+    const res = await fetchWithAuth(fetchUrl, token);
 
     if (res.status === 404) {
       return null;
     }
-    const data = await handleApiResponse<GoogleOrgUnit>(res); // Corrected to handleApiResponse
+    const data = await handleApiResponse<GoogleOrgUnit>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return null;
     return data;
@@ -158,19 +168,20 @@ export async function getOrgUnit(
   }
 }
 
+/** Create a user in Google Workspace. */
 export async function createUser(
   token: string,
   user: Partial<DirectoryUser>
 ): Promise<DirectoryUser | { alreadyExists: true }> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(`${baseUrl}/users`, token, {
-    // Corrected to fetchWithAuth
     method: "POST",
     body: JSON.stringify(user),
   });
-  return handleApiResponse<DirectoryUser>(res); // Corrected to handleApiResponse
+  return handleApiResponse<DirectoryUser>(res);
 }
 
+/** Fetch a user by user key (email or ID). */
 export async function getUser(
   token: string,
   userKey: string
@@ -178,14 +189,13 @@ export async function getUser(
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      // Corrected to fetchWithAuth
       `${baseUrl}/users/${encodeURIComponent(
         userKey
       )}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath`,
       token
     );
     if (res.status === 404) return null;
-    const data = await handleApiResponse<DirectoryUser>(res); // Corrected to handleApiResponse
+    const data = await handleApiResponse<DirectoryUser>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return null;
     return data;
@@ -196,13 +206,13 @@ export async function getUser(
   }
 }
 
+/** Add a secondary domain to the Google Workspace tenant. */
 export async function addDomain(
   token: string,
   domainName: string
 ): Promise<GoogleDomain | { alreadyExists: true }> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains`,
     token,
     {
@@ -210,9 +220,10 @@ export async function addDomain(
       body: JSON.stringify({ domainName }),
     }
   );
-  return handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
+  return handleApiResponse<GoogleDomain>(res);
 }
 
+/** Retrieve domain details if present. */
 export async function getDomain(
   token: string,
   domainName: string
@@ -220,14 +231,13 @@ export async function getDomain(
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      // Corrected to fetchWithAuth
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
         domainName
       )}`,
       token
     );
     if (res.status === 404) return null;
-    const data = await handleApiResponse<GoogleDomain>(res); // Corrected to handleApiResponse
+    const data = await handleApiResponse<GoogleDomain>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return null;
     return data;
@@ -241,19 +251,20 @@ export async function getDomain(
 interface ListAdminRolesResponse {
   items?: GoogleRole[];
 }
+/** List available admin roles. */
 export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roles`,
     token
   );
-  const data = await handleApiResponse<ListAdminRolesResponse>(res); // Corrected to handleApiResponse
+  const data = await handleApiResponse<ListAdminRolesResponse>(res);
   if (typeof data === "object" && data !== null && "alreadyExists" in data)
     return [];
   return data.items ?? [];
 }
 
+/** Assign an admin role to a user. */
 export async function assignAdminRole(
   token: string,
   userEmail: string,
@@ -261,7 +272,6 @@ export async function assignAdminRole(
 ): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments`,
     token,
     {
@@ -273,34 +283,34 @@ export async function assignAdminRole(
       }),
     }
   );
-  return handleApiResponse<GoogleRoleAssignment>(res); // Corrected to handleApiResponse
+  return handleApiResponse<GoogleRoleAssignment>(res);
 }
 
+/** List admin role assignments for a user. */
 export async function listRoleAssignments(
   token: string,
   userKey: string
 ): Promise<GoogleRoleAssignment[]> {
   const baseUrl = getDirectoryApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
       userKey
     )}`,
     token
   );
-  const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(res); // Corrected to handleApiResponse
+  const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(res);
   if (typeof data === "object" && data !== null && "alreadyExists" in data)
     return [];
   return data.items ?? [];
 }
 
+/** Create a new inbound SAML SSO profile. */
 export async function createSamlProfile(
   token: string,
   displayName: string
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
     token,
     {
@@ -308,9 +318,10 @@ export async function createSamlProfile(
       body: JSON.stringify({ displayName }),
     }
   );
-  return handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
+  return handleApiResponse<InboundSamlSsoProfile>(res);
 }
 
+/** Retrieve a specific SAML profile. */
 export async function getSamlProfile(
   token: string,
   profileFullName: string
@@ -320,9 +331,9 @@ export async function getSamlProfile(
     const res = await fetchWithAuth(
       `${cloudIdentityBaseUrl}/${profileFullName}`,
       token
-    ); // Corrected to fetchWithAuth
+    );
     if (res.status === 404) return null;
-    const data = await handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
+    const data = await handleApiResponse<InboundSamlSsoProfile>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return null;
     return data;
@@ -333,23 +344,24 @@ export async function getSamlProfile(
   }
 }
 
+/** List all SAML profiles for the customer. */
 export async function listSamlProfiles(
   token: string
 ): Promise<InboundSamlSsoProfile[]> {
   const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
     token
   );
   const data = await handleApiResponse<{
     inboundSamlSsoProfiles?: InboundSamlSsoProfile[];
-  }>(res); // Corrected to handleApiResponse
+  }>(res);
   if (typeof data === "object" && data !== null && "alreadyExists" in data)
     return [];
   return data.inboundSamlSsoProfiles ?? [];
 }
 
+/** Update settings for an existing SAML profile. */
 export async function updateSamlProfile(
   token: string,
   profileFullName: string,
@@ -362,7 +374,6 @@ export async function updateSamlProfile(
   const updateMask = updateMaskPaths.join(",");
 
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${cloudIdentityBaseUrl}/${profileFullName}${
       updateMask ? `?updateMask=${updateMask}` : ""
     }`,
@@ -372,7 +383,7 @@ export async function updateSamlProfile(
       body: JSON.stringify(config),
     }
   );
-  return handleApiResponse<InboundSamlSsoProfile>(res); // Corrected to handleApiResponse
+  return handleApiResponse<InboundSamlSsoProfile>(res);
 }
 
 interface AssignSamlSsoPayload {
@@ -381,6 +392,7 @@ interface AssignSamlSsoPayload {
     ssoMode: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
   }[];
 }
+/** Assign the SAML profile to one or more organizational units. */
 export async function assignSamlToOrgUnits(
   token: string,
   profileFullName: string,
@@ -388,7 +400,6 @@ export async function assignSamlToOrgUnits(
 ): Promise<object | { alreadyExists: true }> {
   const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
   const res = await fetchWithAuth(
-    // Corrected to fetchWithAuth
     `${cloudIdentityBaseUrl}/${profileFullName}:assignToOrgUnits`,
     token,
     {
@@ -396,5 +407,5 @@ export async function assignSamlToOrgUnits(
       body: JSON.stringify({ assignments } as AssignSamlSsoPayload),
     }
   );
-  return handleApiResponse<object>(res); // Corrected to handleApiResponse
+  return handleApiResponse<object>(res);
 }

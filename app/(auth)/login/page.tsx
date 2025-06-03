@@ -1,4 +1,3 @@
-// ./app/(auth)/login/page.tsx
 "use client";
 
 import {
@@ -25,15 +24,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
+/**
+ * Interactive login page used to connect administrator accounts for both
+ * providers before accessing the dashboard.
+ */
 function LoginPage() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [domain, setDomain] = useState(""); // For Google 'hd' param
+  const [domain, setDomain] = useState("");
   const [tenantId, setTenantId] = useState(
     process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || ""
-  ); // For Microsoft login if not fixed by env
+  );
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
   const [isLookingUpTenant, setIsLookingUpTenant] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
@@ -41,17 +44,17 @@ function LoginPage() {
   const [isGooglePending, startGoogleLoginTransition] = useTransition();
   const [isMicrosoftPending, startMicrosoftLoginTransition] = useTransition();
 
-  // Effect to redirect if both providers are authenticated
+  // Redirect when both providers are authenticated
   useEffect(() => {
     if (session?.hasGoogleAuth && session.hasMicrosoftAuth) {
       console.log(
         "LoginPage: Both providers authenticated. Redirecting to dashboard."
       );
-      router.replace("/"); // Redirect to dashboard
+      router.replace("/");
     }
   }, [session, router]);
 
-  // Effect to display authentication errors
+  // Display authentication errors
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
@@ -119,7 +122,7 @@ function LoginPage() {
   const onMicrosoftSignIn = () => {
     const effectiveTenantId =
       tenantId || process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
-    // Domain is optional for MS login, but good as a hint if available
+    // Domain is optional for MS login but used as hint when provided
     if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
       toast.info(
         "Microsoft Tenant ID is not specified. Attempting sign-in with common endpoint.",
@@ -128,7 +131,7 @@ function LoginPage() {
     }
     startMicrosoftLoginTransition(async () => {
       const formData = new FormData();
-      if (domain) formData.append("domain", domain); // domain_hint
+      if (domain) formData.append("domain", domain);
       if (effectiveTenantId) formData.append("tenantId", effectiveTenantId);
       await handleMicrosoftLogin(formData);
     });
@@ -289,6 +292,10 @@ function LoginPage() {
   );
 }
 
+/**
+ * Suspense boundary for the login page.
+ * This separates the server and client components.
+ */
 export default function LoginPageWrapper() {
   return (
     <Suspense fallback={<div className="p-4">Loading login page...</div>}>

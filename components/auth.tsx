@@ -20,6 +20,9 @@ import {
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 
+/**
+ * Displays the connection status for each provider and triggers sign-in.
+ */
 export function AuthStatus() {
   const { data: session, status } = useSession();
   const { domain, tenantId } = useAppSelector((state) => state.appConfig);

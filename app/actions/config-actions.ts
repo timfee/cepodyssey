@@ -1,11 +1,9 @@
-// ./app/actions/config-actions.ts
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// Assuming ActionResult is defined in a shared types file, or define it here
 export interface ActionResult<TData = Record<string, unknown> | null> {
   success: boolean;
   data?: TData;
@@ -17,7 +15,7 @@ const DOMAIN_REGEX =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
 interface AppConfig {
-  // This matches the Redux AppConfigState structure partially
+  /** Domain and tenant ID mirror the Redux AppConfigState structure. */
   domain: string;
   tenantId: string;
   outputs?: Record<string, unknown>;
@@ -29,9 +27,12 @@ const ConfigSchema = z.object({
   outputs: z.record(z.unknown()).optional(),
 });
 
-const CONFIG_STORE_KEY = "admin_user_app_config"; // Fixed key
+const CONFIG_STORE_KEY = "admin_user_app_config";
 const serverSideConfigStore = new Map<string, AppConfig>();
 
+/**
+ * Persist the provided configuration for the current user session.
+ */
 export async function saveConfig(data: AppConfig): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user) {
@@ -50,16 +51,16 @@ export async function saveConfig(data: AppConfig): Promise<ActionResult> {
   }
 
   serverSideConfigStore.set(CONFIG_STORE_KEY, result.data);
-  console.log(
-    `Configuration saved with key '${CONFIG_STORE_KEY}':`,
-    result.data
-  ); // Confirmed this logs successfully
+  console.log(`Configuration saved with key '${CONFIG_STORE_KEY}':`, result.data);
 
-  revalidatePath("/"); // Revalidate the dashboard page
+  revalidatePath("/");
 
   return { success: true, message: "Configuration saved successfully." };
 }
 
+/**
+ * Retrieve the persisted configuration for the current user session.
+ */
 export async function getConfig(): Promise<AppConfig | null> {
   const session = await auth();
   if (!session?.user) {
@@ -71,12 +72,12 @@ export async function getConfig(): Promise<AppConfig | null> {
     console.log(
       `getConfig: Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
       config
-    ); // Add log here
+    );
     return config;
   } else {
     console.log(
       `getConfig: No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`
-    ); // And here
+    );
     return null;
   }
 }

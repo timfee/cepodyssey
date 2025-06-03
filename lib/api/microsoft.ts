@@ -8,8 +8,9 @@ export type Application = MicrosoftGraph.Application;
 export type SynchronizationJob = MicrosoftGraph.SynchronizationJob;
 export type AppRoleAssignment = MicrosoftGraph.AppRoleAssignment;
 export type SynchronizationSchema = MicrosoftGraph.SynchronizationSchema;
-export type SynchronizationRule = MicrosoftGraph.SynchronizationRule; // Added for typing
+export type SynchronizationRule = MicrosoftGraph.SynchronizationRule;
 
+/** List Azure AD applications matching an optional filter. */
 export async function listApplications(
   token: string,
   filter?: string
@@ -25,17 +26,18 @@ export async function listApplications(
     result !== null &&
     "alreadyExists" in result
   ) {
-    return []; // Should not happen for a list GET
+    return [];
   }
   return result.value ?? [];
 }
 
+/** Get a service principal using its application client ID. */
 export async function getServicePrincipalByAppId(
   token: string,
   appId: string
 ): Promise<ServicePrincipal | null> {
   const res = await fetchWithAuth(
-    `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`, // Added accountEnabled
+    `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`,
     token
   );
   if (res.status === 404) return null;
@@ -49,6 +51,7 @@ export async function getServicePrincipalByAppId(
   return result.value[0] ?? null;
 }
 
+/** Fetch detailed information for a service principal. */
 export async function getServicePrincipalDetails(
   token: string,
   spObjectId: string
@@ -66,6 +69,7 @@ export async function getServicePrincipalDetails(
     : result;
 }
 
+/** Retrieve application details by object ID. */
 export async function getApplicationDetails(
   token: string,
   applicationObjectId: string
@@ -73,7 +77,7 @@ export async function getApplicationDetails(
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/applications/${applicationObjectId}?$select=id,appId,displayName,identifierUris,web`,
     token
-  ); // Select specific fields
+  );
   if (res.status === 404) return null;
   const result = await handleApiResponse<Application>(res);
   return typeof result === "object" &&
@@ -83,6 +87,7 @@ export async function getApplicationDetails(
     : result;
 }
 
+/** Instantiate an application from a gallery template. */
 export async function createEnterpriseApp(
   token: string,
   templateId: string,
@@ -102,6 +107,7 @@ export async function createEnterpriseApp(
   return handleApiResponse(res);
 }
 
+/** Patch properties on a service principal. */
 export async function patchServicePrincipal(
   token: string,
   servicePrincipalId: string,
@@ -118,6 +124,7 @@ export async function patchServicePrincipal(
   return handleApiResponse(res);
 }
 
+/** Update an Azure AD application. */
 export async function updateApplication(
   token: string,
   applicationObjectId: string,
@@ -134,6 +141,7 @@ export async function updateApplication(
   return handleApiResponse(res);
 }
 
+/** Create a new provisioning job for a service principal. */
 export async function createProvisioningJob(
   token: string,
   servicePrincipalId: string
@@ -149,6 +157,7 @@ export async function createProvisioningJob(
   return handleApiResponse(res);
 }
 
+/** List provisioning jobs for a service principal. */
 export async function listSynchronizationJobs(
   token: string,
   servicePrincipalId: string
@@ -168,6 +177,7 @@ export async function listSynchronizationJobs(
   return result.value ?? [];
 }
 
+/** Retrieve details for a specific provisioning job. */
 export async function getProvisioningJob(
   token: string,
   servicePrincipalId: string,
@@ -186,6 +196,7 @@ export async function getProvisioningJob(
     : result;
 }
 
+/** Fetch the synchronization schema for a provisioning job. */
 export async function getSynchronizationSchema(
   token: string,
   servicePrincipalId: string,
@@ -204,6 +215,7 @@ export async function getSynchronizationSchema(
     : result;
 }
 
+/** Update credentials used for the provisioning job. */
 export async function updateProvisioningCredentials(
   token: string,
   servicePrincipalId: string,
@@ -220,6 +232,7 @@ export async function updateProvisioningCredentials(
   return handleApiResponse(res);
 }
 
+/** Start a provisioning job that has been configured. */
 export async function startProvisioningJob(
   token: string,
   servicePrincipalId: string,
@@ -233,11 +246,11 @@ export async function startProvisioningJob(
   return handleApiResponse(res);
 }
 
+/** Configure attribute mappings for a provisioning job. */
 export async function configureAttributeMappings(
   token: string,
   servicePrincipalId: string,
   jobId: string,
-  // Use a more specific type if the payload structure is fixed, or keep as object for flexibility
   schemaPayload:
     | { synchronizationRules: MicrosoftGraph.SynchronizationRule[] }
     | Partial<SynchronizationSchema>
@@ -253,6 +266,7 @@ export async function configureAttributeMappings(
   return handleApiResponse(res);
 }
 
+/** Assign a user or group to an enterprise application. */
 export async function assignUsersToApp(
   token: string,
   servicePrincipalId: string,
@@ -274,6 +288,7 @@ export async function assignUsersToApp(
   return handleApiResponse(res);
 }
 
+/** List assignments for an application service principal. */
 export async function listAppRoleAssignments(
   token: string,
   servicePrincipalObjectId: string
@@ -296,6 +311,7 @@ export interface SamlMetadata {
   certificate: string;
 }
 
+/** Fetch SAML metadata XML and parse key fields. */
 export async function getSamlMetadata(
   tenantId: string,
   appId: string

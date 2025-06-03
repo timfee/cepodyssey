@@ -9,6 +9,9 @@ interface ProviderSignInBlockProps {
   isConnected: boolean;
 }
 
+/**
+ * Simple card showing the sign-in status for a provider.
+ */
 export function ProviderSignInBlock({
   providerName,
   isConnected,

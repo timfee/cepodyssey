@@ -41,6 +41,9 @@ interface StepItemProps {
   canRunGlobal: boolean;
 }
 
+/**
+ * Renders a single automation step card with actions and status.
+ */
 export function StepItem({
   step,
   isLastStep,
@@ -146,19 +149,19 @@ export function StepItem({
               {step.status.replace("_", " ")}
             </Badge>
           </div>
-          {step.description && ( // Check if description exists
+          {step.description && (
             <CardDescription className="text-xs mt-1 leading-relaxed">
               {step.description}
             </CardDescription>
           )}
         </CardHeader>
         <CardContent className="px-4 pb-4 space-y-3">
-          {!step.automatable && ( // For Manual Steps
+          {!step.automatable && (
             <div className="p-3 border rounded-md bg-slate-50 dark:bg-slate-800/50 space-y-2">
               <h5 className="font-medium text-sm text-slate-700 dark:text-slate-300">
                 Manual Action Required:
               </h5>
-              {step.message && ( // Check if message exists
+              {step.message && (
                 <p className="text-xs text-muted-foreground whitespace-pre-line">
                   {step.message}
                 </p>
@@ -196,7 +199,7 @@ export function StepItem({
           )}
 
           {step.automatable &&
-            (step.status === "pending" || allowRetryForAutomated) && ( // Action Button for Automatable Steps
+            (step.status === "pending" || allowRetryForAutomated) && (
               <TooltipProvider>
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
@@ -242,7 +245,7 @@ export function StepItem({
               </TooltipProvider>
             )}
 
-          {step.status === "completed" && ( // Info for Completed Steps
+          {step.status === "completed" && (
             <div className="flex flex-wrap items-center gap-2 mt-2">
               {step.metadata?.preExisting && (
                 <Badge
@@ -271,7 +274,7 @@ export function StepItem({
               )}
               {step.message &&
                 !step.error &&
-                step.automatable && ( // Only show step.message for automated completed steps if it's not an error
+                step.automatable && (
                   <p className="text-xs text-muted-foreground italic w-full">
                     {step.message}
                   </p>
@@ -280,7 +283,7 @@ export function StepItem({
           )}
 
           {step.status === "failed" &&
-            step.error && ( // Error Display
+            step.error && (
               <Alert variant="destructive" className="mt-2 text-xs">
                 <AlertCircleIcon className="h-4 w-4" />
                 <AlertTitle className="font-medium">Error</AlertTitle>

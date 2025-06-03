@@ -61,6 +61,9 @@ async function getTokens(): Promise<{
 }
 
 // --- Google Execution Actions ---
+/**
+ * G-1: Create the Automation organizational unit if it does not exist.
+ */
 export async function executeG1CreateAutomationOu(
   _context: StepContext
 ): Promise<StepExecutionResult> {
@@ -68,7 +71,7 @@ export async function executeG1CreateAutomationOu(
     const { googleToken } = await getTokens();
     const result = await google.createOrgUnit(googleToken, "Automation", "/");
     if (typeof result === "object" && "alreadyExists" in result) {
-      const existingOu = await google.getOrgUnit(googleToken, "/Automation"); // Verify path for existing
+      const existingOu = await google.getOrgUnit(googleToken, "/Automation");
       if (!existingOu?.orgUnitId || !existingOu?.orgUnitPath) {
         throw new Error(
           "OU 'Automation' reported as existing but could not be fetched."
@@ -98,6 +101,9 @@ export async function executeG1CreateAutomationOu(
   }
 }
 
+/**
+ * G-4: Add the primary domain to Google Workspace and notify for verification.
+ */
 export async function executeG4AddAndVerifyDomain(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -125,6 +131,9 @@ export async function executeG4AddAndVerifyDomain(
   }
 }
 
+/**
+ * G-5: Create the initial Google SAML profile.
+ */
 export async function executeG5InitiateGoogleSamlProfile(
   _context: StepContext
 ): Promise<StepExecutionResult> {
@@ -169,7 +178,6 @@ export async function executeG5InitiateGoogleSamlProfile(
       !result.spConfig?.spEntityId ||
       !result.spConfig?.assertionConsumerServiceUrl
     ) {
-      // result is InboundSamlSsoProfile
       throw new Error(
         "Created Google SAML profile is missing expected details (name, SP Entity ID, ACS URL)."
       );
@@ -191,6 +199,9 @@ export async function executeG5InitiateGoogleSamlProfile(
   }
 }
 
+/**
+ * G-6: Update the Google SAML profile with Azure IdP metadata.
+ */
 export async function executeG6UpdateGoogleSamlWithAzureIdp(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -237,6 +248,9 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
   }
 }
 
+/**
+ * G-7: Assign the Google SAML profile to the root OU.
+ */
 export async function executeG7AssignGoogleSamlToRootOu(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -267,6 +281,9 @@ export async function executeG7AssignGoogleSamlToRootOu(
   }
 }
 
+/**
+ * G-8: Exclude the Automation OU from SSO requirements.
+ */
 export async function executeG8ExcludeAutomationOuFromSso(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -304,6 +321,9 @@ export async function executeG8ExcludeAutomationOuFromSso(
 }
 
 // --- Microsoft Execution Actions ---
+/**
+ * M-1: Create the provisioning Enterprise application in Azure.
+ */
 export async function executeM1CreateProvisioningApp(
   _context: StepContext
 ): Promise<StepExecutionResult> {
@@ -360,6 +380,9 @@ export async function executeM1CreateProvisioningApp(
   }
 }
 
+/**
+ * M-2: Configure properties for the provisioning application.
+ */
 export async function executeM2ConfigureProvisioningAppProperties(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -391,6 +414,9 @@ export async function executeM2ConfigureProvisioningAppProperties(
   }
 }
 
+/**
+ * M-3: Authorize the provisioning connection between Azure and Google.
+ */
 export async function executeM3AuthorizeProvisioningConnection(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -465,6 +491,9 @@ export async function executeM3AuthorizeProvisioningConnection(
   }
 }
 
+/**
+ * M-4: Configure attribute mappings used for provisioning.
+ */
 export async function executeM4ConfigureProvisioningAttributeMappings(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -583,6 +612,9 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
   }
 }
 
+/**
+ * M-5: Start the provisioning job in Azure.
+ */
 export async function executeM5StartProvisioningJob(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -613,6 +645,9 @@ export async function executeM5StartProvisioningJob(
   }
 }
 
+/**
+ * M-6: Create the Azure SAML SSO application.
+ */
 export async function executeM6CreateSamlSsoApp(
   _context: StepContext
 ): Promise<StepExecutionResult> {
@@ -669,6 +704,9 @@ export async function executeM6CreateSamlSsoApp(
   }
 }
 
+/**
+ * M-7: Apply Entity ID and Reply URL settings on the Azure SAML app.
+ */
 export async function executeM7ConfigureAzureSamlAppSettings(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -733,6 +771,9 @@ export async function executeM7ConfigureAzureSamlAppSettings(
   }
 }
 
+/**
+ * M-8: Retrieve IdP metadata from Azure for use in Google.
+ */
 export async function executeM8RetrieveAzureIdpMetadata(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -761,6 +802,9 @@ export async function executeM8RetrieveAzureIdpMetadata(
   }
 }
 
+/**
+ * M-9: Guide the admin to assign users to the Azure SSO application.
+ */
 export async function executeM9AssignUsersToAzureSsoApp(
   context: StepContext
 ): Promise<StepExecutionResult> {
@@ -775,7 +819,6 @@ export async function executeM9AssignUsersToAzureSsoApp(
           message: "SAML SSO Service Principal Object ID (from M-6) not found.",
         },
       };
-    // This action guides the user; actual assignments are manual in Azure Portal.
     return {
       success: true,
       message:

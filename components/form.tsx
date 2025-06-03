@@ -1,4 +1,3 @@
-// ./components/form.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,8 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// Schema is for validation, which is less critical if fields are read-only display
 const DOMAIN_REGEX =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
@@ -32,6 +29,9 @@ const configFormSchema = z.object({
   tenantId: z.string().uuid("Invalid Tenant ID format.").optional().nullable(),
 });
 type ConfigFormData = z.infer<typeof configFormSchema>;
+/**
+ * Read-only form displaying the domain and tenant ID from Redux state.
+ */
 
 export function ConfigForm() {
   const currentAppConfig = useAppSelector(
@@ -50,7 +50,7 @@ export function ConfigForm() {
     },
   });
 
-  // Effect to reset form fields if Redux state (sourced from session) changes.
+  // Reset form fields when Redux state changes.
   useEffect(() => {
     console.log(
       "ConfigForm: Resetting/populating form with Redux state:",
@@ -87,7 +87,7 @@ export function ConfigForm() {
             disabled
             className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed"
           />
-          {errors.domain && ( // Should not happen if read-only
+          {errors.domain && (
             <p className="text-sm text-destructive mt-1">
               {errors.domain.message}
             </p>
@@ -103,13 +103,12 @@ export function ConfigForm() {
             disabled
             className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed"
           />
-          {errors.tenantId && ( // Should not happen if read-only
+          {errors.tenantId && (
             <p className="text-sm text-destructive mt-1">
               {errors.tenantId.message}
             </p>
           )}
         </div>
-        {/* Save Configuration button is removed as these fields are now session-derived and read-only */}
       </CardContent>
     </Card>
   );

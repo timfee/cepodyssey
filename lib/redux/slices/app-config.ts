@@ -11,7 +11,7 @@ export const appConfigSlice = createSlice({
   name: "appConfig",
   initialState,
   reducers: {
-    // Initializes the entire config state, e.g., from server or persistence
+    /** Initializes the config state, e.g. from the server or persistence. */
     initializeConfig(state, action: PayloadAction<Partial<AppConfigState>>) {
       state.domain = action.payload.domain ?? state.domain;
       state.tenantId = action.payload.tenantId ?? state.tenantId;
@@ -23,11 +23,11 @@ export const appConfigSlice = createSlice({
     setTenantId(state, action: PayloadAction<string>) {
       state.tenantId = action.payload;
     },
-    // Adds or updates a single output value from a step execution
+    /** Adds or updates a single output value from a step execution. */
     addOutput(state, action: PayloadAction<{ key: string; value: unknown }>) {
       state.outputs[action.payload.key] = action.payload.value;
     },
-    // Merges a batch of outputs, e.g., from a check result
+    /** Merges a batch of outputs, e.g. from a check result. */
     addOutputs(state, action: PayloadAction<Record<string, unknown>>) {
       state.outputs = { ...state.outputs, ...action.payload };
     },

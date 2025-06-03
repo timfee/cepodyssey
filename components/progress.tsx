@@ -1,11 +1,10 @@
-// ./components/progress.tsx
 "use client";
 
-import { useAppSelector } from "@/hooks/use-redux"; // Path from your project-code.md
-import type { RootState } from "@/lib/redux/store"; // Explicitly import RootState
+import { useAppSelector } from "@/hooks/use-redux";
+import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
-import type { ManagedStep, StepStatusInfo } from "@/lib/types"; // Using your main types file
-import { useSession } from "next-auth/react"; // Import useSession
+import type { ManagedStep, StepStatusInfo } from "@/lib/types";
+import { useSession } from "next-auth/react";
 import React from "react";
 
 import {
@@ -15,28 +14,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertTriangleIcon } from "lucide-react"; // For the "No steps" message
-import { StepItem } from "./step"; // Correct path from your project-code.md
+import { AlertTriangleIcon } from "lucide-react";
+import { StepItem } from "./step";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: string) => void;
-  // canRunGlobalSteps will now be determined internally using useSession
 }
+/**
+ * Displays progress for each automation step and allows execution.
+ */
 
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
-  const { data: session } = useSession(); // Get session data for auth status
+  const { data: session } = useSession();
   const stepsStatusMap = useAppSelector(
     (state: RootState) => state.setupSteps.steps
   );
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
 
-  // Derive canRunGlobalSteps based on necessary config and auth states from session
+  // Determine if all prerequisites for running steps are met.
   const canRunGlobalSteps = React.useMemo(
     () =>
       !!(
         appConfig.domain &&
         appConfig.tenantId &&
-        session?.hasGoogleAuth && // Use session for auth status
+        session?.hasGoogleAuth &&
         session?.hasMicrosoftAuth
       ),
     [
@@ -95,7 +96,6 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   );
 
   if (managedSteps.length === 0) {
-    // Handling if allStepDefinitions is empty
     return (
       <Card className="mt-8 shadow-lg">
         <CardHeader>

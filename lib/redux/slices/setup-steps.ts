@@ -13,14 +13,14 @@ export const setupStepsSlice = createSlice({
   name: "setupSteps",
   initialState,
   reducers: {
-    // Initializes all steps from persisted data
+    /** Initializes all steps from persisted data. */
     initializeSteps(
       state,
       action: PayloadAction<Record<string, StepStatusInfo>>
     ) {
       state.steps = action.payload;
     },
-    // Updates the status and metadata of a single step
+    /** Updates the status and metadata of a single step. */
     updateStep(state, action: PayloadAction<{ id: string } & StepStatusInfo>) {
       const { id, ...statusInfo } = action.payload;
       const existingStep = state.steps[id] ?? { status: "pending" };

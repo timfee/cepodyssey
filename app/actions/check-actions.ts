@@ -1,13 +1,15 @@
-// ./app/actions/check-actions.ts
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
-import * as google from "@/lib/api/google"; // Assumes API helpers are in lib/api/
+import * as google from "@/lib/api/google";
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
 import type { StepCheckResult } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types"; // Corrected import path
+import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
+/**
+ * Retrieve auth tokens for the requested providers from the session.
+ */
 
 async function getAuthenticatedTokens(
   providers: ("google" | "microsoft")[] = ["google", "microsoft"]
@@ -35,6 +37,9 @@ async function getAuthenticatedTokens(
   }
   return tokens;
 }
+/**
+ * Log a check error and convert it to a StepCheckResult.
+ */
 
 function handleCheckError(
   error: unknown,
@@ -44,6 +49,9 @@ function handleCheckError(
   const message = error instanceof Error ? error.message : defaultMessage;
   return { completed: false, message };
 }
+/**
+ * Verify that the specified Google Workspace organizational unit exists.
+ */
 
 export async function checkOrgUnitExists(
   ouPath: string
@@ -76,6 +84,9 @@ export async function checkOrgUnitExists(
   }
 }
 
+/**
+ * Check if a domain is verified in Google Workspace.
+ */
 export async function checkDomainVerified(
   domain: string
 ): Promise<StepCheckResult> {
@@ -108,6 +119,9 @@ export async function checkDomainVerified(
   }
 }
 
+/**
+ * Inspect a Google SAML profile by display name or full resource name.
+ */
 export async function checkGoogleSamlProfileDetails(
   profileDisplayNameOrFullName: string,
   checkExistsOnly: boolean,
@@ -201,6 +215,9 @@ export async function checkGoogleSamlProfileDetails(
   }
 }
 
+/**
+ * Ensure the Azure service principal for the application exists.
+ */
 export async function checkMicrosoftServicePrincipal(
   appClientId: string
 ): Promise<StepCheckResult> {
@@ -245,6 +262,9 @@ export async function checkMicrosoftServicePrincipal(
   }
 }
 
+/**
+ * Check whether the given Azure service principal is enabled.
+ */
 export async function checkMicrosoftServicePrincipalEnabled(
   spObjectId: string
 ): Promise<StepCheckResult> {
@@ -277,6 +297,9 @@ export async function checkMicrosoftServicePrincipalEnabled(
   }
 }
 
+/**
+ * Retrieve provisioning job details for an Azure service principal.
+ */
 export async function checkMicrosoftProvisioningJobDetails(
   spObjectId: string,
   jobId?: string
@@ -348,6 +371,9 @@ export async function checkMicrosoftProvisioningJobDetails(
   }
 }
 
+/**
+ * Verify default user attribute mappings are present in the provisioning schema.
+ */
 export async function checkMicrosoftAttributeMappingsApplied(
   spObjectId: string,
   jobId: string
@@ -408,6 +434,9 @@ export async function checkMicrosoftAttributeMappingsApplied(
   }
 }
 
+/**
+ * Confirm the Azure AD SAML app has the expected Entity ID and Reply URL.
+ */
 export async function checkMicrosoftSamlAppSettingsApplied(
   appObjectId: string,
   expectedSpEntityId: string,
@@ -453,6 +482,9 @@ export async function checkMicrosoftSamlAppSettingsApplied(
   }
 }
 
+/**
+ * Determine if any users or groups are assigned to the Azure application.
+ */
 export async function checkMicrosoftAppAssignments(
   servicePrincipalObjectId: string
 ): Promise<StepCheckResult> {
@@ -483,6 +515,3 @@ export async function checkMicrosoftAppAssignments(
   }
 }
 
-// Removed checkUserExists and checkRoleAssigned from here as they were Google specific
-// and not directly used by the refined federation steps' checks.
-// Admin permission checks are handled in app/(auth)/auth.ts during signIn.
