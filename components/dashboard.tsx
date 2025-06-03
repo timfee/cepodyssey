@@ -1,6 +1,11 @@
 "use client";
 
-import { AlertTriangleIcon, Loader2Icon, PlayIcon, LogInIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  Loader2Icon,
+  PlayIcon,
+  LogInIcon,
+} from "lucide-react";
 import type { Session } from "next-auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { useSessionSync } from "@/hooks/use-session-sync";
@@ -188,7 +193,9 @@ export function AutomationDashboard({
               },
             }),
           );
-          toast.success(`${definition.title}: Execution successful!`, { id: toastId });
+          toast.success(`${definition.title}: Execution successful!`, {
+            id: toastId,
+          });
         } else {
           dispatch(
             updateStep({
@@ -202,10 +209,13 @@ export function AutomationDashboard({
               },
             }),
           );
-          toast.error(`${definition.title}: ${result.error?.message ?? "Failed"}`, {
-            id: toastId,
-            duration: 10000,
-          });
+          toast.error(
+            `${definition.title}: ${result.error?.message ?? "Failed"}`,
+            {
+              id: toastId,
+              duration: 10000,
+            },
+          );
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
@@ -238,7 +248,14 @@ export function AutomationDashboard({
         });
       }
     },
-    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId, router],
+    [
+      canRunAutomation,
+      dispatch,
+      store,
+      appConfig.domain,
+      appConfig.tenantId,
+      router,
+    ],
   );
 
   const executeCheck = useCallback(
@@ -258,6 +275,50 @@ export function AutomationDashboard({
           dispatch(addOutputs(checkResult.outputs));
         }
 
+        if (!checkResult.completed && checkResult.outputs?.errorCode) {
+          const errorCode = checkResult.outputs.errorCode as string;
+          const errorMessage =
+            (checkResult.outputs.errorMessage as string) || checkResult.message;
+
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: errorMessage,
+              metadata: {
+                errorCode,
+                checkedAt: new Date().toISOString(),
+                ...(checkResult.outputs || {}),
+              },
+            }),
+          );
+
+          if (errorCode === "API_NOT_ENABLED") {
+            const enableUrlMatch = errorMessage?.match(
+              /https:\/\/console\.developers\.google\.com[^\s]+/,
+            );
+            const enableUrl = enableUrlMatch ? enableUrlMatch[0] : null;
+
+            toast.error("Google Cloud API Not Enabled", {
+              description: "Click 'Enable API' to fix this issue",
+              duration: 15000,
+              action: enableUrl
+                ? {
+                    label: "Enable API",
+                    onClick: () => window.open(enableUrl, "_blank"),
+                  }
+                : undefined,
+            });
+          } else {
+            toast.error(`Check failed for ${stepId}`, {
+              description: errorMessage,
+              duration: 10000,
+            });
+          }
+
+          return;
+        }
+
         if (checkResult.completed) {
           dispatch(
             updateStep({
@@ -272,11 +333,61 @@ export function AutomationDashboard({
             }),
           );
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Auto-check failed for ${stepId}:`, error);
+        const err = error as {
+          code?: string;
+          message?: string;
+          provider?: string;
+        };
+
+        if (
+          err?.code === "AUTH_EXPIRED" ||
+          err?.message?.includes("authentication expired") ||
+          err?.message?.includes("AUTH_EXPIRED")
+        ) {
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: "Authentication expired. Please sign in again.",
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: err.provider || "unknown",
+              },
+            }),
+          );
+
+          toast.error("Authentication expired", {
+            description: "Please sign in again to continue.",
+            duration: 10000,
+            action: {
+              label: "Sign In",
+              onClick: () => router.push("/login"),
+            },
+          });
+
+          throw error;
+        }
+
+        dispatch(
+          updateStep({
+            id: stepId,
+            status: "failed",
+            error: err?.message || "Unknown error occurred",
+            metadata: {
+              errorCode: err?.code || "UNKNOWN_ERROR",
+            },
+          }),
+        );
+
+        toast.error(`Error in ${stepId}`, {
+          description: err?.message || "An unexpected error occurred",
+          duration: 10000,
+        });
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store],
+    [appConfig.domain, appConfig.tenantId, dispatch, store, router],
   );
 
   useAutoCheck(executeCheck);
@@ -400,10 +511,15 @@ export function AutomationDashboard({
             <AlertTriangleIcon className="h-5 w-5" />
             <AlertTitle>Authentication Required</AlertTitle>
             <AlertDescription>
-              Your session has expired. Please sign in again to continue automation.
+              Your session has expired. Please sign in again to continue
+              automation.
             </AlertDescription>
           </Alert>
-          <Button onClick={() => router.push("/login") } className="mt-4 w-full" size="lg">
+          <Button
+            onClick={() => router.push("/login")}
+            className="mt-4 w-full"
+            size="lg"
+          >
             <LogInIcon className="mr-2 h-5 w-5" />
             Return to Login
           </Button>
