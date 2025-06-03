@@ -528,7 +528,6 @@ export async function executeM3AuthorizeProvisioningConnection(
       },
     ]);
 
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
     const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
@@ -658,7 +657,6 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
       jobId,
       schemaPayload,
     );
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
     const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
       success: true,
