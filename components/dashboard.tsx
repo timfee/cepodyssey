@@ -18,13 +18,12 @@ import {
 import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
 import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
-import { allStepDefinitions, getStepActions } from "@/lib/steps";
+import { allStepDefinitions } from "@/lib/steps";
+import { executeStep as executeStepAction } from "@/app/actions/step-registry";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
-  StepCheckResult,
   StepContext,
-  StepExecutionResult,
 } from "@/lib/types";
 import { executeStepCheck } from "@/app/actions/unified-check-action";
 
@@ -144,30 +143,13 @@ export function AutomationDashboard({
         toast.error("Please complete configuration and authentication first.");
         return;
       }
+
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
         toast.error(`Step definition '${stepId}' not found.`);
-        dispatch(
-          updateStep({
-            id: stepId,
-            status: "failed",
-            error: "Step definition not found.",
-          }),
-        );
         return;
       }
-      const stepActionImplementations = getStepActions(stepId);
-      if (!stepActionImplementations?.execute) {
-        toast.error(`Execute function for step '${stepId}' not found.`);
-        dispatch(
-          updateStep({
-            id: stepId,
-            status: "failed",
-            error: "Step execution logic not found.",
-          }),
-        );
-        return;
-      }
+
       dispatch(
         updateStep({
           id: stepId,
@@ -176,53 +158,23 @@ export function AutomationDashboard({
           message: undefined,
         }),
       );
+
       const toastId = `step-exec-${stepId}-${Date.now()}`;
       toast.loading(`Running: ${definition.title}...`, { id: toastId });
-      if (!appConfig.domain || !appConfig.tenantId) {
-        toast.error("Domain or Tenant ID is missing in configuration.", {
-          id: toastId,
-        });
-        dispatch(
-          updateStep({
-            id: stepId,
-            status: "failed",
-            error: "Domain or Tenant ID missing.",
-          }),
-        );
-        return;
-      }
+
       const context: StepContext = {
-        domain: appConfig.domain,
-        tenantId: appConfig.tenantId,
+        domain: appConfig.domain!,
+        tenantId: appConfig.tenantId!,
         outputs: store.getState().appConfig.outputs,
       };
+
       try {
-        if (definition.automatable) {
-          const checkResult: StepCheckResult =
-            await executeStepCheck(stepId, context);
-          if (checkResult.outputs) dispatch(addOutputs(checkResult.outputs));
-          if (checkResult.completed) {
-            dispatch(
-              updateStep({
-                id: stepId,
-                status: "completed",
-                message: checkResult.message || "Already completed.",
-                metadata: {
-                  preExisting: true,
-                  completedAt: new Date().toISOString(),
-                  ...(checkResult.outputs || {}),
-                },
-              }),
-            );
-            toast.success(`${definition.title}: Checked - Already complete.`, {
-              id: toastId,
-            });
-            return;
-          }
+        const result = await executeStepAction(stepId, context);
+
+        if (result.outputs) {
+          dispatch(addOutputs(result.outputs));
         }
-        const result: StepExecutionResult =
-          await stepActionImplementations.execute(context);
-        if (result.outputs) dispatch(addOutputs(result.outputs));
+
         if (result.success) {
           dispatch(
             updateStep({
@@ -236,9 +188,7 @@ export function AutomationDashboard({
               },
             }),
           );
-          toast.success(`${definition.title}: Execution successful!`, {
-            id: toastId,
-          });
+          toast.success(`${definition.title}: Execution successful!`, { id: toastId });
         } else {
           dispatch(
             updateStep({
@@ -248,12 +198,10 @@ export function AutomationDashboard({
               message: result.message,
             }),
           );
-          toast.error(
-            `${definition.title}: Execution failed. ${
-              result.error?.message ?? ""
-            }`,
-            { id: toastId, duration: 10000 },
-          );
+          toast.error(`${definition.title}: ${result.error?.message ?? "Failed"}`, {
+            id: toastId,
+            duration: 10000,
+          });
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
@@ -268,15 +216,12 @@ export function AutomationDashboard({
             updateStep({
               id: stepId,
               status: "failed",
-              error: err.message,
-              metadata: {
-                errorCode: "AUTH_EXPIRED",
-                errorProvider: err.provider,
-              },
+              error: "Authentication expired. Please sign in again.",
             }),
           );
           return;
         }
+
         const message = err instanceof Error ? err.message : String(err);
         dispatch(updateStep({ id: stepId, status: "failed", error: message }));
         toast.error(`${definition.title}: Unexpected error. ${message}`, {
@@ -285,14 +230,7 @@ export function AutomationDashboard({
         });
       }
     },
-    [
-      canRunAutomation,
-      dispatch,
-      store,
-      appConfig.domain,
-      appConfig.tenantId,
-      router,
-    ],
+    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId, router],
   );
 
   const executeCheck = useCallback(

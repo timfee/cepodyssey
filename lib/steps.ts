@@ -1,33 +1,11 @@
-import {
-  executeG1CreateAutomationOu,
-  executeG2CreateServiceAccount,
-  executeG3GrantAdminPrivileges,
-  executeG4AddAndVerifyDomain,
-  executeG5InitiateGoogleSamlProfile,
-  executeG6UpdateGoogleSamlWithAzureIdp,
-  executeG7AssignGoogleSamlToRootOu,
-  executeG8ExcludeAutomationOuFromSso,
-  executeM1CreateProvisioningApp,
-  executeM2ConfigureProvisioningAppProperties,
-  executeM3AuthorizeProvisioningConnection,
-  executeM4ConfigureProvisioningAttributeMappings,
-  executeM5StartProvisioningJob,
-  executeM6CreateSamlSsoApp,
-  executeM7ConfigureAzureSamlAppSettings,
-  executeM8RetrieveAzureIdpMetadata,
-  executeM9AssignUsersToAzureSsoApp,
-} from "@/app/actions/execution-actions";
 
-import type {
-  StepContext,
-  StepDefinition,
-  StepExecutionResult,
-} from "./types";
+import type { StepDefinition } from "./types";
 import { OUTPUT_KEYS } from "./types";
 
 /**
  * Declarative list of all automation steps in execution order.
- * Each definition contains metadata plus check and execute handlers.
+ * Each definition contains metadata only. Execution and check
+ * logic resides in server-side actions.
  */
 export const allStepDefinitions: StepDefinition[] = [
   // Phase 1: Initial Google Workspace Setup
@@ -39,8 +17,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: [],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeG1CreateAutomationOu(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/orgunits",
       verify: "https://admin.google.com/ac/orgunits",
@@ -54,8 +30,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-1"],
-    execute: async (context: StepContext): Promise<StepExecutionResult> =>
-      executeG2CreateServiceAccount(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/users",
       verify: (outputs) =>
@@ -72,8 +46,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-2"],
-    execute: async (context: StepContext): Promise<StepExecutionResult> =>
-      executeG3GrantAdminPrivileges(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/roles",
       verify: (outputs) =>
@@ -90,24 +62,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: false,
     requires: ["G-3"],
-    execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
-      success: true,
-      message:
-        "To get the Google Secret Token for provisioning:\n\n" +
-        "1. Sign in to Google Admin Console (admin.google.com)\n" +
-        "2. Navigate to: Apps > Web and mobile apps\n" +
-        "3. Click 'Add app' > 'Add custom SAML app'\n" +
-        "4. Enter a temporary name (e.g., 'Azure AD Provisioning Setup')\n" +
-        "5. On 'Google Identity Provider details', click 'Continue'\n" +
-        "6. On 'Service provider details', click 'Continue'\n" +
-        "7. On 'Attribute mapping', click 'Continue'\n" +
-        "8. On the final page, look for 'Automatic user provisioning' section\n" +
-        "9. Click 'SET UP AUTOMATIC USER PROVISIONING'\n" +
-        "10. Copy the 'Authorization token' value - this is your Secret Token\n" +
-        "11. Save this token securely - you'll need it for step M-3\n\n" +
-        "Note: The app you create here is temporary. The actual SSO will be configured later.",
-      resourceUrl: "https://admin.google.com/ac/apps/unified",
-    }),
     adminUrls: {
       configure: "https://admin.google.com/ac/apps/unified#/settings/scim",
       verify: "https://admin.google.com/ac/apps/unified#/settings/scim",
@@ -121,8 +75,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-3"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeG4AddAndVerifyDomain(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/domains/manage",
       verify: "https://admin.google.com/ac/domains/manage",
@@ -136,8 +88,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Google",
     automatable: true,
     requires: ["G-4"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeG5InitiateGoogleSamlProfile(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
@@ -153,8 +103,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: [],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM1CreateProvisioningApp(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -178,8 +126,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-1"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM2ConfigureProvisioningAppProperties(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -203,18 +149,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-2", "G-S0"],
-    execute: async (context: StepContext): Promise<StepExecutionResult> => {
-      if (!context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]) {
-        return {
-          success: false,
-          error: {
-            message:
-              "Google Secret Token (from G-S0) not provided. Cannot authorize provisioning.",
-          },
-        };
-      }
-      return executeM3AuthorizeProvisioningConnection(context);
-    },
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -238,8 +172,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-3"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM4ConfigureProvisioningAttributeMappings(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -263,15 +195,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "Microsoft",
     automatable: true,
     requires: ["M-4"],
-    execute: async (context: StepContext): Promise<StepExecutionResult> => {
-      const result = await executeM5StartProvisioningJob(context);
-      if (result.success) {
-        result.message =
-          (result.message ?? "") +
-          " Ensure you have configured the correct provisioning scope (users/groups to sync) in the Azure portal for the Provisioning App.";
-      }
-      return result;
-    },
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -297,8 +220,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: [],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM6CreateSamlSsoApp(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
@@ -322,8 +243,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["M-6", "G-5"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM7ConfigureAzureSamlAppSettings(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
@@ -347,8 +266,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["M-7"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM8RetrieveAzureIdpMetadata(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
@@ -374,8 +291,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-5", "M-8"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeG6UpdateGoogleSamlWithAzureIdp(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
@@ -389,8 +304,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-6"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeG7AssignGoogleSamlToRootOu(context),
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
@@ -404,18 +317,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true,
     requires: ["G-1", "G-7"],
-    execute: async (context: StepContext): Promise<StepExecutionResult> => {
-      const automationOuId = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_ID] as
-        | string
-        | undefined;
-      if (!automationOuId)
-        return {
-          success: true,
-          message:
-            "Automation OU ID not found, skipping SSO disable for it as OU does not exist or was not created by this tool.",
-        };
-      return executeG8ExcludeAutomationOuFromSso(context);
-    },
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
@@ -431,8 +332,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: true, // The action provides a link; actual assignment is manual in Azure.
     requires: ["M-6"],
-    execute: (context: StepContext): Promise<StepExecutionResult> =>
-      executeM9AssignUsersToAzureSsoApp(context),
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
@@ -458,12 +357,6 @@ export const allStepDefinitions: StepDefinition[] = [
     category: "SSO",
     automatable: false,
     requires: ["G-7", "M-9"],
-    execute: async (_context: StepContext): Promise<StepExecutionResult> => ({
-      success: true,
-      message:
-        "Test SSO: \n1. Open a new Incognito/Private browser window. \n2. Navigate to a Google service (e.g., mail.google.com for Workspace, or console.cloud.google.com for GCP). \n3. When prompted for login, enter the full email address (UPN) of an Azure AD user assigned to the SAML SSO application in Azure AD (and ideally provisioned to Google Workspace). \n4. You should be redirected to Azure AD for login. \n5. After successful Azure AD login, you should be redirected back and logged into the Google service. \nVerify access and correct user identity.",
-      resourceUrl: "https://myapps.microsoft.com",
-    }),
     adminUrls: {
       configure: "https://myapps.microsoft.com",
       verify: "https://myapps.microsoft.com",
@@ -478,17 +371,3 @@ export const allStepDefinitions: StepDefinition[] = [
 export const stepDefinitionMap = new Map<string, StepDefinition>(
   allStepDefinitions.map((def) => [def.id, def]),
 );
-
-/**
- * Look up check and execute implementations for a step.
- * Returns undefined if the step ID is not defined.
- */
-export function getStepActions(stepId: string):
-  | {
-      execute: (context: StepContext) => Promise<StepExecutionResult>;
-    }
-  | undefined {
-  const step = allStepDefinitions.find((s) => s.id === stepId);
-  if (!step) return undefined;
-  return { execute: step.execute };
-}
