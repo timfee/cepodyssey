@@ -33,7 +33,7 @@ export default async function Page() {
   };
   console.log(
     "app/page.tsx: Passing initialConfig to dashboard from session:",
-    initialConfig
+    initialConfig,
   );
 
   return (

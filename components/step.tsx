@@ -57,7 +57,7 @@ export function StepItem({
   const prerequisitesMet = React.useMemo(() => {
     return (
       step.requires?.every(
-        (reqId) => allStepsStatus[reqId]?.status === "completed"
+        (reqId) => allStepsStatus[reqId]?.status === "completed",
       ) ?? true
     );
   }, [step.requires, allStepsStatus]);
@@ -107,7 +107,7 @@ export function StepItem({
           preExisting: false,
           completedAt: new Date().toISOString(),
         },
-      })
+      }),
     );
   };
 
@@ -115,8 +115,8 @@ export function StepItem({
   const runButtonDisabledReason = !canRunGlobal
     ? "Global prerequisites (auth/config) not met."
     : !prerequisitesMet
-    ? "Prerequisite steps not completed."
-    : undefined;
+      ? "Prerequisite steps not completed."
+      : undefined;
 
   const allowRetryForAutomated =
     step.automatable &&
@@ -167,8 +167,8 @@ export function StepItem({
                   <Button variant="outline" size="sm" asChild>
                     <a
                       href={
-                        typeof step.adminUrls.configure === 'function'
-                          ? step.adminUrls.configure(outputs) ?? '#'
+                        typeof step.adminUrls.configure === "function"
+                          ? (step.adminUrls.configure(outputs) ?? "#")
                           : step.adminUrls.configure
                       }
                       target="_blank"
@@ -180,7 +180,11 @@ export function StepItem({
                   </Button>
                 )}
                 {step.status !== "completed" && (
-                  <Button size="sm" onClick={handleMarkAsComplete} variant="secondary">
+                  <Button
+                    size="sm"
+                    onClick={handleMarkAsComplete}
+                    variant="secondary"
+                  >
                     <CheckIcon className="mr-1.5 h-3.5 w-3.5" />
                     Mark Complete
                   </Button>
@@ -220,10 +224,10 @@ export function StepItem({
                         {step.status === "in_progress"
                           ? "Running..."
                           : allowRetryForAutomated && step.status !== "pending"
-                          ? step.status === "failed"
-                            ? "Retry Step"
-                            : "Re-run Check"
-                          : "Run Step"}
+                            ? step.status === "failed"
+                              ? "Retry Step"
+                              : "Re-run Check"
+                            : "Run Step"}
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -247,39 +251,32 @@ export function StepItem({
                 </Badge>
               )}
               {step.metadata?.resourceUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="gap-1"
-                >
+                <Button variant="outline" size="sm" asChild className="gap-1">
                   <a
                     href={step.metadata.resourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <ExternalLinkIcon className="h-3 w-3" /> View in Admin Console
+                    <ExternalLinkIcon className="h-3 w-3" /> View in Admin
+                    Console
                   </a>
                 </Button>
               )}
-              {step.message &&
-                !step.error &&
-                step.automatable && (
-                  <p className="text-xs text-muted-foreground italic w-full">
-                    {step.message}
-                  </p>
-                )}
+              {step.message && !step.error && step.automatable && (
+                <p className="text-xs text-muted-foreground italic w-full">
+                  {step.message}
+                </p>
+              )}
             </div>
           )}
 
-          {step.status === "failed" &&
-            step.error && (
-              <Alert variant="destructive" className="mt-2 text-xs">
-                <AlertCircleIcon className="h-4 w-4" />
-                <AlertTitle className="font-medium">Error</AlertTitle>
-                <AlertDescription>{step.error}</AlertDescription>
-              </Alert>
-            )}
+          {step.status === "failed" && step.error && (
+            <Alert variant="destructive" className="mt-2 text-xs">
+              <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle className="font-medium">Error</AlertTitle>
+              <AlertDescription>{step.error}</AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </li>

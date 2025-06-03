@@ -20,7 +20,7 @@ export function CollapsibleStep({
   canRunGlobal,
 }: CollapsibleStepProps) {
   const [isExpanded, setIsExpanded] = useState(
-    step.status === "in_progress" || step.status === "failed"
+    step.status === "in_progress" || step.status === "failed",
   );
 
   const getStatusColor = () => {
@@ -56,7 +56,7 @@ export function CollapsibleStep({
         className={cn(
           "w-full flex items-center justify-between p-3 rounded-lg transition-all",
           "hover:bg-gray-50 dark:hover:bg-gray-800",
-          getStatusColor()
+          getStatusColor(),
         )}
       >
         <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ export function CollapsibleStep({
           <ChevronRightIcon className="h-4 w-4" />
         )}
       </button>
-      
+
       {isExpanded && (
         <div className="mt-2 ml-4">
           <StepItem
@@ -83,4 +83,3 @@ export function CollapsibleStep({
     </div>
   );
 }
-

@@ -5,7 +5,11 @@
  * @param code optional error code provided by the API
  */
 export class APIError extends Error {
-  constructor(message: string, public status: number, public code?: string) {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+  ) {
     super(message);
     this.name = "APIError";
   }
@@ -17,7 +21,7 @@ export class APIError extends Error {
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  retries = 3
+  retries = 3,
 ): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i < retries; i++) {
@@ -45,7 +49,7 @@ export async function withRetry<T>(
 export async function fetchWithAuth(
   url: string,
   token: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<Response> {
   return withRetry(() =>
     fetch(url, {
@@ -55,7 +59,7 @@ export async function fetchWithAuth(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    })
+    }),
   );
 }
 
@@ -63,7 +67,7 @@ export async function fetchWithAuth(
  * Parse a JSON API response and throw APIError on failure.
  */
 export async function handleApiResponse<T>(
-  res: Response
+  res: Response,
 ): Promise<T | { alreadyExists: true }> {
   if (res.status === 409) {
     return { alreadyExists: true };

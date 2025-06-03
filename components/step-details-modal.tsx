@@ -33,7 +33,7 @@ export function StepDetailsModal({
           <DialogTitle>{step.title}</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
         </DialogHeader>
-        
+
         <div className="mt-4 space-y-4">
           {step.message && (
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -41,15 +41,15 @@ export function StepDetailsModal({
               <p className="text-sm whitespace-pre-line">{step.message}</p>
             </div>
           )}
-          
+
           {step.adminUrls && (
             <div className="flex gap-2">
               {step.adminUrls.configure && (
                 <Button variant="outline" asChild>
                   <a
                     href={
-                      typeof step.adminUrls.configure === 'function'
-                        ? step.adminUrls.configure(outputs) ?? '#'
+                      typeof step.adminUrls.configure === "function"
+                        ? (step.adminUrls.configure(outputs) ?? "#")
                         : step.adminUrls.configure
                     }
                     target="_blank"
@@ -62,7 +62,7 @@ export function StepDetailsModal({
               )}
             </div>
           )}
-          
+
           {step.metadata?.resourceUrl && (
             <Button variant="outline" asChild>
               <a
@@ -80,4 +80,3 @@ export function StepDetailsModal({
     </Dialog>
   );
 }
-

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useAppSelector } from './use-redux';
+import { useEffect, useRef } from "react";
+import { useAppSelector } from "./use-redux";
 
 /**
  * Runs lightweight "check" functions for a subset of steps once the
@@ -18,11 +18,11 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
     hasChecked.current = true;
     // Only run checks for steps that perform safe, read-only operations.
     const autoCheckSteps = [
-      'G-1',  // Check OU exists
-      'G-4',  // Domain verified
-      'G-5',  // SAML profile exists
-      'M-1',  // Provisioning app exists
-      'M-6',  // SSO app exists
+      "G-1", // Check OU exists
+      "G-4", // Domain verified
+      "G-5", // SAML profile exists
+      "M-1", // Provisioning app exists
+      "M-6", // SSO app exists
     ];
     // Don't auto-check these as they might have side effects:
     // M-2, M-7, M-8 - These might modify state
@@ -30,7 +30,9 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
     const checkPromises = autoCheckSteps
       .filter((stepId) => {
         const status = stepsStatus[stepId];
-        return !status || status.status === 'pending' || status.status === 'failed';
+        return (
+          !status || status.status === "pending" || status.status === "failed"
+        );
       })
       .map((id) => executeCheck(id));
 

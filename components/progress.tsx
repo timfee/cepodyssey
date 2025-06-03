@@ -7,12 +7,7 @@ import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import { useSession } from "next-auth/react";
 import React from "react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
 import { CollapsibleStep } from "./collapsible-step";
 
@@ -26,7 +21,7 @@ interface ProgressVisualizerProps {
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const { data: session } = useSession();
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps
+    (state: RootState) => state.setupSteps.steps,
   );
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
 
@@ -44,7 +39,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
       appConfig.tenantId,
       session?.hasGoogleAuth,
       session?.hasMicrosoftAuth,
-    ]
+    ],
   );
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {
@@ -68,21 +63,29 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const renderStepList = (
     title: string,
     stepsToList: ManagedStep[],
-    categoryKey: string
+    categoryKey: string,
   ) => {
-    const completedCount = stepsToList.filter(s => s.status === "completed").length;
+    const completedCount = stepsToList.filter(
+      (s) => s.status === "completed",
+    ).length;
     const totalCount = stepsToList.length;
-    const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+    const progressPercent =
+      totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
     return (
-      <div key={categoryKey} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+      <div
+        key={categoryKey}
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm"
+      >
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </h3>
           <div className="mt-2">
             <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <span>{completedCount} of {totalCount} completed</span>
+              <span>
+                {completedCount} of {totalCount} completed
+              </span>
               <span>{Math.round(progressPercent)}%</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -131,9 +134,12 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   return (
     <div className="mt-8">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Automation Progress</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Automation Progress
+        </h2>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Click on steps to expand details. Automated steps can be run individually or via Run All Pending.
+          Click on steps to expand details. Automated steps can be run
+          individually or via Run All Pending.
         </p>
       </div>
 

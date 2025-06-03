@@ -35,7 +35,7 @@ type ConfigFormData = z.infer<typeof configFormSchema>;
 
 export function ConfigForm() {
   const currentAppConfig = useAppSelector(
-    (state: RootState) => state.appConfig
+    (state: RootState) => state.appConfig,
   );
 
   const {
@@ -54,7 +54,7 @@ export function ConfigForm() {
   useEffect(() => {
     console.log(
       "ConfigForm: Resetting/populating form with Redux state:",
-      currentAppConfig
+      currentAppConfig,
     );
     reset({
       domain: currentAppConfig.domain ?? "",

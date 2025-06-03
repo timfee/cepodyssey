@@ -188,7 +188,8 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM2ConfigureProvisioningAppProperties(context),
     adminUrls: {
       configure: (outputs) =>
-        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] && outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]
+        outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] &&
+        outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]
           ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]}`
           : null,
       verify: (outputs) =>
@@ -224,7 +225,7 @@ export const allStepDefinitions: StepDefinition[] = [
         };
       return checkMicrosoftProvisioningJobDetails(
         spObjectId,
-        context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string | undefined
+        context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string | undefined,
       );
     },
     execute: async (context: StepContext): Promise<StepExecutionResult> => {
@@ -308,7 +309,7 @@ export const allStepDefinitions: StepDefinition[] = [
         };
       const jobStatus = await checkMicrosoftProvisioningJobDetails(
         spObjectId,
-        jobId
+        jobId,
       );
       if (
         jobStatus.completed &&
@@ -369,7 +370,8 @@ export const allStepDefinitions: StepDefinition[] = [
       executeM6CreateSamlSsoApp(context),
     adminUrls: {
       configure: (outputs) =>
-        outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] && outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] &&
+        outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]
           ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_ID]}/objectId/${outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]}`
           : null,
       verify: (outputs) =>
@@ -406,7 +408,7 @@ export const allStepDefinitions: StepDefinition[] = [
       return checkMicrosoftSamlAppSettingsApplied(
         appObjectId,
         googleSpEntityId,
-        googleAcsUrl
+        googleAcsUrl,
       );
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
@@ -490,7 +492,7 @@ export const allStepDefinitions: StepDefinition[] = [
       return checkGoogleSamlProfileDetails(
         profileFullName,
         false,
-        expectedIdpEntityId
+        expectedIdpEntityId,
       );
     },
     execute: (context: StepContext): Promise<StepExecutionResult> =>
@@ -520,7 +522,7 @@ export const allStepDefinitions: StepDefinition[] = [
       const profileDetailsCheck = await checkGoogleSamlProfileDetails(
         profileFullName,
         false,
-        undefined
+        undefined,
       );
       if (
         profileDetailsCheck.completed &&
@@ -653,7 +655,7 @@ export const allStepDefinitions: StepDefinition[] = [
 ];
 
 export const stepDefinitionMap = new Map<string, StepDefinition>(
-  allStepDefinitions.map((def) => [def.id, def])
+  allStepDefinitions.map((def) => [def.id, def]),
 );
 
 export function getStepActions(stepId: string):
