@@ -4,7 +4,7 @@ import { auth } from "@/app/(auth)/auth";
 import * as google from "@/lib/api/google";
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
-import { AuthenticationError } from "@/lib/api/auth-interceptor";
+import { AuthenticationError, isAuthenticationError } from "@/lib/api/auth-interceptor";
 import type { StepCheckResult } from "@/lib/types";
 import type { Session } from "next-auth";
 import { OUTPUT_KEYS } from "@/lib/types";
@@ -55,6 +55,19 @@ function handleCheckError(
   defaultMessage: string,
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
+
+  // Special handling for auth errors
+  if (isAuthenticationError(error)) {
+    return {
+      completed: false,
+      message: error.message,
+      outputs: {
+        errorCode: "AUTH_EXPIRED",
+        errorProvider: error.provider,
+      },
+    };
+  }
+
   const message = error instanceof Error ? error.message : defaultMessage;
   return { completed: false, message };
 }
