@@ -1,23 +1,28 @@
-// ./app/(auth)/auth.ts
 import { withRetry } from "@/lib/api/utils";
-import type { User } from "next-auth"; // Standard NextAuth types
+import type { User } from "next-auth";
 import NextAuth from "next-auth";
-import type { JWT } from "next-auth/jwt"; // NextAuth JWT type
+import type { JWT } from "next-auth/jwt";
 import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 import MicrosoftEntraIDProvider, {
   type MicrosoftEntraIDProfile,
 } from "next-auth/providers/microsoft-entra-id";
-// Assuming refresh token functions are correctly in ./refresh as per your project-code.md
-
-// Assuming withRetry is from your lib/utils/retry.ts or lib/api/utils.ts if moved
 
 const ADMIN_USER_KEY = "admin-user";
 const accountStore = new Map<string, JWT>();
 
+/**
+ * Derive a stable key for storing the current user's tokens.
+ * Multi-user support is not implemented, so a constant key is used.
+ */
 function getUserKey(_userOrToken?: User | JWT): string {
   return ADMIN_USER_KEY;
 }
 
+/**
+ * Refresh an expired Google access token using the stored refresh token.
+ * Returns a token object with updated expiry or marks the token invalid on
+ * failure.
+ */
 async function refreshGoogleToken(token: JWT): Promise<JWT> {
   try {
     const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -54,6 +59,11 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
   }
 }
 
+/**
+ * Refresh an expired Microsoft access token using the stored refresh token.
+ * Attempts the tenant associated with the token before falling back to the
+ * configured default.
+ */
 async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   try {
     const tenantForRefresh =
@@ -97,6 +107,10 @@ async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   }
 }
 
+/**
+ * Validate that the Google account is a Super Administrator and not suspended.
+ * Returns `false` when API errors occur or the user lacks sufficient rights.
+ */
 async function checkGoogleAdmin(
   accessToken: string,
   email?: string | null,
@@ -109,14 +123,13 @@ async function checkGoogleAdmin(
     process.env.GOOGLE_API_BASE
   }/admin/directory/v1/users/${encodeURIComponent(
     email,
-  )}?fields=isAdmin,suspended,primaryEmail`; // Request primaryEmail for logging
+  )}?fields=isAdmin,suspended,primaryEmail`;
 
   console.log(
     `checkGoogleAdmin: Fetching admin status for ${email} from ${fetchUrl}`,
   );
   try {
     const res = await withRetry(() =>
-      // Using withRetry from your project-code.md's auth.ts
       fetch(fetchUrl, { headers: { Authorization: `Bearer ${accessToken}` } }),
     );
 
@@ -139,7 +152,7 @@ async function checkGoogleAdmin(
     }
     const data = JSON.parse(responseBodyForLogging) as {
       isAdmin?: boolean;
-      suspended?: boolean; // Corrected from suspensionReason
+      suspended?: boolean;
       primaryEmail?: string;
     };
     console.log(
@@ -161,6 +174,10 @@ async function checkGoogleAdmin(
   }
 }
 
+/**
+ * Determine if the Microsoft account is a Global Administrator.
+ * Returns `false` when API access fails or the role isn't present.
+ */
 async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
   if (!accessToken) {
     console.warn("checkMicrosoftAdmin: AccessToken missing.");
@@ -170,7 +187,6 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
   console.log(`checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`);
   try {
     const res = await withRetry(() =>
-      // Using withRetry
       fetch(fetchUrl, { headers: { Authorization: `Bearer ${accessToken}` } }),
     );
 
@@ -216,8 +232,12 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
   }
 }
 
+/**
+ * Central NextAuth configuration for both Google and Microsoft providers.
+ * Includes token refresh logic and admin verification callbacks.
+ */
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET, // Your project-code.md used NEXTAUTH_SECRET, ensure consistency or use AUTH_SECRET
+  secret: process.env.AUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -229,10 +249,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           prompt: "consent",
         },
       },
-      allowDangerousEmailAccountLinking: true, // As per your project-code.md
+      allowDangerousEmailAccountLinking: true,
     }),
     MicrosoftEntraIDProvider({
-      // Using direct provider
       clientId: process.env.MICROSOFT_CLIENT_ID!,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
       issuer: `https://login.microsoftonline.com/${
@@ -241,16 +260,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorization: {
         params: {
           scope: process.env.MICROSOFT_GRAPH_SCOPES!,
-          prompt: "consent", // Added for consistency, can be reviewed
+          prompt: "consent",
         },
       },
-      allowDangerousEmailAccountLinking: true, // As per your project-code.md
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
-    error: "/login", // Redirect to login page on auth errors
+    error: "/login",
   },
   callbacks: {
     async signIn({ user, account, profile }) {
@@ -279,18 +298,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       if (account && profile) {
-        finalToken.error = undefined; // Clear previous errors
+        finalToken.error = undefined;
         if (account.provider === "google") {
           console.log(
             "Google Profile in JWT callback:",
             JSON.stringify(profile, null, 2),
-          ); // Log Google profile
+          );
           finalToken.googleAccessToken = account.access_token;
           finalToken.googleRefreshToken = account.refresh_token;
           finalToken.googleExpiresAt = account.expires_at
             ? Date.now() + account.expires_at * 1000
             : undefined;
-          // Attempt to capture 'hd' (hosted domain) from Google profile
+          // Capture 'hd' (hosted domain) from Google profile if present
           finalToken.authFlowDomain =
             (profile as GoogleProfile).hd ?? finalToken.authFlowDomain;
           if ((profile as GoogleProfile).hd) {
@@ -307,7 +326,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           console.log(
             "Microsoft Profile in JWT callback:",
             JSON.stringify(profile, null, 2),
-          ); // Log Microsoft profile
+          );
           finalToken.microsoftAccessToken = account.access_token;
           finalToken.microsoftRefreshToken = account.refresh_token;
           finalToken.microsoftExpiresAt = account.expires_at
@@ -338,7 +357,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (finalToken.googleExpiresAt ?? 0) < now
       ) {
         if (finalToken.googleRefreshToken) {
-          finalToken = await refreshGoogleToken(finalToken); // refreshGoogleToken from ./refresh
+          finalToken = await refreshGoogleToken(finalToken);
           tokenNeedsUpdateInStore = true;
         } else if (!finalToken.error) {
           finalToken.error = "RefreshTokenError";
@@ -350,7 +369,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (finalToken.microsoftExpiresAt ?? 0) < now
       ) {
         if (finalToken.microsoftRefreshToken) {
-          finalToken = await refreshMicrosoftToken(finalToken); // refreshMicrosoftToken from ./refresh
+          finalToken = await refreshMicrosoftToken(finalToken);
           tokenNeedsUpdateInStore = true;
         } else if (!finalToken.error) {
           finalToken.error = "RefreshTokenError";
@@ -367,10 +386,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.image = token.picture ?? session.user.image;
       session.hasGoogleAuth = !!token.googleAccessToken;
       session.hasMicrosoftAuth = !!token.microsoftAccessToken;
-      session.googleToken = token.googleAccessToken; // For server-side use
-      session.microsoftToken = token.microsoftAccessToken; // For server-side use
+      session.googleToken = token.googleAccessToken;
+      session.microsoftToken = token.microsoftAccessToken;
       session.microsoftTenantId = token.microsoftTenantId;
-      session.authFlowDomain = token.authFlowDomain; // Pass Google domain to session
+      session.authFlowDomain = token.authFlowDomain;
       if (token.error) session.error = token.error;
       return session;
     },

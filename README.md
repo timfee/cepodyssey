@@ -17,6 +17,26 @@ Automation steps are defined in `lib/steps.ts` and executed through server actio
 2. Copy `.env.local` and provide credentials (see below).
 3. Run `pnpm dev` to start the dev server.
 
+### Environment Variables
+
+`.env.local` should define the following keys:
+
+```
+AUTH_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_ADMIN_SCOPES=
+GOOGLE_API_BASE=https://admin.googleapis.com
+GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+MICROSOFT_GRAPH_SCOPES=
+MICROSOFT_TENANT_ID=
+NEXT_PUBLIC_MICROSOFT_TENANT_ID=
+GRAPH_API_BASE=https://graph.microsoft.com/v1.0
+`NEXT_PUBLIC_MICROSOFT_TENANT_ID` can be set to pre-fill the tenant field on the login page.
+```
+
 ### Google OAuth Setup
 
 This app requests admin level scopes from Google Workspace. Because these scopes are sensitive, the OAuth consent screen must be set to **Internal** (only users in your Workspace) or placed in a published testing mode. Create credentials for a Web application and set the callback URL to `http://localhost:3000/api/auth/callback/google`.

@@ -1,4 +1,3 @@
-// ./lib/steps.ts
 import {
   checkDomainVerified,
   checkGoogleSamlProfileDetails,
@@ -35,10 +34,14 @@ import type {
   StepDefinition,
   StepExecutionResult,
 } from "./types";
-import { OUTPUT_KEYS } from "./types"; // Import OUTPUT_KEYS from types.ts
+import { OUTPUT_KEYS } from "./types";
 
+/**
+ * Declarative list of all automation steps in execution order.
+ * Each definition contains metadata plus check and execute handlers.
+ */
 export const allStepDefinitions: StepDefinition[] = [
-  // --- Phase 1: Initial Google Workspace Setup ---
+  // Phase 1: Initial Google Workspace Setup
   {
     id: "G-1",
     title: "Create 'Automation' OU (Optional)",
@@ -129,7 +132,7 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
 
-  // --- Phase 2: Azure AD - App 1 (User Provisioning) ---
+  // Phase 2: Azure AD - App 1 (User Provisioning)
   {
     id: "M-1",
     title: "Create Azure AD Enterprise App for Provisioning",
@@ -345,7 +348,7 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
 
-  // --- Phase 3: Azure AD - App 2 (SAML SSO) ---
+  // Phase 3: Azure AD - App 2 (SAML SSO)
   {
     id: "M-6",
     title: "Create Azure AD Enterprise App for SAML SSO",
@@ -461,7 +464,7 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
 
-  // --- Phase 4: Finalize SSO in Google Workspace ---
+  // Phase 4: Finalize SSO in Google Workspace
   {
     id: "G-6",
     title: "Update Google SAML Profile with Azure AD IdP Info",
@@ -592,7 +595,7 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
 
-  // --- Phase 5: Azure AD - Finalize SSO App ---
+  // Phase 5: Azure AD - Finalize SSO App
   {
     id: "M-9",
     title: "Assign Users/Groups to Azure AD SSO App",
@@ -627,7 +630,7 @@ export const allStepDefinitions: StepDefinition[] = [
     },
   },
 
-  // --- Phase 6: Testing ---
+  // Phase 6: Testing
   {
     id: "M-10",
     title: "Test & Validate SSO Sign-in",
@@ -654,10 +657,18 @@ export const allStepDefinitions: StepDefinition[] = [
   },
 ];
 
+/**
+ * Quick lookup map for step definitions by ID.
+ * Useful when resolving dependencies or executing actions.
+ */
 export const stepDefinitionMap = new Map<string, StepDefinition>(
   allStepDefinitions.map((def) => [def.id, def]),
 );
 
+/**
+ * Look up check and execute implementations for a step.
+ * Returns undefined if the step ID is not defined.
+ */
 export function getStepActions(stepId: string):
   | {
       check?: (context: StepContext) => Promise<StepCheckResult>;

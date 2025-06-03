@@ -1,10 +1,5 @@
-// ./next-auth.d.ts
-import type {
-  DefaultSession,
-  Profile as NextAuthProfile,
-  User,
-} from "next-auth"; // Added Profile
-import type { JWT as NextAuthJWT } from "next-auth/jwt"; // Renamed to NextAuthJWT to avoid conflict
+import type { DefaultSession, Profile as NextAuthProfile, User } from "next-auth";
+import type { JWT as NextAuthJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
@@ -21,7 +16,6 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT extends NextAuthJWT {
-    // Extends imported JWT
     googleAccessToken?: string;
     googleRefreshToken?: string;
     googleExpiresAt?: number;
@@ -33,18 +27,14 @@ declare module "next-auth/jwt" {
     error?: "RefreshTokenError";
   }
 }
-
-// Extend the Profile type for specific providers if needed
 declare module "next-auth/providers/google" {
   interface GoogleProfile extends NextAuthProfile {
-    // Use NextAuthProfile as base
     hd?: string;
   }
 }
 
 declare module "next-auth/providers/microsoft-entra-id" {
   interface MicrosoftEntraIDProfile extends NextAuthProfile {
-    // Use NextAuthProfile as base
     tid?: string;
   }
 }

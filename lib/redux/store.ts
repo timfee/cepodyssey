@@ -9,7 +9,8 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false, // Disabling for simplicity with non-serializable data like dates if needed
+      // Allow Date objects in state metadata
+      serializableCheck: false,
     }),
 });
 
