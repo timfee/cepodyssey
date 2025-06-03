@@ -248,7 +248,9 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const profileFullName = context.outputs[
@@ -294,7 +296,9 @@ export async function executeG7AssignGoogleSamlToRootOu(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const profileFullName = context.outputs[
@@ -329,7 +333,9 @@ export async function executeG8ExcludeAutomationOuFromSso(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const profileFullName = context.outputs[
@@ -441,7 +447,9 @@ export async function executeM2ConfigureProvisioningAppProperties(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const spObjectId = context.outputs[
@@ -483,7 +491,9 @@ export async function executeM3AuthorizeProvisioningConnection(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const spObjectId = context.outputs[
@@ -560,7 +570,9 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const spObjectId = context.outputs[
@@ -686,7 +698,9 @@ export async function executeM5StartProvisioningJob(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const spObjectId = context.outputs[
@@ -855,11 +869,15 @@ export async function executeM8RetrieveAzureIdpMetadata(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const samlSsoAppId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    const spObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string;
+    const spObjectId = context.outputs[
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID
+    ] as string;
 
     const metadata = await microsoft.getSamlMetadata(tenantId, samlSsoAppId);
     const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${samlSsoAppId}/objectId/${spObjectId}`;
@@ -893,7 +911,9 @@ export async function executeM9AssignUsersToAzureSsoApp(
     if (!validation.valid) {
       return {
         success: false,
-        error: { message: `Missing required outputs: ${validation.missing.join(", ")}` },
+        error: {
+          message: `Missing required outputs: ${validation.missing.join(", ")}`,
+        },
       };
     }
     const ssoSpObjectId = context.outputs[

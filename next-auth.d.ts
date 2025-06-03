@@ -1,4 +1,8 @@
-import type { DefaultSession, Profile as NextAuthProfile, User } from "next-auth";
+import type {
+  DefaultSession,
+  Profile as NextAuthProfile,
+  User,
+} from "next-auth";
 import type { JWT as NextAuthJWT } from "next-auth/jwt";
 
 declare module "next-auth" {

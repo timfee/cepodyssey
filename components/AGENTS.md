@@ -1,17 +1,20 @@
 # Component Guidelines
 
 ## Component Architecture
+
 All components follow React 18 patterns with clear separation of concerns and standardized prop interfaces.
 
 ## Component Categories
 
 ### shadcn/ui Components (`ui/`)
+
 - Pre-built components following Radix UI patterns
 - Styled with Tailwind CSS utility classes
 - Use existing variants: `variant="default" | "outline" | "destructive"`
 - Import pattern: `import { Button } from "@/components/ui/button"`
 
 ### Feature Components
+
 - `dashboard.tsx`: Main orchestration component
 - `progress.tsx`: Step visualization and progress tracking
 - `step.tsx` & `collapsible-step.tsx`: Individual step rendering
@@ -21,6 +24,7 @@ All components follow React 18 patterns with clear separation of concerns and st
 ## React 18 Patterns
 
 ### Client Component Standards
+
 ```typescript
 "use client";
 
@@ -37,13 +41,13 @@ interface ComponentProps {
 
 export function ComponentName({ step, onExecuteStep, canRunGlobal = false }: ComponentProps) {
   const [isPending, startTransition] = useTransition();
-  
+
   const handleAction = useCallback((id: string) => {
     startTransition(() => {
       onExecuteStep(id);
     });
   }, [onExecuteStep]);
-  
+
   return (
     <div className="space-y-4">
       {/* Component JSX */}
@@ -53,6 +57,7 @@ export function ComponentName({ step, onExecuteStep, canRunGlobal = false }: Com
 ```
 
 ### State Management Integration
+
 ```typescript
 // Use typed Redux hooks
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
@@ -67,26 +72,31 @@ dispatch(updateStep({ id: stepId, status: "completed" }));
 ```
 
 ### Event Handling with Transitions
+
 ```typescript
 import { useTransition } from "react";
 
 const [isPending, startTransition] = useTransition();
 
-const handleAsyncAction = useCallback((id: string) => {
-  startTransition(async () => {
-    try {
-      await executeAction(id);
-      toast.success("Action completed");
-    } catch (error) {
-      toast.error("Action failed: " + error.message);
-    }
-  });
-}, [executeAction]);
+const handleAsyncAction = useCallback(
+  (id: string) => {
+    startTransition(async () => {
+      try {
+        await executeAction(id);
+        toast.success("Action completed");
+      } catch (error) {
+        toast.error("Action failed: " + error.message);
+      }
+    });
+  },
+  [executeAction],
+);
 ```
 
 ## shadcn/ui Usage Patterns
 
 ### Button Component
+
 ```typescript
 import { Button } from "@/components/ui/button";
 
@@ -103,6 +113,7 @@ import { Button } from "@/components/ui/button";
 ```
 
 ### Card Component
+
 ```typescript
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -118,6 +129,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 ```
 
 ### Toast Notifications
+
 ```typescript
 import { toast } from "sonner";
 
@@ -136,6 +148,7 @@ toast.success("Completed!", { id: "operation-123" });
 ```
 
 ## Styling Standards
+
 - Use Tailwind CSS utility classes exclusively
 - Follow existing spacing scale: `p-4`, `mt-6`, `space-y-4`
 - Color scheme: `bg-slate-50`, `text-slate-900`, `border-slate-200`
@@ -143,6 +156,7 @@ toast.success("Completed!", { id: "operation-123" });
 - Responsive design: `md:grid-cols-2`, `lg:grid-cols-3`
 
 ## Accessibility Standards
+
 - Use semantic HTML elements
 - Proper ARIA labels: `aria-label`, `aria-describedby`
 - Keyboard navigation support
@@ -150,6 +164,7 @@ toast.success("Completed!", { id: "operation-123" });
 - Color contrast compliance (built into shadcn/ui)
 
 ## Anti-Patterns
+
 - ❌ Don't fetch data directly in Client Components (use Server Actions)
 - ❌ Don't duplicate step execution logic
 - ❌ Don't hardcode step IDs or configuration values

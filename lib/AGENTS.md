@@ -1,6 +1,7 @@
 # Library Guidelines
 
 ## Structure Overview
+
 The `lib/` directory contains all shared utilities, type definitions, and business logic that's reused across the application.
 
 ```
@@ -15,6 +16,7 @@ lib/
 ## Type System (`types.ts`)
 
 ### Core Type Patterns
+
 ```typescript
 // Result types for consistent API responses
 export interface StepExecutionResult {
@@ -42,6 +44,7 @@ export interface StepStatusInfo {
 ```
 
 ### Output Keys System
+
 ```typescript
 // Centralized constants for step data flow
 export const OUTPUT_KEYS = {
@@ -55,6 +58,7 @@ export const OUTPUT_KEYS = {
 ## API Clients (`api/`)
 
 ### Error Handling Pattern
+
 ```typescript
 export class APIError extends Error {
   constructor(
@@ -91,6 +95,7 @@ export async function withRetry<T>(
 ```
 
 ### HTTP Client Pattern
+
 ```typescript
 export async function fetchWithAuth(
   url: string,
@@ -113,6 +118,7 @@ export async function fetchWithAuth(
 ## Redux Toolkit State (`redux/`)
 
 ### Slice Patterns
+
 ```typescript
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
@@ -140,6 +146,7 @@ export const { addOutputs, setDomain } = appConfigSlice.actions;
 ```
 
 ### Store Configuration
+
 ```typescript
 import { configureStore } from "@reduxjs/toolkit";
 
@@ -161,6 +168,7 @@ export type AppDispatch = typeof store.dispatch;
 ## Step System (`steps.ts`)
 
 ### Step Definition Pattern
+
 ```typescript
 export const allStepDefinitions: StepDefinition[] = [
   {
@@ -178,21 +186,24 @@ export const allStepDefinitions: StepDefinition[] = [
     },
     adminUrls: {
       configure: "https://admin.google.com/ac/orgunits",
-      verify: (outputs) => outputs[OUTPUT_KEYS.AUTOMATION_OU_ID] 
-        ? `https://admin.google.com/specific-url/${outputs[OUTPUT_KEYS.AUTOMATION_OU_ID]}`
-        : null,
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.AUTOMATION_OU_ID]
+          ? `https://admin.google.com/specific-url/${outputs[OUTPUT_KEYS.AUTOMATION_OU_ID]}`
+          : null,
     },
   },
 ];
 ```
 
 ## Utility Standards
+
 - Pure functions where possible
 - Consistent error handling with APIError
 - TypeScript strict mode compliance
 - JSDoc comments for complex functions
 
 ## Integration Rules
+
 - All external API calls go through `lib/api/` clients
 - Step definitions are the single source of truth for automation
 - Types defined once in `types.ts`, imported everywhere else

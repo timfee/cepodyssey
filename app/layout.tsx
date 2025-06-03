@@ -1,10 +1,23 @@
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+import localFont from "next/font/local";
+
+const inter = localFont({
+  src: [
+    {
+      path: "../public/InterVariable.woff2",
+      style: "normal",
+    },
+    {
+      path: "../public/InterVariable-Italic.woff2",
+      style: "italic",
+    },
+  ],
+});
 
 export const metadata: Metadata = {
   title: "Directory Setup Assistant",
