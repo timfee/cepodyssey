@@ -1,8 +1,25 @@
 "use server";
 
+import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import type { StepCheckResult, StepContext } from "@/lib/types";
 import { checkStep } from "./step-registry";
-import type { StepContext, StepCheckResult } from "@/lib/types";
 
-export async function executeStepCheck(stepId: string, context: StepContext): Promise<StepCheckResult> {
-  return checkStep(stepId, context);
+export async function executeStepCheck(
+  stepId: string,
+  context: StepContext
+): Promise<StepCheckResult> {
+  try {
+    return await checkStep(stepId, context);
+  } catch (error) {
+    // For authentication errors, propagate them to the client
+    if (isAuthenticationError(error)) {
+      throw {
+        code: "AUTH_EXPIRED",
+        message: error.message,
+        provider: error.provider,
+      };
+    }
+    // For other errors, throw them as is
+    throw error;
+  }
 }

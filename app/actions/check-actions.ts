@@ -1,14 +1,17 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
+import {
+  AuthenticationError,
+  isAuthenticationError,
+} from "@/lib/api/auth-interceptor";
 import * as google from "@/lib/api/google";
 import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
-import { AuthenticationError, isAuthenticationError } from "@/lib/api/auth-interceptor";
 import type { StepCheckResult } from "@/lib/types";
-import type { Session } from "next-auth";
 import { OUTPUT_KEYS } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
+import type { Session } from "next-auth";
 
 function validateTokens(session: Session | null): asserts session is Session {
   if (!session) {
@@ -21,7 +24,10 @@ function validateTokens(session: Session | null): asserts session is Session {
     throw new AuthenticationError("Google authentication required", "google");
   }
   if (!session.microsoftToken) {
-    throw new AuthenticationError("Microsoft authentication required", "microsoft");
+    throw new AuthenticationError(
+      "Microsoft authentication required",
+      "microsoft"
+    );
   }
 }
 /**
@@ -29,7 +35,7 @@ function validateTokens(session: Session | null): asserts session is Session {
  */
 
 async function getAuthenticatedTokens(
-  providers: ("google" | "microsoft")[] = ["google", "microsoft"],
+  providers: ("google" | "microsoft")[] = ["google", "microsoft"]
 ) {
   const session = await auth();
   validateTokens(session);
@@ -41,31 +47,28 @@ async function getAuthenticatedTokens(
   }
   if (providers.includes("microsoft")) {
     if (!session.microsoftToken)
-      throw new AuthenticationError("Microsoft authentication required", "microsoft");
+      throw new AuthenticationError(
+        "Microsoft authentication required",
+        "microsoft"
+      );
     tokens.microsoftToken = session.microsoftToken;
   }
   return tokens;
 }
+
 /**
  * Log a check error and convert it to a StepCheckResult.
  */
 
 function handleCheckError(
   error: unknown,
-  defaultMessage: string,
+  defaultMessage: string
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
-  // Special handling for auth errors
+  // Special handling for auth errors - rethrow them to be handled by the dashboard
   if (isAuthenticationError(error)) {
-    return {
-      completed: false,
-      message: error.message,
-      outputs: {
-        errorCode: "AUTH_EXPIRED",
-        errorProvider: error.provider,
-      },
-    };
+    throw error; // Propagate auth errors to be handled by the UI
   }
 
   const message = error instanceof Error ? error.message : defaultMessage;
@@ -76,7 +79,7 @@ function handleCheckError(
  */
 
 export async function checkOrgUnitExists(
-  ouPath: string,
+  ouPath: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
@@ -110,7 +113,7 @@ export async function checkOrgUnitExists(
  * Check if a domain is verified in Google Workspace.
  */
 export async function checkDomainVerified(
-  domain: string,
+  domain: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
@@ -136,13 +139,13 @@ export async function checkDomainVerified(
     }
     return handleCheckError(
       e,
-      `Failed to check domain verification for '${domain}'.`,
+      `Failed to check domain verification for '${domain}'.`
     );
   }
 }
 
 export async function checkServiceAccountExists(
-  serviceAccountEmail: string,
+  serviceAccountEmail: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
@@ -173,7 +176,7 @@ export async function checkServiceAccountExists(
 }
 
 export async function checkServiceAccountIsAdmin(
-  serviceAccountEmail: string,
+  serviceAccountEmail: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
@@ -192,10 +195,10 @@ export async function checkServiceAccountIsAdmin(
     }
     const roleAssignments = await google.listRoleAssignments(
       googleToken!,
-      serviceAccountEmail,
+      serviceAccountEmail
     );
     const hasSuperAdminRole = roleAssignments.some(
-      (assignment) => assignment.roleId === "3",
+      (assignment) => assignment.roleId === "3"
     );
     if (hasSuperAdminRole) {
       return {
@@ -219,7 +222,7 @@ export async function checkServiceAccountIsAdmin(
 export async function checkGoogleSamlProfileDetails(
   profileDisplayNameOrFullName: string,
   checkExistsOnly: boolean,
-  expectedIdpEntityId?: string,
+  expectedIdpEntityId?: string
 ): Promise<StepCheckResult> {
   try {
     const { googleToken } = await getAuthenticatedTokens(["google"]);
@@ -228,7 +231,7 @@ export async function checkGoogleSamlProfileDetails(
     if (profileDisplayNameOrFullName.startsWith("inboundSamlSsoProfiles/")) {
       profile = await google.getSamlProfile(
         googleToken!,
-        profileDisplayNameOrFullName,
+        profileDisplayNameOrFullName
       );
     } else {
       const profiles = await google.listSamlProfiles(googleToken!);
@@ -304,7 +307,7 @@ export async function checkGoogleSamlProfileDetails(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check SAML Profile '${profileDisplayNameOrFullName}'.`,
+      `Failed to check SAML Profile '${profileDisplayNameOrFullName}'.`
     );
   }
 }
@@ -313,19 +316,19 @@ export async function checkGoogleSamlProfileDetails(
  * Ensure the Azure service principal for the application exists.
  */
 export async function checkMicrosoftServicePrincipal(
-  appClientId: string,
+  appClientId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const sp = await microsoft.getServicePrincipalByAppId(
       microsoftToken!,
-      appClientId,
+      appClientId
     );
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
       const applications = await microsoft.listApplications(
         microsoftToken!,
-        `appId eq '${appClientId}'`,
+        `appId eq '${appClientId}'`
       );
       if (applications[0]?.id) {
         appObjectId = applications[0].id;
@@ -351,7 +354,7 @@ export async function checkMicrosoftServicePrincipal(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check for Service Principal with App Client ID '${appClientId}'.`,
+      `Failed to check for Service Principal with App Client ID '${appClientId}'.`
     );
   }
 }
@@ -360,13 +363,13 @@ export async function checkMicrosoftServicePrincipal(
  * Check whether the given Azure service principal is enabled.
  */
 export async function checkMicrosoftServicePrincipalEnabled(
-  spObjectId: string,
+  spObjectId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const sp = await microsoft.getServicePrincipalDetails(
       microsoftToken!,
-      spObjectId,
+      spObjectId
     );
     if (sp?.accountEnabled === true) {
       return { completed: true, message: "Service Principal is enabled." };
@@ -386,7 +389,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
     }
     return handleCheckError(
       e,
-      `Failed to check if Service Principal '${spObjectId}' is enabled.`,
+      `Failed to check if Service Principal '${spObjectId}' is enabled.`
     );
   }
 }
@@ -396,7 +399,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
  */
 export async function checkMicrosoftProvisioningJobDetails(
   spObjectId: string,
-  jobId?: string,
+  jobId?: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
@@ -405,12 +408,12 @@ export async function checkMicrosoftProvisioningJobDetails(
       jobToInspect = await microsoft.getProvisioningJob(
         microsoftToken!,
         spObjectId,
-        jobId,
+        jobId
       );
     } else {
       const jobs = await microsoft.listSynchronizationJobs(
         microsoftToken!,
-        spObjectId,
+        spObjectId
       );
       jobToInspect =
         jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
@@ -460,7 +463,7 @@ export async function checkMicrosoftProvisioningJobDetails(
     }
     return handleCheckError(
       e,
-      `Failed to check provisioning job for SP '${spObjectId}'.`,
+      `Failed to check provisioning job for SP '${spObjectId}'.`
     );
   }
 }
@@ -470,38 +473,38 @@ export async function checkMicrosoftProvisioningJobDetails(
  */
 export async function checkMicrosoftAttributeMappingsApplied(
   spObjectId: string,
-  jobId: string,
+  jobId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const schema = await microsoft.getSynchronizationSchema(
       microsoftToken!,
       spObjectId,
-      jobId,
+      jobId
     );
     const userMappingRule = schema?.synchronizationRules?.find(
       (rule: MicrosoftGraph.SynchronizationRule) =>
         rule.objectMappings?.some(
           (om: MicrosoftGraph.ObjectMapping) =>
             om.targetObjectName?.toLowerCase() === "user" &&
-            om.sourceObjectName?.toLowerCase() === "user",
-        ),
+            om.sourceObjectName?.toLowerCase() === "user"
+        )
     );
     const userObjectMapping = userMappingRule?.objectMappings?.find(
       (om: MicrosoftGraph.ObjectMapping) =>
-        om.targetObjectName?.toLowerCase() === "user",
+        om.targetObjectName?.toLowerCase() === "user"
     );
 
     const hasUserPrincipalNameToUserName =
       userObjectMapping?.attributeMappings?.some(
         (am: MicrosoftGraph.AttributeMapping) =>
           am.targetAttributeName === "userName" &&
-          am.source?.expression?.toLowerCase().includes("[userprincipalname]"),
+          am.source?.expression?.toLowerCase().includes("[userprincipalname]")
       );
     const hasMailToEmail = userObjectMapping?.attributeMappings?.some(
       (am: MicrosoftGraph.AttributeMapping) =>
         am.targetAttributeName === 'emails[type eq "work"].value' &&
-        am.source?.expression?.toLowerCase().includes("[mail]"),
+        am.source?.expression?.toLowerCase().includes("[mail]")
     );
 
     if (hasUserPrincipalNameToUserName && hasMailToEmail) {
@@ -534,13 +537,13 @@ export async function checkMicrosoftAttributeMappingsApplied(
 export async function checkMicrosoftSamlAppSettingsApplied(
   appObjectId: string,
   expectedSpEntityId: string,
-  expectedAcsUrl: string,
+  expectedAcsUrl: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const appDetails = await microsoft.getApplicationDetails(
       microsoftToken!,
-      appObjectId,
+      appObjectId
     );
     if (!appDetails) {
       return {
@@ -564,11 +567,11 @@ export async function checkMicrosoftSamlAppSettingsApplied(
     let message = "Azure AD SAML app settings not fully configured: ";
     if (!hasCorrectIdentifierUri)
       message += `Expected Identifier URI '${expectedSpEntityId}' not found in ${JSON.stringify(
-        appDetails.identifierUris,
+        appDetails.identifierUris
       )}. `;
     if (!hasCorrectReplyUrl)
       message += `Expected Reply URL '${expectedAcsUrl}' not found in ${JSON.stringify(
-        appDetails.web?.redirectUris,
+        appDetails.web?.redirectUris
       )}.`;
     return { completed: false, message: message.trim() };
   } catch (e) {
@@ -580,13 +583,13 @@ export async function checkMicrosoftSamlAppSettingsApplied(
  * Determine if any users or groups are assigned to the Azure application.
  */
 export async function checkMicrosoftAppAssignments(
-  servicePrincipalObjectId: string,
+  servicePrincipalObjectId: string
 ): Promise<StepCheckResult> {
   try {
     const { microsoftToken } = await getAuthenticatedTokens(["microsoft"]);
     const assignments = await microsoft.listAppRoleAssignments(
       microsoftToken!,
-      servicePrincipalObjectId,
+      servicePrincipalObjectId
     );
     const hasAssignments = assignments && assignments.length > 0;
     return {
@@ -604,7 +607,7 @@ export async function checkMicrosoftAppAssignments(
     }
     return handleCheckError(
       e,
-      "Failed to check app assignments for SP " + servicePrincipalObjectId,
+      "Failed to check app assignments for SP " + servicePrincipalObjectId
     );
   }
 }
@@ -626,7 +629,10 @@ export async function checkGoogleAPIsEnabled(): Promise<{
       await google.getUser(googleToken!, "test@nonexistent.domain");
       adminSDK = true;
     } catch (e) {
-      if (e instanceof APIError && e.message?.includes("Admin SDK API has not been used")) {
+      if (
+        e instanceof APIError &&
+        e.message?.includes("Admin SDK API has not been used")
+      ) {
         errors.push("Admin SDK API is not enabled");
       } else {
         adminSDK = true; // API is enabled, user doesn't exist
@@ -638,7 +644,10 @@ export async function checkGoogleAPIsEnabled(): Promise<{
       await google.listSamlProfiles(googleToken!);
       cloudIdentity = true;
     } catch (e) {
-      if (e instanceof APIError && e.message?.includes("Cloud Identity API has not been used")) {
+      if (
+        e instanceof APIError &&
+        e.message?.includes("Cloud Identity API has not been used")
+      ) {
         errors.push("Cloud Identity API is not enabled");
       } else {
         cloudIdentity = true; // API is enabled
@@ -646,7 +655,8 @@ export async function checkGoogleAPIsEnabled(): Promise<{
     }
   } catch (e) {
     errors.push(
-      "Unable to check API status: " + (e instanceof Error ? e.message : String(e)),
+      "Unable to check API status: " +
+        (e instanceof Error ? e.message : String(e))
     );
   }
 
