@@ -15,12 +15,17 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
   const { session } = useSessionSync();
 
   useEffect(() => {
+    const authErrorPresent = Object.values(stepsStatus).some(
+      (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
+    );
+
     if (
       !session?.hasGoogleAuth ||
       !session?.hasMicrosoftAuth ||
       !appConfig.domain ||
       !appConfig.tenantId ||
-      hasChecked.current
+      hasChecked.current ||
+      authErrorPresent
     )
       return;
 

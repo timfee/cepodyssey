@@ -57,8 +57,8 @@ export function StepItem({
   const prerequisitesMet = React.useMemo(() => {
     // Auth errors override prerequisite logic to allow retrying the step
     if (
-      step.error?.includes("AUTH_EXPIRED") ||
-      step.error?.includes("authentication expired")
+      step.metadata?.errorCode === "AUTH_EXPIRED" ||
+      step.error?.toLowerCase().includes("authentication expired")
     ) {
       return true;
     }
@@ -68,7 +68,7 @@ export function StepItem({
         (reqId) => allStepsStatus[reqId]?.status === "completed",
       ) ?? true
     );
-  }, [step.requires, step.error, allStepsStatus]);
+  }, [step.requires, step.error, step.metadata, allStepsStatus]);
 
   const getStatusVisuals = () => {
     switch (step.status) {
@@ -120,11 +120,12 @@ export function StepItem({
   };
 
   const isStepEffectivelyDisabled =
-    !canRunGlobal || (!prerequisitesMet && !step.error?.includes("AUTH_EXPIRED"));
+    !canRunGlobal ||
+    (!prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED");
 
   const runButtonDisabledReason = !canRunGlobal
     ? "Global prerequisites (auth/config) not met."
-    : !prerequisitesMet && !step.error?.includes("AUTH_EXPIRED")
+    : !prerequisitesMet && step.metadata?.errorCode !== "AUTH_EXPIRED"
       ? "Prerequisite steps not completed."
       : undefined;
 
