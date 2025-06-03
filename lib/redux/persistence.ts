@@ -14,7 +14,7 @@ const getStorageKey = (domain: string) => `automation-progress-${domain}`;
  */
 export function saveProgress(
   domain: string,
-  progress: PersistedProgress
+  progress: PersistedProgress,
 ): void {
   if (typeof window === "undefined" || !domain) return;
   try {

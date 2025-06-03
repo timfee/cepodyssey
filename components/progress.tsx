@@ -7,15 +7,9 @@ import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import { useSession } from "next-auth/react";
 import React from "react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
-import { StepItem } from "./step";
+import { CollapsibleStep } from "./collapsible-step";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: string) => void;
@@ -27,7 +21,7 @@ interface ProgressVisualizerProps {
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const { data: session } = useSession();
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps
+    (state: RootState) => state.setupSteps.steps,
   );
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
 
@@ -45,7 +39,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
       appConfig.tenantId,
       session?.hasGoogleAuth,
       session?.hasMicrosoftAuth,
-    ]
+    ],
   );
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {
@@ -69,16 +63,43 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const renderStepList = (
     title: string,
     stepsToList: ManagedStep[],
-    categoryKey: string
-  ) => (
-    <div key={categoryKey} className="flex flex-col">
-      <h3 className="mb-6 text-xl font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-300 dark:border-slate-700 pb-3">
-        {title}
-      </h3>
-      {stepsToList.length > 0 ? (
-        <ol className="relative">
+    categoryKey: string,
+  ) => {
+    const completedCount = stepsToList.filter(
+      (s) => s.status === "completed",
+    ).length;
+    const totalCount = stepsToList.length;
+    const progressPercent =
+      totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+    return (
+      <div
+        key={categoryKey}
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm"
+      >
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </h3>
+          <div className="mt-2">
+            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <span>
+                {completedCount} of {totalCount} completed
+              </span>
+              <span>{Math.round(progressPercent)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1">
           {stepsToList.map((step, index) => (
-            <StepItem
+            <CollapsibleStep
               key={step.id}
               step={step}
               isLastStep={index === stepsToList.length - 1}
@@ -86,14 +107,10 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               canRunGlobal={canRunGlobalSteps}
             />
           ))}
-        </ol>
-      ) : (
-        <div className="flex items-center justify-center h-32 text-sm text-muted-foreground border border-dashed rounded-md">
-          No steps defined for this category.
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   if (managedSteps.length === 0) {
     return (
@@ -115,26 +132,22 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   }
 
   return (
-    <Card className="mt-8 shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold tracking-tight">
+    <div className="mt-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold tracking-tight">
           Automation Progress
-        </CardTitle>
-        <CardDescription>
-          Follow these steps to complete the integration. Manual steps require
-          your input. Automated steps can be run individually or via &quot;Run
-          All Pending&quot;.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-x-6 gap-y-10 lg:grid-cols-3">
-        {renderStepList("Google Workspace Setup", googleSteps, "google")}
-        {renderStepList(
-          "Microsoft Entra ID Provisioning Setup",
-          microsoftSteps,
-          "microsoft"
-        )}
-        {renderStepList("Single Sign-On (SSO) Setup", ssoSteps, "sso")}
-      </CardContent>
-    </Card>
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          Click on steps to expand details. Automated steps can be run
+          individually or via Run All Pending.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-3">
+        {renderStepList("Google Workspace", googleSteps, "google")}
+        {renderStepList("Microsoft Entra ID", microsoftSteps, "microsoft")}
+        {renderStepList("Single Sign-On", ssoSteps, "sso")}
+      </div>
+    </div>
   );
 }

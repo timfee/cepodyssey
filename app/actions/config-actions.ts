@@ -51,7 +51,10 @@ export async function saveConfig(data: AppConfig): Promise<ActionResult> {
   }
 
   serverSideConfigStore.set(CONFIG_STORE_KEY, result.data);
-  console.log(`Configuration saved with key '${CONFIG_STORE_KEY}':`, result.data);
+  console.log(
+    `Configuration saved with key '${CONFIG_STORE_KEY}':`,
+    result.data,
+  );
 
   revalidatePath("/");
 
@@ -71,12 +74,12 @@ export async function getConfig(): Promise<AppConfig | null> {
   if (config) {
     console.log(
       `getConfig: Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
-      config
+      config,
     );
     return config;
   } else {
     console.log(
-      `getConfig: No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`
+      `getConfig: No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`,
     );
     return null;
   }

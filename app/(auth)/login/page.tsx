@@ -35,7 +35,7 @@ function LoginPage() {
 
   const [domain, setDomain] = useState("");
   const [tenantId, setTenantId] = useState(
-    process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || ""
+    process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "",
   );
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
   const [isLookingUpTenant, setIsLookingUpTenant] = useState(false);
@@ -48,7 +48,7 @@ function LoginPage() {
   useEffect(() => {
     if (session?.hasGoogleAuth && session.hasMicrosoftAuth) {
       console.log(
-        "LoginPage: Both providers authenticated. Redirecting to dashboard."
+        "LoginPage: Both providers authenticated. Redirecting to dashboard.",
       );
       router.replace("/");
     }
@@ -108,7 +108,7 @@ function LoginPage() {
   const onGoogleSignIn = () => {
     if (!domain) {
       toast.error(
-        "Primary Google Workspace domain is required for Google Sign-In."
+        "Primary Google Workspace domain is required for Google Sign-In.",
       );
       return;
     }
@@ -126,7 +126,7 @@ function LoginPage() {
     if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
       toast.info(
         "Microsoft Tenant ID is not specified. Attempting sign-in with common endpoint.",
-        { duration: 7000 }
+        { duration: 7000 },
       );
     }
     startMicrosoftLoginTransition(async () => {

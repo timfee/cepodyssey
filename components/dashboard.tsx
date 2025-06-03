@@ -27,6 +27,7 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
@@ -49,7 +50,7 @@ export function AutomationDashboard({
   const store = useStore<RootState>();
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps
+    (state: RootState) => state.setupSteps.steps,
   );
 
   const isLoadingSession = status === "loading";
@@ -67,18 +68,18 @@ export function AutomationDashboard({
     ) {
       console.log(
         "AutomationDashboard: Initializing Redux with config from server session props:",
-        initialConfig
+        initialConfig,
       );
       dispatch(
         initializeConfig({
           domain: initialConfig.domain ?? null,
           tenantId: initialConfig.tenantId ?? null,
           outputs: initialConfig.outputs ?? {},
-        })
+        }),
       );
     } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
       console.log(
-        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant."
+        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant.",
       );
     }
   }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
@@ -87,7 +88,7 @@ export function AutomationDashboard({
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain
+        appConfig.domain,
       );
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
@@ -129,7 +130,7 @@ export function AutomationDashboard({
       currentSession?.hasMicrosoftAuth,
       appConfig.domain,
       appConfig.tenantId,
-    ]
+    ],
   );
 
   const executeStep = useCallback(
@@ -146,7 +147,7 @@ export function AutomationDashboard({
             id: stepId,
             status: "failed",
             error: "Step definition not found.",
-          })
+          }),
         );
         return;
       }
@@ -158,7 +159,7 @@ export function AutomationDashboard({
             id: stepId,
             status: "failed",
             error: "Step execution logic not found.",
-          })
+          }),
         );
         return;
       }
@@ -168,7 +169,7 @@ export function AutomationDashboard({
           status: "in_progress",
           error: null,
           message: undefined,
-        })
+        }),
       );
       const toastId = `step-exec-${stepId}-${Date.now()}`;
       toast.loading(`Running: ${definition.title}...`, { id: toastId });
@@ -181,7 +182,7 @@ export function AutomationDashboard({
             id: stepId,
             status: "failed",
             error: "Domain or Tenant ID missing.",
-          })
+          }),
         );
         return;
       }
@@ -206,7 +207,7 @@ export function AutomationDashboard({
                   completedAt: new Date().toISOString(),
                   ...(checkResult.outputs || {}),
                 },
-              })
+              }),
             );
             toast.success(`${definition.title}: Checked - Already complete.`, {
               id: toastId,
@@ -228,7 +229,7 @@ export function AutomationDashboard({
                 completedAt: new Date().toISOString(),
                 ...(result.outputs || {}),
               },
-            })
+            }),
           );
           toast.success(`${definition.title}: Execution successful!`, {
             id: toastId,
@@ -240,13 +241,13 @@ export function AutomationDashboard({
               status: "failed",
               error: result.error?.message ?? "Unknown error during execution.",
               message: result.message,
-            })
+            }),
           );
           toast.error(
             `${definition.title}: Execution failed. ${
               result.error?.message ?? ""
             }`,
-            { id: toastId, duration: 10000 }
+            { id: toastId, duration: 10000 },
           );
         }
       } catch (err) {
@@ -258,7 +259,7 @@ export function AutomationDashboard({
         });
       }
     },
-    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId]
+    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId],
   );
 
   const executeCheck = useCallback(
@@ -285,21 +286,21 @@ export function AutomationDashboard({
           dispatch(
             updateStep({
               id: stepId,
-              status: 'completed',
-              message: checkResult.message || 'Pre-existing resource found',
+              status: "completed",
+              message: checkResult.message || "Pre-existing resource found",
               metadata: {
                 preExisting: true,
                 checkedAt: new Date().toISOString(),
                 ...(checkResult.outputs || {}),
               },
-            })
+            }),
           );
         }
       } catch (error) {
         console.error(`Auto-check failed for ${stepId}:`, error);
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store]
+    [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
   useAutoCheck(executeCheck);
@@ -307,7 +308,7 @@ export function AutomationDashboard({
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) {
       toast.error(
-        "Complete configuration and authentication to run all steps."
+        "Complete configuration and authentication to run all steps.",
       );
       return;
     }
@@ -341,6 +342,49 @@ export function AutomationDashboard({
     }
   }, [executeStep, store, canRunAutomation]);
 
+  const ProgressSummary = () => {
+    const totalSteps = allStepDefinitions.length;
+    const completedSteps = Object.values(stepsStatusMap).filter(
+      (s) => s.status === "completed",
+    ).length;
+    const progressPercent = (completedSteps / totalSteps) * 100;
+
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Setup Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>
+                  {completedSteps} of {totalSteps} steps completed
+                </span>
+                <span className="font-medium">
+                  {Math.round(progressPercent)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {canRunAutomation && completedSteps < totalSteps && (
+              <Button onClick={runAllPending} className="w-full" size="lg">
+                <PlayIcon className="mr-2 h-5 w-5" />
+                Run All Pending Steps ({totalSteps - completedSteps} remaining)
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   if (isLoadingSession && !currentSession) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -370,6 +414,7 @@ export function AutomationDashboard({
         </header>
         <ConfigForm /> {/* ConfigForm is now read-only for domain/tenantId */}
         <AuthStatus />
+        <ProgressSummary />
         {showActionRequired && (
           <Alert
             variant="default"
@@ -408,16 +453,6 @@ export function AutomationDashboard({
             </AlertDescription>
           </Alert>
         )}
-        <div className="flex justify-end pt-4">
-          <Button
-            onClick={runAllPending}
-            disabled={!canRunAutomation || isLoadingSession}
-            size="lg"
-          >
-            <PlayIcon className="mr-2 h-5 w-5" />
-            Run All Pending Automatable Steps
-          </Button>
-        </div>
         <ProgressVisualizer onExecuteStep={executeStep} />
       </main>
     </div>

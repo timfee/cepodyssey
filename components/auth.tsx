@@ -46,7 +46,7 @@ export function AuthStatus() {
     providerName: string,
     Icon: React.ElementType,
     isConnected: boolean,
-    onConnect: () => void
+    onConnect: () => void,
   ) => (
     <div className="flex items-center justify-between rounded-lg border bg-card p-4">
       <div className="flex items-center gap-4">
@@ -102,13 +102,13 @@ export function AuthStatus() {
           "Google Workspace",
           ChromeIcon,
           session?.hasGoogleAuth ?? false,
-          () => handleSignIn("google")
+          () => handleSignIn("google"),
         )}
         {renderPill(
           "Microsoft Entra ID",
           CloudIcon,
           session?.hasMicrosoftAuth ?? false,
-          () => handleSignIn("microsoft-entra-id")
+          () => handleSignIn("microsoft-entra-id"),
         )}
       </CardContent>
     </Card>

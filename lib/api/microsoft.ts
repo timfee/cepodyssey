@@ -13,7 +13,7 @@ export type SynchronizationRule = MicrosoftGraph.SynchronizationRule;
 /** List Azure AD applications matching an optional filter. */
 export async function listApplications(
   token: string,
-  filter?: string
+  filter?: string,
 ): Promise<Application[]> {
   let url = `${GRAPH_BASE_URL}/applications`;
   if (filter) {
@@ -34,11 +34,11 @@ export async function listApplications(
 /** Get a service principal using its application client ID. */
 export async function getServicePrincipalByAppId(
   token: string,
-  appId: string
+  appId: string,
 ): Promise<ServicePrincipal | null> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`,
-    token
+    token,
   );
   if (res.status === 404) return null;
   const result = await handleApiResponse<{ value: ServicePrincipal[] }>(res);
@@ -54,11 +54,11 @@ export async function getServicePrincipalByAppId(
 /** Fetch detailed information for a service principal. */
 export async function getServicePrincipalDetails(
   token: string,
-  spObjectId: string
+  spObjectId: string,
 ): Promise<ServicePrincipal | null> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${spObjectId}?$select=id,appId,displayName,accountEnabled`,
-    token
+    token,
   );
   if (res.status === 404) return null;
   const result = await handleApiResponse<ServicePrincipal>(res);
@@ -72,11 +72,11 @@ export async function getServicePrincipalDetails(
 /** Retrieve application details by object ID. */
 export async function getApplicationDetails(
   token: string,
-  applicationObjectId: string
+  applicationObjectId: string,
 ): Promise<Application | null> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/applications/${applicationObjectId}?$select=id,appId,displayName,identifierUris,web`,
-    token
+    token,
   );
   if (res.status === 404) return null;
   const result = await handleApiResponse<Application>(res);
@@ -91,7 +91,7 @@ export async function getApplicationDetails(
 export async function createEnterpriseApp(
   token: string,
   templateId: string,
-  displayName: string
+  displayName: string,
 ): Promise<
   | { application: Application; servicePrincipal: ServicePrincipal }
   | { alreadyExists: true }
@@ -102,7 +102,7 @@ export async function createEnterpriseApp(
     {
       method: "POST",
       body: JSON.stringify({ displayName }),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -111,7 +111,7 @@ export async function createEnterpriseApp(
 export async function patchServicePrincipal(
   token: string,
   servicePrincipalId: string,
-  body: Partial<ServicePrincipal>
+  body: Partial<ServicePrincipal>,
 ): Promise<void | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}`,
@@ -119,7 +119,7 @@ export async function patchServicePrincipal(
     {
       method: "PATCH",
       body: JSON.stringify(body),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -128,7 +128,7 @@ export async function patchServicePrincipal(
 export async function updateApplication(
   token: string,
   applicationObjectId: string,
-  body: Partial<Application>
+  body: Partial<Application>,
 ): Promise<void | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/applications/${applicationObjectId}`,
@@ -136,7 +136,7 @@ export async function updateApplication(
     {
       method: "PATCH",
       body: JSON.stringify(body),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -144,7 +144,7 @@ export async function updateApplication(
 /** Create a new provisioning job for a service principal. */
 export async function createProvisioningJob(
   token: string,
-  servicePrincipalId: string
+  servicePrincipalId: string,
 ): Promise<SynchronizationJob | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
@@ -152,7 +152,7 @@ export async function createProvisioningJob(
     {
       method: "POST",
       body: JSON.stringify({ templateId: "GoogleApps" }),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -160,11 +160,11 @@ export async function createProvisioningJob(
 /** List provisioning jobs for a service principal. */
 export async function listSynchronizationJobs(
   token: string,
-  servicePrincipalId: string
+  servicePrincipalId: string,
 ): Promise<SynchronizationJob[]> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
-    token
+    token,
   );
   const result = await handleApiResponse<{ value: SynchronizationJob[] }>(res);
   if (
@@ -181,11 +181,11 @@ export async function listSynchronizationJobs(
 export async function getProvisioningJob(
   token: string,
   servicePrincipalId: string,
-  jobId: string
+  jobId: string,
 ): Promise<SynchronizationJob | null> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}`,
-    token
+    token,
   );
   if (res.status === 404) return null;
   const result = await handleApiResponse<SynchronizationJob>(res);
@@ -200,11 +200,11 @@ export async function getProvisioningJob(
 export async function getSynchronizationSchema(
   token: string,
   servicePrincipalId: string,
-  jobId: string
+  jobId: string,
 ): Promise<SynchronizationSchema | null> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
-    token
+    token,
   );
   if (res.status === 404) return null;
   const result = await handleApiResponse<SynchronizationSchema>(res);
@@ -219,7 +219,7 @@ export async function getSynchronizationSchema(
 export async function updateProvisioningCredentials(
   token: string,
   servicePrincipalId: string,
-  credentials: { key: string; value: string }[]
+  credentials: { key: string; value: string }[],
 ): Promise<void | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/secrets`,
@@ -227,7 +227,7 @@ export async function updateProvisioningCredentials(
     {
       method: "PUT",
       body: JSON.stringify({ value: credentials }),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -236,12 +236,12 @@ export async function updateProvisioningCredentials(
 export async function startProvisioningJob(
   token: string,
   servicePrincipalId: string,
-  jobId: string
+  jobId: string,
 ): Promise<void | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/start`,
     token,
-    { method: "POST" }
+    { method: "POST" },
   );
   return handleApiResponse(res);
 }
@@ -253,7 +253,7 @@ export async function configureAttributeMappings(
   jobId: string,
   schemaPayload:
     | { synchronizationRules: MicrosoftGraph.SynchronizationRule[] }
-    | Partial<SynchronizationSchema>
+    | Partial<SynchronizationSchema>,
 ): Promise<SynchronizationSchema | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
@@ -261,7 +261,7 @@ export async function configureAttributeMappings(
     {
       method: "PUT",
       body: JSON.stringify(schemaPayload),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -271,7 +271,7 @@ export async function assignUsersToApp(
   token: string,
   servicePrincipalId: string,
   principalId: string,
-  appRoleId: string
+  appRoleId: string,
 ): Promise<AppRoleAssignment | { alreadyExists: true }> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/appRoleAssignedTo`,
@@ -283,7 +283,7 @@ export async function assignUsersToApp(
         resourceId: servicePrincipalId,
         appRoleId,
       }),
-    }
+    },
   );
   return handleApiResponse(res);
 }
@@ -291,18 +291,18 @@ export async function assignUsersToApp(
 /** List assignments for an application service principal. */
 export async function listAppRoleAssignments(
   token: string,
-  servicePrincipalObjectId: string
+  servicePrincipalObjectId: string,
 ): Promise<AppRoleAssignment[]> {
   const res = await fetchWithAuth(
     `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalObjectId}/appRoleAssignedTo`,
-    token
+    token,
   );
   const result = await handleApiResponse<{ value: AppRoleAssignment[] }>(res);
   return typeof result === "object" &&
     result !== null &&
     "alreadyExists" in result
     ? []
-    : result.value ?? [];
+    : (result.value ?? []);
 }
 
 export interface SamlMetadata {
@@ -314,14 +314,14 @@ export interface SamlMetadata {
 /** Fetch SAML metadata XML and parse key fields. */
 export async function getSamlMetadata(
   tenantId: string,
-  appId: string
+  appId: string,
 ): Promise<SamlMetadata> {
   const url = `https://login.microsoftonline.com/${tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid=${appId}`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new APIError(
       `Failed to fetch SAML metadata: ${res.statusText}`,
-      res.status
+      res.status,
     );
   }
   const xml = await res.text();

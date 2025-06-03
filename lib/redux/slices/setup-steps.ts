@@ -16,7 +16,7 @@ export const setupStepsSlice = createSlice({
     /** Initializes all steps from persisted data. */
     initializeSteps(
       state,
-      action: PayloadAction<Record<string, StepStatusInfo>>
+      action: PayloadAction<Record<string, StepStatusInfo>>,
     ) {
       state.steps = action.payload;
     },

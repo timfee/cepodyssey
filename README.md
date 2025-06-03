@@ -1,6 +1,6 @@
 # Directory Setup Assistant
 
-This Next.js application automates connecting Google Workspace and Microsoft Entra ID.  It uses **NextAuth** for authentication and a small Redux store to track configuration and step progress.
+This Next.js application automates connecting Google Workspace and Microsoft Entra ID. It uses **NextAuth** for authentication and a small Redux store to track configuration and step progress.
 
 ## Project Structure
 
@@ -19,7 +19,7 @@ Automation steps are defined in `lib/steps.ts` and executed through server actio
 
 ### Google OAuth Setup
 
-This app requests admin level scopes from Google Workspace.  Because these scopes are sensitive, the OAuth consent screen must be set to **Internal** (only users in your Workspace) or placed in a published testing mode.  Create credentials for a Web application and set the callback URL to `http://localhost:3000/api/auth/callback/google`.
+This app requests admin level scopes from Google Workspace. Because these scopes are sensitive, the OAuth consent screen must be set to **Internal** (only users in your Workspace) or placed in a published testing mode. Create credentials for a Web application and set the callback URL to `http://localhost:3000/api/auth/callback/google`.
 
 Set the following environment variables:
 
@@ -33,7 +33,7 @@ GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
 
 ### Microsoft OAuth Setup
 
-Create an app registration in Azure AD with the redirect URL `http://localhost:3000/api/auth/callback/microsoft-entra-id`.  Grant the Microsoft Graph scopes used in `.env.local` and enable the `Allow public client flows` option if needed.
+Create an app registration in Azure AD with the redirect URL `http://localhost:3000/api/auth/callback/microsoft-entra-id`. Grant the Microsoft Graph scopes used in `.env.local` and enable the `Allow public client flows` option if needed.
 
 Environment variables:
 
@@ -47,4 +47,4 @@ GRAPH_API_BASE=https://graph.microsoft.com/v1.0
 
 ## Running
 
-Once both providers are configured you can sign in with accounts that have administrator permissions in each service.  The dashboard will then guide you through the integration steps.
+Once both providers are configured you can sign in with accounts that have administrator permissions in each service. The dashboard will then guide you through the integration steps.

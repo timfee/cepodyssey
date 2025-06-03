@@ -11,7 +11,7 @@ interface TenantLookupResult {
  * OpenID Connect configuration.
  */
 export async function lookupTenantId(
-  domain: string
+  domain: string,
 ): Promise<TenantLookupResult> {
   if (!domain) {
     return { success: false, message: "Domain is required." };
@@ -29,7 +29,7 @@ export async function lookupTenantId(
     }
     const config = (await response.json()) as { issuer?: string };
     const issuerMatch = /https?:\/\/sts\.windows\.net\/([^/]+)\//i.exec(
-      config.issuer ?? ""
+      config.issuer ?? "",
     );
     const tenantId = issuerMatch?.[1];
 
