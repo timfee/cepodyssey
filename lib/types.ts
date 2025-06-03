@@ -57,7 +57,7 @@ export interface StepContext {
 }
 
 /**
- * Defines the static and functional properties of a single automation step.
+ * Defines the static properties of a single automation step.
  */
 export interface StepDefinition {
   id: string;
@@ -66,7 +66,6 @@ export interface StepDefinition {
   category: "Google" | "Microsoft" | "SSO";
   automatable: boolean;
   requires?: string[];
-  execute: (context: StepContext) => Promise<StepExecutionResult>;
   /**
    * Optional deep links to relevant admin console locations. These may be
    * provided as static strings or as functions that derive URLs from any
