@@ -1025,7 +1025,7 @@ export async function executeM8RetrieveAzureIdpMetadata(
     ] as string;
 
     const metadata = await microsoft.getSamlMetadata(tenantId, samlSsoAppId);
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${samlSsoAppId}/objectId/${spObjectId}`;
+    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${samlSsoAppId}/objectId=${spObjectId}`;
     return {
       success: true,
       message:

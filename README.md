@@ -68,3 +68,8 @@ GRAPH_API_BASE=https://graph.microsoft.com/v1.0
 ## Running
 
 Once both providers are configured you can sign in with accounts that have administrator permissions in each service. The dashboard will then guide you through the integration steps.
+
+## Testing
+
+Run `pnpm lint` to check code formatting and `pnpm build` to create a production build.
+
