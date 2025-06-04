@@ -27,6 +27,7 @@ export interface InboundSamlSsoProfile {
     entityId?: string;
     assertionConsumerServiceUri?: string;
   };
+  ssoMode?: string;
 }
 
 export interface SsoAssignment {

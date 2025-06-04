@@ -34,7 +34,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { GoogleTokenModal } from "./google-token-modal";
+import { useDialogs } from "./dialog-provider";
 
 interface StepItemProps {
   step: ManagedStep;
@@ -55,7 +55,7 @@ export function StepItem({
   const dispatch = useAppDispatch();
   const allStepsStatus = useAppSelector((state) => state.setupSteps.steps);
   const outputs = useAppSelector((state) => state.appConfig.outputs);
-  const [showTokenModal, setShowTokenModal] = React.useState(false);
+  const { openGoogleTokenModal } = useDialogs();
 
   const prerequisitesMet = React.useMemo(() => {
     // If already completed, prerequisites are implicitly met
@@ -196,7 +196,7 @@ export function StepItem({
                   <div className="flex items-center gap-2 flex-wrap">
                     <Button
                       size="sm"
-                      onClick={() => setShowTokenModal(true)}
+                      onClick={() => openGoogleTokenModal(handleMarkAsComplete)}
                       variant="default"
                     >
                       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -219,15 +219,7 @@ export function StepItem({
                       </Button>
                     )}
                   </div>
-                  {/* Show token modal for G-S0 */}
-                  <GoogleTokenModal
-                    isOpen={showTokenModal}
-                    onClose={() => setShowTokenModal(false)}
-                    onComplete={() => {
-                      handleMarkAsComplete();
-                      setShowTokenModal(false);
-                    }}
-                  />
+                  {/* GoogleTokenModal is rendered via DialogProvider */}
                 </>
               )}
 

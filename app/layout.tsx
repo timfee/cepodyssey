@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { ErrorToastProvider } from "@/components/error-toast-provider";
+import { DialogProvider } from "@/components/dialog-provider";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangleIcon } from "lucide-react";
@@ -53,10 +54,12 @@ export default function RootLayout({
           </AlertDescription>
         </Alert>
         <Providers>
-          <ErrorToastProvider>
-            {children}
-            <Toaster richColors />
-          </ErrorToastProvider>
+          <DialogProvider>
+            <ErrorToastProvider>
+              {children}
+              <Toaster richColors />
+            </ErrorToastProvider>
+          </DialogProvider>
         </Providers>
       </body>
     </html>
