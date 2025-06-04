@@ -117,7 +117,7 @@ return {
 
 ## Development Workflow
 
-1. Define new steps in `lib/steps.ts` with proper dependencies
+1. Define new steps in `lib/steps/` with proper dependencies
 2. Implement server actions in `app/actions/`
 3. Add UI components following existing patterns
 4. Update Redux state and types as needed

@@ -8,7 +8,7 @@ The `lib/` directory contains all shared utilities, type definitions, and busine
 lib/
 ├── api/              # External service clients
 ├── redux/            # Redux Toolkit state management
-├── steps.ts          # Step definitions and orchestration
+├── steps/            # Step definitions and orchestration
 ├── types.ts          # Centralized TypeScript definitions
 └── utils.ts          # Utility functions
 ```
@@ -172,7 +172,7 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 ```
 
-## Step System (`steps.ts`)
+## Step System (`steps/`)
 
 ### Step Definition Pattern
 

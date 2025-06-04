@@ -9,7 +9,7 @@ This Next.js application automates connecting Google Workspace and Microsoft Ent
 - **hooks/** – Custom hooks, including typed Redux helpers.
 - **lib/** – API wrappers, Redux slices and utility functions.
 
-Automation steps are defined in `lib/steps.ts` and executed through server actions in `app/actions`.
+Automation steps are defined in `lib/steps/` (one file per step) and executed through server actions in `app/actions`.
 
 ## Workflow Overview
 

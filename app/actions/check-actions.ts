@@ -379,7 +379,7 @@ export async function checkMicrosoftServicePrincipal(
         appObjectId = applications[0].id;
       }
       // These outputs are generic for any SP found by appClientId.
-      // The calling lambda in lib/steps.ts will map these to specific OUTPUT_KEYS (e.g., PROVISIONING_SP_OBJECT_ID or SAML_SSO_SP_OBJECT_ID).
+      // The calling lambda in lib/steps/ will map these to specific OUTPUT_KEYS (e.g., PROVISIONING_SP_OBJECT_ID or SAML_SSO_SP_OBJECT_ID).
       const outputs = {
         spId: sp.id,
         retrievedAppId: sp.appId,
