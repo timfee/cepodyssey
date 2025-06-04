@@ -106,6 +106,25 @@ async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   }
 }
 
+export async function validateTokenPresence(token: JWT): Promise<{
+  valid: boolean;
+  missingTokens: ("google" | "microsoft")[];
+  error?: string;
+}> {
+  const missingTokens: ("google" | "microsoft")[] = [];
+  if (!token.googleAccessToken || token.googleAccessToken === "undefined") {
+    missingTokens.push("google");
+  }
+  if (!token.microsoftAccessToken || token.microsoftAccessToken === "undefined") {
+    missingTokens.push("microsoft");
+  }
+  return {
+    valid: missingTokens.length === 0,
+    missingTokens,
+    error: missingTokens.length > 0 ? "MISSING_TOKENS" : undefined,
+  };
+}
+
 /**
  * Validate that the Google account is a Super Administrator and not suspended.
  * Returns `false` when API errors occur or the user lacks sufficient rights.
@@ -267,6 +286,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope: process.env.GOOGLE_ADMIN_SCOPES!,
           access_type: "offline",
           prompt: "consent",
+          include_granted_scopes: true,
         },
       },
       allowDangerousEmailAccountLinking: true,
@@ -279,8 +299,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }/v2.0`,
       authorization: {
         params: {
-          scope: process.env.MICROSOFT_GRAPH_SCOPES!,
+          scope: `${process.env.MICROSOFT_GRAPH_SCOPES!} offline_access`,
           prompt: "consent",
+          response_mode: "query",
         },
       },
       allowDangerousEmailAccountLinking: true,
@@ -429,6 +450,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return finalToken;
     },
     async session({ session, token }) {
+      const validation = await validateTokenPresence(token);
+      if (!validation.valid) {
+        session.error = 'MissingTokens' as unknown as 'RefreshTokenError';
+        session.hasGoogleAuth = false;
+        session.hasMicrosoftAuth = false;
+        return session;
+      }
       session.user.id = token.sub ?? session.user.id;
       session.user.name = token.name ?? session.user.name;
       session.user.email = token.email ?? session.user.email;
@@ -444,3 +472,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
+
+export async function cleanupInvalidSession() {
+  const userKey = getUserKey();
+  accountStore.delete(userKey);
+}

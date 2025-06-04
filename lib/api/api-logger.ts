@@ -7,9 +7,7 @@ export class ApiLogger {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const provider = this.detectProvider(url);
 
-    const debugEnabled =
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+    const debugEnabled = !!process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
 
     if (!debugEnabled) {
       Logger.debug(
@@ -70,9 +68,7 @@ export class ApiLogger {
     responseBody?: unknown,
     duration?: number,
   ) {
-    const debugEnabled =
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+    const debugEnabled = !!process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
 
     if (!debugEnabled) {
       Logger.debug(
@@ -103,9 +99,7 @@ export class ApiLogger {
   }
 
   static logError(id: string, error: unknown) {
-    const debugEnabled =
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+    const debugEnabled = !!process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
 
     if (!debugEnabled) {
       Logger.error("[ApiLogger]", `Error for request ${id}`, error);

@@ -5,7 +5,7 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
 
 /**
  * Enable the provisioning service principal in Azure AD.

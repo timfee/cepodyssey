@@ -6,7 +6,7 @@ import type * as MicrosoftGraph from "microsoft-graph";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
 
 /**
  * Configure default attribute mappings for the provisioning connection.

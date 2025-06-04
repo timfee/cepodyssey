@@ -38,9 +38,7 @@ export function DebugPanel() {
   const logs = useAppSelector(selectFilteredLogs);
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
-  const debugDisabled =
-    process.env.NODE_ENV !== "development" &&
-    !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+  const debugDisabled = !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
 
   const toggleLogExpansion = (id: string) => {
     setExpandedLogs((prev) => {
@@ -82,6 +80,10 @@ export function DebugPanel() {
     return null;
   }
 
+  const showProdWarning =
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+
   if (!isOpen) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
@@ -105,6 +107,11 @@ export function DebugPanel() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg max-h-[50vh] flex flex-col">
+      {showProdWarning && (
+        <div className="bg-red-500 text-white text-center text-xs py-1">
+          Debug mode is enabled
+        </div>
+      )}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
           <h3 className="font-semibold flex items-center gap-2">

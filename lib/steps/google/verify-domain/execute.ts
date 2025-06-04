@@ -3,7 +3,8 @@ import * as google from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Add the primary domain to Google Workspace for verification.
@@ -13,14 +14,9 @@ export async function executeVerifyDomain(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
-    if (!context.domain) {
-      return {
-        success: false,
-        error: {
-          message: "Primary domain not available in context.",
-          code: "MISSING_CONFIG",
-        },
-      };
+    const validation = validateRequiredOutputs(context, []);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
     }
     const user = await google.getLoggedInUser(token);
     const result = await google.addDomain(token, context.domain);

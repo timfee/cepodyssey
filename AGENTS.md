@@ -176,7 +176,6 @@ store: {
 **Available Modals:**
 
 - **StepDetailsModal**: Shows detailed step information, instructions, and admin console links
-- **StepOutputsDialog**: Displays step inputs/outputs dependencies and data flow
 
 ### OAuth-Based Provisioning
 
@@ -307,7 +306,10 @@ The registry in `lib/steps/registry.ts` exposes helper functions `checkStep` and
 3. **Parallel Development** – multiple developers can work on different steps without conflicts
 
 # Testing
+Always run `pnpm test:build` before committing changes to ensure:
+- No ESLint errors
+- No TypeScript errors  
+- The build succeeds
 
-- ensure `pnpm lint` works
-
-- ensure `pnpm build` works
+To test the development server:
+- Run `pnpm dev:test` to start the server and verify it's accessible

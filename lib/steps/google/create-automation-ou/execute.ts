@@ -5,7 +5,8 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Create the 'Automation' Organizational Unit in Google Workspace.
@@ -15,6 +16,10 @@ export async function executeCreateAutomationOu(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
+    const validation = validateRequiredOutputs(context, []);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
     const ouName = "Automation";
     const parentPath = "/";
     const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;

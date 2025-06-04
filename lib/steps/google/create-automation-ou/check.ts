@@ -6,7 +6,7 @@ import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
-import { handleCheckError } from "../utils/error-handling";
+import { handleCheckError } from "../../utils/error-handling";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**

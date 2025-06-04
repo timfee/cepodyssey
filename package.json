@@ -12,7 +12,10 @@
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md}'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "dev:test": "concurrently \"pnpm dev\" \"pnpm dev:wait-and-test\"",
+    "dev:wait-and-test": "sleep 10 && curl -f http://localhost:3000 && echo 'Dev server is running successfully!'",
+    "test:build": "pnpm lint && pnpm type-check && pnpm build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -58,6 +61,7 @@
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.8",
     "tw-animate-css": "^1.3.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "concurrently": "^8.2.2"
   }
 }
