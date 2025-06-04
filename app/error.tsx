@@ -24,48 +24,65 @@ export default function Error({
     console.error("Route error:", error);
 
     if (isAuthenticationError(error)) {
-      dispatch(showError({
-        error: {
-          title: "Authentication Required",
-          message: error.message,
-          code: "AUTH_EXPIRED",
-          provider: error.provider,
-          actions: [{
-            label: "Sign In",
-            onClick: () => router.push("/login"),
-            variant: "default",
-          }]
-        },
-        dismissible: false // Can't dismiss, must sign in
-      }));
-    } else if (error instanceof APIError && error.message?.includes("has not been used in project")) {
+      dispatch(
+        showError({
+          error: {
+            title: "Authentication Required",
+            message: error.message,
+            code: "AUTH_EXPIRED",
+            provider: error.provider,
+            actions: [
+              {
+                label: "Sign In",
+                onClick: () => router.push("/login"),
+                variant: "default",
+              },
+            ],
+          },
+          dismissible: false, // Can't dismiss, must sign in
+        }),
+      );
+    } else if (
+      error instanceof APIError &&
+      error.message?.includes("has not been used in project")
+    ) {
       const apiMatch = error.message.match(
         /https:\/\/console\.developers\.google\.com[^\s]+/,
       );
       const enableUrl = apiMatch ? apiMatch[0] : null;
 
-      dispatch(showError({
-        error: {
-          title: "API Not Enabled",
-          message: "A required Google Cloud API is not enabled for your project.",
-          code: "API_NOT_ENABLED",
-          details: { enableUrl },
-          actions: enableUrl ? [{
-            label: "Enable API",
-            onClick: () => window.open(enableUrl, "_blank"),
-            variant: "default",
-          }, {
-            label: "Retry",
-            onClick: reset,
-            variant: "outline",
-          }] : [{
-            label: "Retry",
-            onClick: reset,
-            variant: "default",
-          }]
-        },
-        dismissible: true
-      }));
+      dispatch(
+        showError({
+          error: {
+            title: "API Not Enabled",
+            message:
+              "A required Google Cloud API is not enabled for your project.",
+            code: "API_NOT_ENABLED",
+            details: { enableUrl },
+            actions: enableUrl
+              ? [
+                  {
+                    label: "Enable API",
+                    onClick: () => window.open(enableUrl, "_blank"),
+                    variant: "default",
+                  },
+                  {
+                    label: "Retry",
+                    onClick: reset,
+                    variant: "outline",
+                  },
+                ]
+              : [
+                  {
+                    label: "Retry",
+                    onClick: reset,
+                    variant: "default",
+                  },
+                ],
+          },
+          dismissible: true,
+        }),
+      );
     }
   }, [error, router, dispatch, reset]);
 

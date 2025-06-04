@@ -22,16 +22,30 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {
     return allStepDefinitions.map((definition) => {
-      const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || { status: "pending" };
+      const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || {
+        status: "pending",
+      };
       return { ...definition, ...statusInfo };
     });
   }, [stepsStatusMap]);
 
   const categories = [
     { id: "all", label: "All Steps", steps: managedSteps },
-    { id: "google", label: "Google", steps: managedSteps.filter((s) => s.category === "Google") },
-    { id: "microsoft", label: "Microsoft", steps: managedSteps.filter((s) => s.category === "Microsoft") },
-    { id: "sso", label: "SSO", steps: managedSteps.filter((s) => s.category === "SSO") },
+    {
+      id: "google",
+      label: "Google",
+      steps: managedSteps.filter((s) => s.category === "Google"),
+    },
+    {
+      id: "microsoft",
+      label: "Microsoft",
+      steps: managedSteps.filter((s) => s.category === "Microsoft"),
+    },
+    {
+      id: "sso",
+      label: "SSO",
+      steps: managedSteps.filter((s) => s.category === "SSO"),
+    },
   ];
 
   const getProgress = (steps: ManagedStep[]) => {
@@ -43,7 +57,9 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
     <Tabs defaultValue="all" className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Automation Progress</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Automation Progress
+          </h2>
           <p className="text-muted-foreground">
             Configure Google Workspace and Microsoft Entra ID integration
           </p>
@@ -54,7 +70,8 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               {cat.label}
               {cat.id !== "all" && (
                 <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                  {cat.steps.filter((s) => s.status === "completed").length}/{cat.steps.length}
+                  {cat.steps.filter((s) => s.status === "completed").length}/
+                  {cat.steps.length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -69,7 +86,8 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === "completed").length} of {cat.steps.length} completed
+                  {cat.steps.filter((s) => s.status === "completed").length} of{" "}
+                  {cat.steps.length} completed
                 </span>
               </div>
             </CardHeader>

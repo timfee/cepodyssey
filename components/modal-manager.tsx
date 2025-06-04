@@ -5,7 +5,11 @@ import {
   selectStepDetailsModal,
   selectStepOutputsModal,
 } from "@/lib/redux/slices/modals";
-import { selectActiveError, selectIsDismissible, dismissError } from "@/lib/redux/slices/errors";
+import {
+  selectActiveError,
+  selectIsDismissible,
+  dismissError,
+} from "@/lib/redux/slices/errors";
 import { StepDetailsModal } from "./step-details-modal";
 import { StepOutputsDialog } from "./step-outputs-dialog";
 import { ErrorDialog } from "@/components/ui/error-dialog";
@@ -22,7 +26,7 @@ export function ModalManager() {
       {stepDetailsModal.step && <StepDetailsModal />}
       {stepOutputsModal.step && <StepOutputsDialog />}
       {activeError && (
-        <ErrorDialog 
+        <ErrorDialog
           error={activeError}
           open={!!activeError}
           onOpenChange={(open) => {

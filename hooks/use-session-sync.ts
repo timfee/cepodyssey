@@ -23,7 +23,9 @@ export function useSessionSync() {
         lastCheckRef.current = Date.now();
         const updated = await update();
         if (updated?.error === "RefreshTokenError") {
-          handleError(new Error("Session expired. Please sign in again."), { stepTitle: "Session" });
+          handleError(new Error("Session expired. Please sign in again."), {
+            stepTitle: "Session",
+          });
           dispatch(resetAuthState());
         }
       }

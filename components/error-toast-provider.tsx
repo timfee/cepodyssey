@@ -18,10 +18,9 @@ export function ErrorToastProvider({
         event.reason?.message?.includes("API") &&
         event.reason?.message?.includes("not enabled")
       ) {
-        handleError(
-          new Error("Google Cloud API not enabled"),
-          { stepTitle: "Unhandled Rejection" },
-        );
+        handleError(new Error("Google Cloud API not enabled"), {
+          stepTitle: "Unhandled Rejection",
+        });
       }
     };
 

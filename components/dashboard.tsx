@@ -39,7 +39,13 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
@@ -225,23 +231,25 @@ export function AutomationDashboard({
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
-          dispatch(showError({
-            error: {
-              title: "Authentication Required",
-              message: `Your ${err.provider === "google" ? "Google Workspace" : "Microsoft"} session has expired.`,
-              code: "AUTH_EXPIRED",
-              provider: err.provider,
-              actions: [
-                {
-                  label: "Sign In",
-                  onClick: () => router.push("/login"),
-                  variant: "default",
-                  icon: <LogInIcon className="mr-2 h-4 w-4" />,
-                },
-              ],
-            },
-            dismissible: true,
-          }));
+          dispatch(
+            showError({
+              error: {
+                title: "Authentication Required",
+                message: `Your ${err.provider === "google" ? "Google Workspace" : "Microsoft"} session has expired.`,
+                code: "AUTH_EXPIRED",
+                provider: err.provider,
+                actions: [
+                  {
+                    label: "Sign In",
+                    onClick: () => router.push("/login"),
+                    variant: "default",
+                    icon: <LogInIcon className="mr-2 h-4 w-4" />,
+                  },
+                ],
+              },
+              dismissible: true,
+            }),
+          );
 
           dispatch(
             updateStep({
@@ -265,35 +273,40 @@ export function AutomationDashboard({
           );
           const enableUrl = enableUrlMatch ? enableUrlMatch[0] : null;
 
-          dispatch(showError({
-            error: {
-              title: "Google Cloud API Not Enabled",
-              message: "A required API is not enabled for your Google Cloud project.",
-              code: "API_NOT_ENABLED",
-              details: { fullMessage: err.message, apiUrl: enableUrl },
-              actions: enableUrl
-                ? [
-                    {
-                      label: "Enable API",
-                      onClick: () => window.open(enableUrl, "_blank"),
-                      variant: "default",
-                      icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
-                    },
-                  ]
-                : [],
-            },
-            dismissible: true,
-          }));
+          dispatch(
+            showError({
+              error: {
+                title: "Google Cloud API Not Enabled",
+                message:
+                  "A required API is not enabled for your Google Cloud project.",
+                code: "API_NOT_ENABLED",
+                details: { fullMessage: err.message, apiUrl: enableUrl },
+                actions: enableUrl
+                  ? [
+                      {
+                        label: "Enable API",
+                        onClick: () => window.open(enableUrl, "_blank"),
+                        variant: "default",
+                        icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
+                      },
+                    ]
+                  : [],
+              },
+              dismissible: true,
+            }),
+          );
         } else {
-          dispatch(showError({
-            error: {
-              title: "Step Execution Failed",
-              message: `Failed to execute ${definition.title}`,
-              code: "EXECUTION_ERROR",
-              details: { stepId, errorMessage: message },
-            },
-            dismissible: true,
-          }));
+          dispatch(
+            showError({
+              error: {
+                title: "Step Execution Failed",
+                message: `Failed to execute ${definition.title}`,
+                code: "EXECUTION_ERROR",
+                details: { stepId, errorMessage: message },
+              },
+              dismissible: true,
+            }),
+          );
         }
 
         dispatch(updateStep({ id: stepId, status: "failed", error: message }));
@@ -346,21 +359,27 @@ export function AutomationDashboard({
           !checkResult.completed &&
           checkResult.outputs?.errorCode === "AUTH_EXPIRED"
         ) {
-          dispatch(showError({
-            error: {
-              title: "Authentication Required",
-              message: checkResult.message || "Your session has expired.",
-              code: "AUTH_EXPIRED",
-              provider: checkResult.outputs.errorProvider as "google" | "microsoft",
-              actions: [{
-                label: "Sign In",
-                onClick: () => router.push("/login"),
-                variant: "default",
-                icon: <LogInIcon className="mr-2 h-4 w-4" />
-              }]
-            },
-            dismissible: true
-          }));
+          dispatch(
+            showError({
+              error: {
+                title: "Authentication Required",
+                message: checkResult.message || "Your session has expired.",
+                code: "AUTH_EXPIRED",
+                provider: checkResult.outputs.errorProvider as
+                  | "google"
+                  | "microsoft",
+                actions: [
+                  {
+                    label: "Sign In",
+                    onClick: () => router.push("/login"),
+                    variant: "default",
+                    icon: <LogInIcon className="mr-2 h-4 w-4" />,
+                  },
+                ],
+              },
+              dismissible: true,
+            }),
+          );
           dispatch(
             updateStep({
               id: stepId,
@@ -402,32 +421,38 @@ export function AutomationDashboard({
             );
             const enableUrl = enableUrlMatch ? enableUrlMatch[0] : null;
 
-            dispatch(showError({
-              error: {
-                title: "Google Cloud API Not Enabled",
-                message: "Enable the required API to continue.",
-                code: "API_NOT_ENABLED",
-                details: { apiUrl: enableUrl },
-                actions: enableUrl
-                  ? [{
-                      label: "Enable API",
-                      onClick: () => window.open(enableUrl, "_blank"),
-                      variant: "default",
-                      icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                    }]
-                  : [],
-              },
-              dismissible: true,
-            }));
+            dispatch(
+              showError({
+                error: {
+                  title: "Google Cloud API Not Enabled",
+                  message: "Enable the required API to continue.",
+                  code: "API_NOT_ENABLED",
+                  details: { apiUrl: enableUrl },
+                  actions: enableUrl
+                    ? [
+                        {
+                          label: "Enable API",
+                          onClick: () => window.open(enableUrl, "_blank"),
+                          variant: "default",
+                          icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
+                        },
+                      ]
+                    : [],
+                },
+                dismissible: true,
+              }),
+            );
           } else {
-            dispatch(showError({
-              error: {
-                title: "Check Failed",
-                message: errorMessage,
-                code: errorCode,
-              },
-              dismissible: true,
-            }));
+            dispatch(
+              showError({
+                error: {
+                  title: "Check Failed",
+                  message: errorMessage,
+                  code: errorCode,
+                },
+                dismissible: true,
+              }),
+            );
           }
 
           return;

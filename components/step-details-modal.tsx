@@ -13,7 +13,10 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExternalLinkIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
-import { selectStepDetailsModal, closeStepDetailsModal } from "@/lib/redux/slices/modals";
+import {
+  selectStepDetailsModal,
+  closeStepDetailsModal,
+} from "@/lib/redux/slices/modals";
 
 export function StepDetailsModal() {
   const dispatch = useAppDispatch();
@@ -22,13 +25,16 @@ export function StepDetailsModal() {
   if (!step) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => dispatch(closeStepDetailsModal())}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={() => dispatch(closeStepDetailsModal())}
+    >
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{step.title}</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
         </DialogHeader>
-        
+
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {step.message && (
@@ -49,9 +55,11 @@ export function StepDetailsModal() {
                   {step.adminUrls?.configure && (
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href={typeof step.adminUrls.configure === "function"
-                          ? (step.adminUrls.configure(outputs) ?? "#")
-                          : step.adminUrls.configure}
+                        href={
+                          typeof step.adminUrls.configure === "function"
+                            ? (step.adminUrls.configure(outputs) ?? "#")
+                            : step.adminUrls.configure
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -60,7 +68,7 @@ export function StepDetailsModal() {
                       </a>
                     </Button>
                   )}
-                  
+
                   {step.metadata?.resourceUrl && (
                     <Button variant="outline" size="sm" asChild>
                       <a

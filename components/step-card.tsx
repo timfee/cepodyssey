@@ -298,8 +298,8 @@ export function StepCard({
             <HoverCardTrigger asChild>
               <Button variant="ghost" size="sm" className="h-auto p-1 text-xs">
                 <InfoIcon className="h-3 w-3 mr-1" />
-                {dependencies.filter((d) => d.met).length}/
-                {dependencies.length} dependencies met
+                {dependencies.filter((d) => d.met).length}/{dependencies.length}{" "}
+                dependencies met
               </Button>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
