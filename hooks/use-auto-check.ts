@@ -1,4 +1,3 @@
-import { debounce } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
 import { useSessionSync } from "./use-session-sync";
@@ -23,8 +22,11 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
   }, [appConfig.domain]);
 
   // Debounced check function
-  const debouncedCheck = useCallback(
-    debounce(async () => {
+  const debouncedCheck = useCallback(() => {
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+    checkTimeoutRef.current = setTimeout(async () => {
       // Skip if already checking
       if (hasChecked.current || isValidating) return;
 
@@ -98,9 +100,8 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
       } finally {
         setIsValidating(false);
       }
-    }, 2000),
-    [appConfig, stepsStatus, session, status, executeCheck, isValidating]
-  );
+    }, 2000);
+  }, [appConfig, stepsStatus, session, status, executeCheck, isValidating]);
 
   // Trigger debounced check when dependencies change
   useEffect(() => {

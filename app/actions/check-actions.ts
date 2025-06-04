@@ -1,7 +1,6 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
-import { isAPIEnablementError } from "@/lib/api/api-enablement-error";
 import {
   AuthenticationError,
   isAuthenticationError,
