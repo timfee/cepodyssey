@@ -179,6 +179,67 @@ const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
 3. **Use selectors for computed state** - Don't duplicate data
 4. **Handle async operations in server actions** - Keep Redux synchronous
 
+## URL Management System
+
+### Centralized URL Builder (`lib/api/url-builder.ts`)
+
+All URLs in the application are constructed through a centralized system:
+
+```typescript
+import { portalUrls, googleDirectoryUrls, microsoftGraphUrls } from "@/lib/api/url-builder";
+
+// Portal URLs for UI navigation
+const adminUrl = portalUrls.google.sso.samlProfile(profileFullName);
+
+// API URLs for backend calls
+const apiUrl = googleDirectoryUrls.users.get(userEmail);
+```
+
+**Key Benefits:**
+- No hardcoded URLs in components or API clients
+- Automatic URL encoding using native URL and encodeURIComponent
+- Environment-specific configuration through env variables
+- Type safety for all URL parameters
+
+### Environment Variables
+
+All base URLs are configurable through environment variables:
+- API endpoints (`GOOGLE_API_BASE`, `GRAPH_API_BASE`, etc.)
+- Portal/Console URLs (`GOOGLE_ADMIN_CONSOLE_BASE`, `AZURE_PORTAL_BASE`)
+- Authentication endpoints (`GOOGLE_OAUTH_BASE`, `MICROSOFT_LOGIN_BASE`)
+
+## Error Handling Patterns
+
+### Authentication Errors
+
+Authentication errors are now handled at multiple levels:
+
+1. **API Level**: Detected and wrapped with `AuthenticationError`
+2. **Action Level**: Converted to `StepCheckResult` with error metadata
+3. **Component Level**: Displayed with clear messaging and action buttons
+
+```typescript
+// In server actions
+if (isAuthenticationError(error)) {
+  return {
+    completed: false,
+    message: error.message,
+    outputs: {
+      errorCode: "AUTH_EXPIRED",
+      errorProvider: error.provider,
+    },
+  };
+}
+```
+
+### API Enablement Errors
+
+Google Cloud API enablement errors are specially handled:
+- Enhanced error messages with enable URLs
+- Toast notifications with action buttons
+- Direct links to enable APIs in Google Cloud Console
+
+
 # Testing
 
 - ensure `pnpm lint` works

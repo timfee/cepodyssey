@@ -227,3 +227,107 @@ export const allStepDefinitions: StepDefinition[] = [
 - Types defined once in `types.ts`, imported everywhere else
 - Redux state changes only through defined actions
 - Use OUTPUT_KEYS constants for all step data flow
+
+## URL Builder System (`api/url-builder.ts`)
+
+### Architecture
+
+The URL builder provides a centralized, type-safe system for all URL construction:
+
+```typescript
+// API Base URLs from environment
+export const API_BASES = {
+  googleDirectory: process.env.GOOGLE_API_BASE,
+  googleIdentity: process.env.GOOGLE_IDENTITY_BASE,
+  microsoftGraph: process.env.GRAPH_API_BASE,
+};
+
+// Structured URL builders for each service
+export const googleDirectoryUrls = {
+  users: {
+    get: (userKey: string) =>
+      `${API_BASES.googleDirectory}/users/${encodeURIComponent(userKey)}`,
+  },
+};
+```
+
+### Key Principles
+
+1. **No Hardcoded URLs**: All URLs constructed through the builder
+2. **Automatic Encoding**: Uses `encodeURIComponent` and URL class
+3. **Environment Aware**: Base URLs from environment variables
+4. **Type Safe**: TypeScript ensures correct parameter types
+5. **Consistent Structure**: Organized by service and resource type
+
+### Usage Patterns
+
+```typescript
+// API URLs
+const url = googleDirectoryUrls.users.get(userEmail);
+
+// Portal URLs with proper encoding
+const adminUrl = portalUrls.google.sso.samlProfile(profileFullName);
+
+// Query parameters using URL class
+const listUrl = new URL(microsoftGraphUrls.applications.list());
+listUrl.searchParams.append("$filter", filter);
+```
+
+### Special Cases
+
+#### Google SAML Profile URLs
+
+The Google Admin Console expects SAML profile IDs in a specific format:
+
+```typescript
+// Profile full name: "inboundSamlSsoProfiles/12345"
+// Admin Console URL: /sso-profiles/inboundSamlSsoProfiles%2F12345
+
+samlProfile: (profileFullName: string) => {
+  const profileId = profileFullName.split("/").pop();
+  const encodedProfileRef = `inboundSamlSsoProfiles${encodeURIComponent("/" + profileId)}`;
+  return `${PORTAL_BASES.googleAdmin}/ac/security/sso/sso-profiles/${encodedProfileRef}`;
+}
+```
+
+#### Azure Portal Parameter Inconsistency
+
+Azure Portal uses different parameter names across blades:
+
+```typescript
+// Overview and UsersAndGroups use servicePrincipalId
+overview: (spId, appId) => `.../Overview/servicePrincipalId/${spId}/appId/${appId}`
+
+// ProvisioningManagement and SingleSignOn use objectId
+provisioning: (spId, appId) => `.../ProvisioningManagement/appId/${appId}/objectId/${spId}`
+```
+
+## Enhanced Error Handling
+
+### Authentication Error Detection
+
+The system now includes comprehensive auth error detection:
+
+```typescript
+const AUTH_ERROR_PATTERNS = {
+  google: [
+    /invalid authentication credentials/i,
+    /OAuth 2 access token/i,
+    /Token has been expired or revoked/i,
+  ],
+  microsoft: [
+    /InvalidAuthenticationToken/i,
+    /Access token validation failure/i,
+    /Token expired/i,
+  ],
+};
+```
+
+### Error Flow
+
+1. **API Client**: Detects 401 status or error patterns
+2. **Auth Interceptor**: Wraps as `AuthenticationError` with provider
+3. **Server Action**: Converts to result with error metadata
+4. **UI Component**: Shows notification with sign-in action
+
+This prevents unhandled promise rejections and provides clear user guidance.
