@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { useErrorHandler } from "@/hooks/use-error-handler";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, LogInIcon } from "lucide-react";
@@ -20,18 +20,13 @@ export function AuthErrorBoundary({
   children,
 }: AuthErrorBoundaryProps) {
   const router = useRouter();
+  const { handleError } = useErrorHandler();
 
   useEffect(() => {
     if (isAuthenticationError(error)) {
-      toast.error(`Authentication expired: ${error.provider}`, {
-        duration: 10000,
-        action: {
-          label: "Sign In",
-          onClick: () => router.push("/login"),
-        },
-      });
+      handleError(error, { stepTitle: "Authentication" });
     }
-  }, [error, router]);
+  }, [error, router, handleError]);
 
   if (isAuthenticationError(error)) {
     return (

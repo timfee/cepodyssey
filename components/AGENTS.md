@@ -12,7 +12,7 @@ Required components for the enhanced UI:
 
 - Core: `button`, `card`, `badge`, `alert`, `dialog`, `input`, `label`
 - Data Display: `table`, `separator`, `collapsible`
-- Feedback: `toast` (via sonner), `tooltip`
+- Feedback: `error-dialog` for errors, `toast` (via sonner) for success/info, `tooltip`
 - Form: `form` (react-hook-form integration)
 
 ### Feature Components

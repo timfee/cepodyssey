@@ -15,7 +15,7 @@ import { ExternalLinkIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
 import { selectStepDetailsModal, closeStepDetailsModal } from "@/lib/redux/slices/modals";
 
-export function StepDetailsDialog() {
+export function StepDetailsModal() {
   const dispatch = useAppDispatch();
   const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
 

@@ -18,7 +18,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/use-error-handler";
 
 /**
  * Displays the connection status for each provider and triggers sign-in.
@@ -26,13 +26,14 @@ import { toast } from "sonner";
 export function AuthStatus() {
   const { data: session, status } = useSession();
   const { domain, tenantId } = useAppSelector((state) => state.appConfig);
+  const { handleError } = useErrorHandler();
 
   const isConfigReady = !!domain && !!tenantId;
   const isLoading = status === "loading";
 
   const handleSignIn = (provider: "google" | "microsoft-entra-id") => {
     if (!isConfigReady) {
-      toast.error("Please set the domain and tenant ID before connecting.");
+      handleError(new Error("Please set the domain and tenant ID before connecting."), { stepTitle: "Authentication" });
       return;
     }
     const options: { hd?: string; tenant?: string } = {};
