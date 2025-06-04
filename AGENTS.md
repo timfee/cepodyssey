@@ -4,6 +4,12 @@
 
 This is a Next.js application that automates Google Workspace and Microsoft Entra ID integration through a step-based workflow. It uses TypeScript, NextAuth for dual-provider authentication, and Redux Toolkit for state management.
 
+The automation mirrors the official Google documentation for federating Google
+Cloud with Microsoft Entra ID. Steps in this repository align with the manual
+workflow of provisioning users through the *Google Cloud/G Suite Connector by
+Microsoft* gallery app and configuring SAML-based single sign-on. See the README
+for a short summary of that workflow.
+
 ## Core Architecture Principles
 
 ### 1. Step-Based Automation
