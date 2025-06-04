@@ -6,7 +6,7 @@ import {
   CloudIcon,
   Loader2Icon,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -74,6 +74,14 @@ function LoginPage() {
     }
   }, [searchParams]);
 
+  // Force sign out when reauthenticating
+  useEffect(() => {
+    const reauth = searchParams.get("reauth");
+    if (reauth && (session?.hasGoogleAuth || session?.hasMicrosoftAuth)) {
+      signOut({ redirect: false }).catch(console.error);
+    }
+  }, [searchParams, session]);
+
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDomain(e.target.value);
     setIsTenantDiscovered(false);
@@ -111,6 +119,9 @@ function LoginPage() {
       return;
     }
     startGoogleLoginTransition(async () => {
+      if (session?.hasGoogleAuth) {
+        await signOut({ redirect: false });
+      }
       const formData = new FormData();
       formData.append("domain", domain);
       await handleGoogleLogin(formData);
@@ -128,6 +139,9 @@ function LoginPage() {
       );
     }
     startMicrosoftLoginTransition(async () => {
+      if (session?.hasMicrosoftAuth) {
+        await signOut({ redirect: false });
+      }
       const formData = new FormData();
       if (domain) formData.append("domain", domain);
       if (effectiveTenantId) formData.append("tenantId", effectiveTenantId);

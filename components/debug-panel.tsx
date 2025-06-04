@@ -7,6 +7,8 @@ import {
   toggleDebugPanel,
   openDebugPanel,
   clearLogs,
+  addApiLog,
+  updateApiLog,
   setFilter,
   type DebugPanelState,
   ApiLogEntry,
@@ -23,7 +25,7 @@ import {
   AlertCircleIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -69,6 +71,31 @@ export function DebugPanel() {
   const errorCount = logs.filter(
     (log) => log.error || (log.responseStatus && log.responseStatus >= 400),
   ).length;
+
+  // Poll server-side logs so API requests from server actions appear
+  useEffect(() => {
+    if (debugDisabled) return;
+    const seenIds = new Set<string>();
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch("/api/debug/logs");
+        const data: { logs: ApiLogEntry[] } = await res.json();
+        data.logs.forEach((log) => {
+          if (seenIds.has(log.id)) {
+            dispatch(updateApiLog({ id: log.id, updates: log }));
+          } else {
+            seenIds.add(log.id);
+            dispatch(addApiLog(log));
+          }
+        });
+      } catch (err) {
+        console.error("Failed to fetch debug logs", err);
+      }
+    };
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 2000);
+    return () => clearInterval(interval);
+  }, [dispatch, debugDisabled]);
 
   // Auto-open panel when there are errors
   useEffect(() => {

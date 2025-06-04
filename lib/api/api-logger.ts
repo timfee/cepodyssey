@@ -1,5 +1,14 @@
 import { store } from "@/lib/redux/store";
-import { addApiLog, updateApiLog } from "@/lib/redux/slices/debug-panel";
+import {
+  addApiLog,
+  updateApiLog,
+  type ApiLogEntry,
+} from "@/lib/redux/slices/debug-panel";
+
+// Server-side log storage used to expose logs via the debug API route
+const g = globalThis as { __API_LOGS__?: ApiLogEntry[] };
+const serverLogs: ApiLogEntry[] = g.__API_LOGS__ || [];
+g.__API_LOGS__ = serverLogs;
 
 export class ApiLogger {
   static logRequest(url: string, init?: RequestInit): string {
@@ -37,17 +46,21 @@ export class ApiLogger {
       }
     }
 
-    store.dispatch(
-      addApiLog({
-        id,
-        timestamp: new Date().toISOString(),
-        method: init?.method || "GET",
-        url,
-        headers,
-        requestBody,
-        provider,
-      }),
-    );
+    const entry = {
+      id,
+      timestamp: new Date().toISOString(),
+      method: init?.method || "GET",
+      url,
+      headers,
+      requestBody,
+      provider,
+    } as import("@/lib/redux/slices/debug-panel").ApiLogEntry;
+
+    if (typeof window === "undefined") {
+      serverLogs.push(entry);
+    } else {
+      store.dispatch(addApiLog(entry));
+    }
 
     return id;
   }
@@ -65,17 +78,19 @@ export class ApiLogger {
       return;
     }
 
-    store.dispatch(
-      updateApiLog({
-        id,
-        updates: {
-          responseStatus: response.status,
-          responseBody,
-          duration,
-          error: response.ok ? undefined : `HTTP ${response.status}`,
-        },
-      }),
-    );
+    const updates = {
+      responseStatus: response.status,
+      responseBody,
+      duration,
+      error: response.ok ? undefined : `HTTP ${response.status}`,
+    };
+
+    if (typeof window === "undefined") {
+      const log = serverLogs.find((l) => l.id === id);
+      if (log) Object.assign(log, updates);
+    } else {
+      store.dispatch(updateApiLog({ id, updates }));
+    }
   }
 
   static logError(id: string, error: unknown) {
@@ -87,14 +102,13 @@ export class ApiLogger {
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error);
-    store.dispatch(
-      updateApiLog({
-        id,
-        updates: {
-          error: errorMessage,
-        },
-      }),
-    );
+
+    if (typeof window === "undefined") {
+      const log = serverLogs.find((l) => l.id === id);
+      if (log) log.error = errorMessage;
+    } else {
+      store.dispatch(updateApiLog({ id, updates: { error: errorMessage } }));
+    }
   }
 
   private static detectProvider(url: string): "google" | "microsoft" | "other" {
