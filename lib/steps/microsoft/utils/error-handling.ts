@@ -1,5 +1,7 @@
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
+import { store } from "@/lib/redux/store";
+import { addAppError } from "@/lib/redux/slices/debug-panel";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
 export function handleCheckError(
@@ -7,6 +9,17 @@ export function handleCheckError(
   defaultMessage: string,
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
+
+  // Log to debug panel
+  store.dispatch(
+    addAppError({
+      timestamp: new Date().toISOString(),
+      category: "Check Error",
+      message: defaultMessage,
+      error: error instanceof Error ? error.message : String(error),
+      stackTrace: error instanceof Error ? error.stack : undefined,
+    }),
+  );
 
   if (isAuthenticationError(error)) {
     throw error;
