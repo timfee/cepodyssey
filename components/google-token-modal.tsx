@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppSelector } from "@/hooks/use-redux";
 import { OUTPUT_KEYS } from "@/lib/types";
+import { getGoogleSamlProfileUrl } from "@/lib/utils";
 import {
   CheckCircle2Icon,
   CopyIcon,
@@ -121,9 +122,8 @@ export function GoogleTokenModal({
                   const profileName = outputs?.[
                     OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
                   ] as string;
-                  const profileId = profileName?.split("/").pop();
-                  const url = profileId
-                    ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
+                  const url = profileName
+                    ? getGoogleSamlProfileUrl(profileName)
                     : "https://admin.google.com/ac/security/sso";
                   window.open(url, "_blank");
                 }}

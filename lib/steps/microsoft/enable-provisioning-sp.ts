@@ -1,5 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
+import { getAzurePortalUrl } from "../../utils";
 /**
  * Step definition for enabling the Azure AD provisioning service principal.
  */
@@ -17,13 +18,13 @@ export const m2EnableProvisioningSp: StepDefinition = {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
+      return getAzurePortalUrl("Overview", spId as string, appId as string);
     },
     verify: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spId}/appId/${appId}`;
+      return getAzurePortalUrl("Overview", spId as string, appId as string);
     },
   },
 };

@@ -1,5 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
+import { getAzurePortalUrl } from "../../utils";
 /**
  * Step definition for retrieving Azure AD IdP metadata for Google Workspace.
  */
@@ -17,13 +18,13 @@ export const m8RetrieveIdpMetadata: StepDefinition = {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
+      return getAzurePortalUrl("SingleSignOn", spId as string, appId as string);
     },
     verify: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spId}`;
+      return getAzurePortalUrl("SingleSignOn", spId as string, appId as string);
     },
   },
 };

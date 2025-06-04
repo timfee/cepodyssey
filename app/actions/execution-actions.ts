@@ -7,7 +7,7 @@ import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { validateRequiredOutputs } from "@/lib/utils";
+import { validateRequiredOutputs, getGoogleSamlProfileUrl } from "@/lib/utils";
 import type * as MicrosoftGraph from "microsoft-graph";
 
 /**
@@ -324,10 +324,7 @@ export async function executeG5InitiateGoogleSamlProfile(
           },
         };
       }
-      const profileId = existingProfile.name.split("/").pop();
-      const resourceUrl = profileId
-        ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
-        : "https://admin.google.com/ac/sso";
+      const resourceUrl = getGoogleSamlProfileUrl(existingProfile.name);
       return {
         success: true,
         message: `SAML Profile '${profileDisplayName}' already exists. Using its details.`,
@@ -356,10 +353,7 @@ export async function executeG5InitiateGoogleSamlProfile(
         },
       };
     }
-    const profileId = result.name.split("/").pop();
-    const resourceUrl = profileId
-      ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
-      : "https://admin.google.com/ac/sso";
+    const resourceUrl = getGoogleSamlProfileUrl(result.name);
     return {
       success: true,
       message: `SAML Profile '${profileDisplayName}' created in Google Workspace.`,
@@ -399,8 +393,6 @@ export async function executeGS0EnableProvisioning(
       };
     }
 
-    const profileId = profileFullName.split("/").pop();
-
     return {
       success: true,
       message:
@@ -410,9 +402,7 @@ export async function executeGS0EnableProvisioning(
         "3. Copy the 'Authorization token'\n" +
         "4. Return here and click 'Enter Token'\n\n" +
         "This uses the same SAML profile from step G-5 - no temporary app needed!",
-      resourceUrl: profileId
-        ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
-        : "https://admin.google.com/ac/security/sso",
+      resourceUrl: getGoogleSamlProfileUrl(profileFullName),
     };
   } catch (e) {
     return handleExecutionError(e, "G-S0");

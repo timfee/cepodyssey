@@ -9,7 +9,7 @@ import React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
-import { CollapsibleStep } from "./collapsible-step";
+import { StepCard } from "./enhanced-step-card";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: string) => void;
@@ -98,12 +98,12 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
         </div>
 
         <div className="space-y-1">
-          {stepsToList.map((step, index) => (
-            <CollapsibleStep
+          {stepsToList.map((step) => (
+            <StepCard
               key={step.id}
               step={step}
-              isLastStep={index === stepsToList.length - 1}
-              onExecuteStepAction={onExecuteStep}
+              outputs={appConfig.outputs}
+              onExecute={onExecuteStep}
               canRunGlobal={canRunGlobalSteps}
             />
           ))}
