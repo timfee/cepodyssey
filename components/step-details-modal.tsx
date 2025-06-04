@@ -9,29 +9,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ExternalLinkIcon } from "lucide-react";
-import type { ManagedStep } from "@/lib/types";
+import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
+import { selectStepDetailsModal, closeStepDetailsModal } from "@/lib/redux/slices/modals";
 
-interface StepDetailsModalProps {
-  step: ManagedStep | null;
-  isOpen: boolean;
-  onClose: () => void;
-  outputs: Record<string, unknown>;
-}
-/**
- * Modal dialog displaying full details and admin links for a step.
- * Allows navigation to configure or verify URLs when available.
- */
+export function StepDetailsModal() {
+  const dispatch = useAppDispatch();
+  const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
 
-export function StepDetailsModal({
-  step,
-  isOpen,
-  onClose,
-  outputs,
-}: StepDetailsModalProps) {
   if (!step) return null;
 
+  const handleClose = () => {
+    dispatch(closeStepDetailsModal());
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{step.title}</DialogTitle>

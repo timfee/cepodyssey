@@ -37,7 +37,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useDialogs } from "./dialog-provider";
+import {
+  openGoogleTokenModal,
+  openStepOutputsModal,
+} from "@/lib/redux/slices/modals";
 
 interface StepItemProps {
   step: ManagedStep;
@@ -60,7 +63,6 @@ export function StepItem({
   const outputs = useAppSelector((state) => state.appConfig.outputs);
   const appConfig = useAppSelector((state) => state.appConfig);
   const { data: session } = useSession();
-  const { openGoogleTokenModal, openStepOutputsModal } = useDialogs();
 
   const prerequisitesMet = React.useMemo(() => {
     // If already completed, prerequisites are implicitly met
@@ -229,7 +231,9 @@ export function StepItem({
                   <div className="flex items-center gap-2 flex-wrap">
                     <Button
                       size="sm"
-                      onClick={() => openGoogleTokenModal(handleMarkAsComplete)}
+                      onClick={() => {
+                        dispatch(openGoogleTokenModal({}));
+                      }}
                       variant="default"
                     >
                       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -405,7 +409,13 @@ export function StepItem({
               variant="outline"
               size="sm"
               onClick={() =>
-                openStepOutputsModal(step, outputs, allStepsStatus)
+                dispatch(
+                  openStepOutputsModal({
+                    step,
+                    outputs,
+                    allStepsStatus,
+                  })
+                )
               }
               className="gap-1"
             >

@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAppSelector } from "@/hooks/use-redux";
+import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
+import { selectGoogleTokenModal, closeGoogleTokenModal } from "@/lib/redux/slices/modals";
+import { updateStep } from "@/lib/redux/slices/setup-steps";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import {
@@ -22,25 +24,30 @@ import {
   ExternalLinkIcon,
   InfoIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-interface GoogleTokenModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export function GoogleTokenModal({
-  isOpen,
-  onClose,
-  onComplete,
-}: GoogleTokenModalProps) {
+export function GoogleTokenModal() {
+  const dispatch = useAppDispatch();
+  const { isOpen } = useAppSelector(selectGoogleTokenModal);
   const outputs = useAppSelector((state) => state.appConfig.outputs);
+
   const [token, setToken] = useState("");
   const [isValidating, setIsValidating] = useState(false);
 
+  // Reset token when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setToken("");
+      setIsValidating(false);
+    }
+  }, [isOpen]);
+
   const isTokenFormatValid = token.length > 50 && !token.includes(" ");
+
+  const handleClose = () => {
+    dispatch(closeGoogleTokenModal());
+  };
 
   const handleSaveToken = async () => {
     if (!isTokenFormatValid) {
@@ -49,14 +56,23 @@ export function GoogleTokenModal({
     }
     setIsValidating(true);
 
-    // Token no longer stored in global configuration; handled manually
+    // Mark the step as complete
+    dispatch(
+      updateStep({
+        id: "G-S0",
+        status: "completed",
+        message: "Google provisioning token saved",
+        metadata: {
+          completedAt: new Date().toISOString(),
+        },
+      })
+    );
 
     toast.success("Google provisioning token saved successfully!");
 
     setTimeout(() => {
       setIsValidating(false);
-      onComplete();
-      onClose();
+      dispatch(closeGoogleTokenModal());
     }, 500);
   };
 
@@ -74,7 +90,7 @@ export function GoogleTokenModal({
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Get Google Workspace Provisioning Token</DialogTitle>
@@ -176,13 +192,10 @@ export function GoogleTokenModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSaveToken}
-            disabled={!isTokenFormatValid || isValidating}
-          >
+          <Button onClick={handleSaveToken} disabled={!isTokenFormatValid || isValidating}>
             {isValidating ? "Saving..." : "Save Token"}
           </Button>
         </DialogFooter>

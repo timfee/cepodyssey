@@ -10,34 +10,26 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2Icon, XCircleIcon, AlertCircleIcon } from "lucide-react";
-import type { ManagedStep } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { allStepDefinitions } from "@/lib/steps";
+import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
+import { selectStepOutputsModal, closeStepOutputsModal } from "@/lib/redux/slices/modals";
 
-interface StepOutputsDialogProps {
-  step: ManagedStep | null;
-  isOpen: boolean;
-  onClose: () => void;
-  outputs: Record<string, unknown>;
-  allStepsStatus: Record<string, { status: string }>;
-}
+export function StepOutputsDialog() {
+  const dispatch = useAppDispatch();
+  const { isOpen, step, outputs, allStepsStatus } = useAppSelector(selectStepOutputsModal);
 
-export function StepOutputsDialog({
-  step,
-  isOpen,
-  onClose,
-  outputs,
-  allStepsStatus: _allStepsStatus,
-}: StepOutputsDialogProps) {
   if (!step) return null;
 
+  const handleClose = () => {
+    dispatch(closeStepOutputsModal());
+  };
+
   // Get the outputs this step produces
-  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(
-    ([_key, value]) => {
-      const stepPrefix = step.id.toLowerCase().replace("-", "");
-      return value.toLowerCase().startsWith(stepPrefix);
-    },
-  );
+  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(([_key, value]) => {
+    const stepPrefix = step.id.toLowerCase().replace("-", "");
+    return value.toLowerCase().startsWith(stepPrefix);
+  });
 
   // Get the outputs this step requires from other steps
   const requiredOutputs: Array<{
@@ -67,13 +59,12 @@ export function StepOutputsDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{step.title} - Outputs &amp; Dependencies</DialogTitle>
           <DialogDescription>
-            View the outputs this step produces and the outputs it requires from
-            other steps.
+            View the outputs this step produces and the outputs it requires from other steps.
           </DialogDescription>
         </DialogHeader>
 
