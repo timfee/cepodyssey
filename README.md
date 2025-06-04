@@ -83,6 +83,14 @@ MICROSOFT_LOGIN_BASE=https://login.microsoftonline.com
 AZURE_PORTAL_BASE=https://portal.azure.com
 ```
 
+### Logging Configuration
+
+```env
+NEXT_PUBLIC_LOG_LEVEL=info
+NEXT_PUBLIC_LOG_TO_CONSOLE=true
+NEXT_PUBLIC_LOG_LEVEL_TO_SHOW_IN_TOASTS=1
+```
+
 Note: `NEXT_PUBLIC_MICROSOFT_TENANT_ID` can be set to pre-fill the tenant field on the login page.
 
 ### Google OAuth Setup
