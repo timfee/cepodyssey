@@ -42,17 +42,6 @@ export function useAutoCheck(
       // Skip if session not ready
       if (!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) return;
 
-      // Check for existing auth errors
-      const authErrorPresent = Object.values(stepsStatus).some(
-        (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
-      );
-      if (authErrorPresent) {
-        Logger.info(
-          "[Hook]",
-          "Skipping auto-check due to existing auth errors",
-        );
-        return;
-      }
 
       setIsValidating(true);
 
@@ -93,10 +82,6 @@ export function useAutoCheck(
             continue;
           }
 
-          // Skip if failed with auth error (needs manual re-auth)
-          if (status?.metadata?.errorCode === "AUTH_EXPIRED") {
-            continue;
-          }
 
           try {
             await executeCheck(stepId);

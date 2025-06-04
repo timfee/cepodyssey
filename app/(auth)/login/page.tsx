@@ -78,9 +78,12 @@ function LoginPage() {
   useEffect(() => {
     const reauth = searchParams.get("reauth");
     if (reauth && (session?.hasGoogleAuth || session?.hasMicrosoftAuth)) {
-      signOut({ redirect: false }).catch(console.error);
+      (async () => {
+        await signOut({ redirect: false });
+        router.refresh();
+      })().catch(console.error);
     }
-  }, [searchParams, session]);
+  }, [searchParams, session, router]);
 
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDomain(e.target.value);
@@ -121,6 +124,7 @@ function LoginPage() {
     startGoogleLoginTransition(async () => {
       if (session?.hasGoogleAuth) {
         await signOut({ redirect: false });
+        router.refresh();
       }
       const formData = new FormData();
       formData.append("domain", domain);
@@ -141,6 +145,7 @@ function LoginPage() {
     startMicrosoftLoginTransition(async () => {
       if (session?.hasMicrosoftAuth) {
         await signOut({ redirect: false });
+        router.refresh();
       }
       const formData = new FormData();
       if (domain) formData.append("domain", domain);
