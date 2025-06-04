@@ -112,6 +112,7 @@ export async function checkOrgUnitExists(
         outputs: {
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
+          resourceUrl: `https://admin.google.com/ac/orgunits?ouid=${orgUnit.orgUnitId}`,
         },
       };
     }
@@ -268,11 +269,17 @@ export async function checkGoogleSamlProfileDetails(
       };
     }
 
+    const profileId = profile.name.split("/").pop();
+    const resourceUrl = profileId
+      ? `https://admin.google.com/ac/sso/profile/${profileId}`
+      : "https://admin.google.com/ac/sso";
+
     const outputs: Record<string, unknown> = {
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
       ssoMode: profile.ssoMode,
       idpEntityId: profile.idpConfig?.idpEntityId,
+      resourceUrl,
     };
     if (profile.spConfig?.spEntityId) {
       outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] =
@@ -361,6 +368,7 @@ export async function checkMicrosoftServicePrincipal(
         retrievedAppId: sp.appId,
         appObjectId: appObjectId,
         displayName: sp.displayName,
+        resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${sp.id}/appId/${sp.appId}`,
       };
       return {
         completed: true,
