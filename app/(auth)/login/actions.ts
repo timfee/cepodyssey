@@ -14,9 +14,16 @@ export async function handleGoogleLogin(formData: FormData): Promise<void> {
     redirectTo: "/login?authAttempt=google",
   };
 
-  await signIn("google", signInOptions, {
-    hd: domain ?? "",
-  });
+  await signIn(
+    "google",
+    signInOptions,
+    {
+      hd: domain ?? "",
+      scope: process.env.GOOGLE_ADMIN_SCOPES,
+      access_type: "offline",
+      prompt: "consent",
+    },
+  );
 }
 
 /**
@@ -37,5 +44,12 @@ export async function handleMicrosoftLogin(formData: FormData): Promise<void> {
   if (domain) signInOptions.domainHint = domain;
   if (tenantId) signInOptions.tenant = tenantId;
 
-  await signIn("microsoft-entra-id", signInOptions);
+  await signIn(
+    "microsoft-entra-id",
+    signInOptions,
+    {
+      scope: process.env.MICROSOFT_GRAPH_SCOPES,
+      prompt: "consent",
+    },
+  );
 }

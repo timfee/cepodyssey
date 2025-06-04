@@ -1,15 +1,21 @@
 import { store } from "@/lib/redux/store";
 import { addApiLog, updateApiLog } from "@/lib/redux/slices/debug-panel";
+import { Logger } from "@/lib/utils/logger";
 
 export class ApiLogger {
   static logRequest(url: string, init?: RequestInit): string {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const provider = this.detectProvider(url);
 
-    if (
-      process.env.NODE_ENV !== "development" &&
-      !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-    ) {
+    const debugEnabled =
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+
+    if (!debugEnabled) {
+      Logger.debug(
+        "[ApiLogger]",
+        `Request ${init?.method || "GET"} ${url}`,
+      );
       return id;
     }
 
@@ -49,6 +55,12 @@ export class ApiLogger {
       }),
     );
 
+    Logger.debug(
+      "[ApiLogger]",
+      `Request ${init?.method || "GET"} ${url}`,
+      requestBody,
+    );
+
     return id;
   }
 
@@ -58,10 +70,16 @@ export class ApiLogger {
     responseBody?: unknown,
     duration?: number,
   ) {
-    if (
-      process.env.NODE_ENV !== "development" &&
-      !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-    ) {
+    const debugEnabled =
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+
+    if (!debugEnabled) {
+      Logger.debug(
+        "[ApiLogger]",
+        `Response ${response.status} for request ${id}`,
+        responseBody,
+      );
       return;
     }
 
@@ -76,13 +94,21 @@ export class ApiLogger {
         },
       }),
     );
+
+    Logger.debug(
+      "[ApiLogger]",
+      `Response ${response.status} for request ${id}`,
+      responseBody,
+    );
   }
 
   static logError(id: string, error: unknown) {
-    if (
-      process.env.NODE_ENV !== "development" &&
-      !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-    ) {
+    const debugEnabled =
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+
+    if (!debugEnabled) {
+      Logger.error("[ApiLogger]", `Error for request ${id}`, error);
       return;
     }
 
@@ -95,6 +121,8 @@ export class ApiLogger {
         },
       }),
     );
+
+    Logger.error("[ApiLogger]", `Error for request ${id}`, error);
   }
 
   private static detectProvider(url: string): "google" | "microsoft" | "other" {

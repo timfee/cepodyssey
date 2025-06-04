@@ -191,8 +191,16 @@ export const portalUrls = {
   google: {
     orgUnits: {
       list: () => `${PORTAL_BASES.googleAdmin}/ac/orgunits`,
-      details: (ouPath: string) =>
-        `${PORTAL_BASES.googleAdmin}/ac/orgunits/details?ouPath=${encodeURIComponent(ouPath)}`,
+      /**
+       * Return the Admin Console URL for a given org unit reference.
+       * Accepts either an orgUnitId (prefixed with "id:") or an org unit path.
+       */
+      details: (ouRef: string) => {
+        if (ouRef.startsWith("id:")) {
+          return `${PORTAL_BASES.googleAdmin}/ac/orgunits/details?ouid=${encodeURIComponent(ouRef)}`;
+        }
+        return `${PORTAL_BASES.googleAdmin}/ac/orgunits/details?ouPath=${encodeURIComponent(ouRef)}`;
+      },
     },
     users: {
       list: () => `${PORTAL_BASES.googleAdmin}/ac/users`,

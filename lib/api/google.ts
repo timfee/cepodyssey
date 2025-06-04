@@ -143,6 +143,27 @@ export async function createOrgUnit(
 
     return handleApiResponse<GoogleOrgUnit>(res);
   } catch (error) {
+    if (
+      error instanceof APIError &&
+      error.status === 400 &&
+      error.message.includes("Invalid Ou Id")
+    ) {
+      // Fallback to using parentOrgUnitId by fetching the root OU ID
+      const orgUnits = await listOrgUnits(token);
+      const rootOu = orgUnits.find((ou) => ou.orgUnitPath === "/");
+      if (rootOu?.orgUnitId) {
+        const retryRes = await fetchWithAuth(
+          googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
+          token,
+          {
+            method: "POST",
+            body: JSON.stringify({ name, parentOrgUnitId: rootOu.orgUnitId }),
+          },
+        );
+        return handleApiResponse<GoogleOrgUnit>(retryRes);
+      }
+    }
+
     handleGoogleError(error);
   }
 }

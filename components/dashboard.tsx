@@ -157,13 +157,40 @@ export function AutomationDashboard({
   const executeStep = useCallback(
     async (stepId: string) => {
       if (!canRunAutomation) {
-        // toast.error("Sign in to both services to start");
+        dispatch(
+          showError({
+            error: {
+              title: "Setup Required",
+              message:
+                "Please sign in to both Google and Microsoft to continue.",
+              code: "SETUP_REQUIRED",
+              actions: [
+                {
+                  type: ErrorActionType.SIGN_IN,
+                  label: "Go to Login",
+                  variant: "default",
+                  icon: "LogInIcon",
+                },
+              ],
+            },
+            dismissible: true,
+          }),
+        );
         return;
       }
 
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
-        // toast.error(`Step definition '${stepId}' not found.`);
+        dispatch(
+          showError({
+            error: {
+              title: "Step Not Found",
+              message: `Step ${stepId} not found in definitions.`,
+              code: "STEP_NOT_FOUND",
+            },
+            dismissible: true,
+          }),
+        );
         return;
       }
 
@@ -205,31 +232,73 @@ export function AutomationDashboard({
               },
             }),
           );
-          toast.success(`${definition.title}: Execution successful!`, {
+          toast.success(`${definition.title}: Success!`, {
             id: toastId,
+            duration: 3000,
           });
         } else {
+          toast.dismiss(toastId);
+
+          const errorMessage = result.error?.message ?? "Execution failed";
+
           dispatch(
             updateStep({
               id: stepId,
               status: "failed",
-              error: result.error?.message ?? "Unknown error during execution.",
+              error: errorMessage,
               message: result.message,
-              metadata: {
-                ...(result.outputs || {}),
-                resourceUrl: result.resourceUrl,
-              },
+              metadata: result.outputs || {},
             }),
           );
-          // toast.error(
-          //   `${definition.title}: ${result.error?.message ?? "Failed"}`,
-          //   {
-          //     id: toastId,
-          //     duration: 10000,
-          //   },
-          // );
+
+          if (result.outputs?.errorCode === "AUTH_EXPIRED") {
+            dispatch(
+              showError({
+                error: {
+                  title: "Authentication Required",
+                  message: errorMessage,
+                  code: "AUTH_EXPIRED",
+                  provider: result.outputs.errorProvider as "google" | "microsoft",
+                  actions: [
+                    {
+                      type: ErrorActionType.SIGN_IN,
+                      label: "Sign In",
+                      variant: "default",
+                      icon: "LogInIcon",
+                    },
+                  ],
+                },
+                dismissible: false,
+              }),
+            );
+          } else {
+            dispatch(
+              showError({
+                error: {
+                  title: `${definition.title} Failed`,
+                  message: errorMessage,
+                  code: result.error?.code || "EXECUTION_ERROR",
+                  details: { stepId, ...result.outputs },
+                },
+                dismissible: true,
+              }),
+            );
+          }
         }
       } catch (err) {
+        toast.dismiss(toastId);
+
+        const message =
+          err instanceof Error ? err.message : "Unexpected error occurred";
+
+        dispatch(
+          updateStep({
+            id: stepId,
+            status: "failed",
+            error: message,
+          }),
+        );
+
         if (isAuthenticationError(err)) {
           dispatch(
             showError({
@@ -250,77 +319,22 @@ export function AutomationDashboard({
               dismissible: false,
             }),
           );
-
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "failed",
-              error: "Your session expired",
-              metadata: {
-                errorCode: "AUTH_EXPIRED",
-                errorProvider: err.provider,
-              },
-            }),
-          );
-          return;
-        }
-
-        const message = err instanceof Error ? err.message : String(err);
-
-        if (err instanceof APIError && err.code === "API_NOT_ENABLED") {
-          const enableUrlMatch = err.message?.match(
-            /https:\/\/console\.developers\.google\.com[^\s]+/,
-          );
-          const enableUrl = enableUrlMatch ? enableUrlMatch[0] : null;
-
-          dispatch(
-            showError({
-              error: {
-                title: "Enable this Google API",
-                message:
-                  "A required API is not enabled for your Google Cloud project.",
-                code: "API_NOT_ENABLED",
-                details: { fullMessage: err.message, apiUrl: enableUrl },
-                actions: enableUrl
-                  ? [
-                      {
-                        type: ErrorActionType.ENABLE_API,
-                        label: "Enable API",
-                        variant: "default",
-                        icon: "ExternalLinkIcon",
-                        payload: { url: enableUrl },
-                      },
-                    ]
-                  : [],
-              },
-              dismissible: true,
-            }),
-          );
         } else {
           dispatch(
             showError({
               error: {
-                title: "Step Execution Failed",
-                message: `Failed to execute ${definition.title}`,
+                title: "Execution Failed",
+                message: `Failed to execute ${definition.title}: ${message}`,
                 code: "EXECUTION_ERROR",
-                details: { stepId, errorMessage: message },
+                details: { stepId, error: message },
               },
               dismissible: true,
             }),
           );
         }
-
-        dispatch(updateStep({ id: stepId, status: "failed", error: message }));
       }
     },
-    [
-      canRunAutomation,
-      dispatch,
-      store,
-      appConfig.domain,
-      appConfig.tenantId,
-      router,
-    ],
+    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId],
   );
 
   const executeCheck = useCallback(
@@ -340,31 +354,14 @@ export function AutomationDashboard({
           dispatch(addOutputs(checkResult.outputs));
         }
 
-        if (checkResult.completed) {
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "completed",
-              message: checkResult.message || "Pre-existing resource found",
-              metadata: {
-                preExisting: true,
-                checkedAt: new Date().toISOString(),
-                ...(checkResult.outputs || {}),
-              },
-            }),
-          );
-        }
-
-        // Handle auth errors from the check result
-        if (
-          !checkResult.completed &&
-          checkResult.outputs?.errorCode === "AUTH_EXPIRED"
-        ) {
+        if (checkResult.outputs?.errorCode === "AUTH_EXPIRED") {
           dispatch(
             showError({
               error: {
                 title: "Authentication Required",
-                message: checkResult.message || "Your session has expired.",
+                message:
+                  checkResult.message ||
+                  "Your session has expired. Please sign in again.",
                 code: "AUTH_EXPIRED",
                 provider: checkResult.outputs.errorProvider as
                   | "google"
@@ -381,15 +378,15 @@ export function AutomationDashboard({
               dismissible: false,
             }),
           );
+
           dispatch(
             updateStep({
               id: stepId,
               status: "failed",
-              error: checkResult.message || "Your session expired",
+              error: "Authentication expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
                 errorProvider: checkResult.outputs.errorProvider,
-                checkedAt: new Date().toISOString(),
               },
             }),
           );
@@ -397,26 +394,18 @@ export function AutomationDashboard({
         }
 
         if (!checkResult.completed && checkResult.outputs?.errorCode) {
-          const errorCode = checkResult.outputs.errorCode as string;
-          const errorMessage =
-            (checkResult.outputs.errorMessage as string) ||
-            checkResult.message ||
-            "Check failed";
+          const errorMessage = checkResult.message || "Check failed";
 
           dispatch(
             updateStep({
               id: stepId,
               status: "failed",
               error: errorMessage,
-              metadata: {
-                errorCode,
-                checkedAt: new Date().toISOString(),
-                ...(checkResult.outputs || {}),
-              },
+              metadata: checkResult.outputs,
             }),
           );
 
-          if (errorCode === "API_NOT_ENABLED") {
+          if (checkResult.outputs.errorCode === "API_NOT_ENABLED") {
             const enableUrlMatch = errorMessage?.match(
               /https:\/\/console\.developers\.google\.com[^\s]+/,
             );
@@ -450,37 +439,56 @@ export function AutomationDashboard({
                 error: {
                   title: "Check Failed",
                   message: errorMessage,
-                  code: errorCode,
+                  code: checkResult.outputs.errorCode as string,
                 },
                 dismissible: true,
               }),
             );
           }
-
           return;
         }
-      } catch (error: unknown) {
-        // This catch block should rarely be hit now since we handle errors in executeStepCheck
+
+        if (checkResult.completed) {
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "completed",
+              message: checkResult.message || "Check passed",
+              metadata: {
+                preExisting: true,
+                checkedAt: new Date().toISOString(),
+                ...(checkResult.outputs || {}),
+              },
+            }),
+          );
+        }
+      } catch (error) {
         console.error(`Unexpected error in executeCheck for ${stepId}:`, error);
 
         dispatch(
           updateStep({
             id: stepId,
             status: "failed",
-            error: "An unexpected error occurred",
-            metadata: {
-              errorCode: "UNEXPECTED_ERROR",
-            },
+            error: error instanceof Error ? error.message : "Check failed",
           }),
         );
 
-        // toast.error(`Unexpected error in ${stepId}`, {
-        //   description: "Please try again or contact support",
-        //   duration: 10000,
-        // });
+        dispatch(
+          showError({
+            error: {
+              title: "Check Failed",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "An unexpected error occurred",
+              code: "CHECK_ERROR",
+            },
+            dismissible: true,
+          }),
+        );
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store, router],
+    [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
   useAutoCheck(executeCheck);
