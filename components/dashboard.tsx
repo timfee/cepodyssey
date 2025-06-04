@@ -365,7 +365,6 @@ export function AutomationDashboard({
 
           return;
         }
-
       } catch (error: unknown) {
         // This catch block should rarely be hit now since we handle errors in executeStepCheck
         console.error(`Unexpected error in executeCheck for ${stepId}:`, error);

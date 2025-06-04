@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,7 +101,7 @@ export function StepCard({
         reqStep &&
         outputs[
           Object.values(OUTPUT_KEYS).find((v) =>
-            v.toLowerCase().startsWith(reqId.toLowerCase().replace("-", ""))
+            v.toLowerCase().startsWith(reqId.toLowerCase().replace("-", "")),
           ) || ""
         ]
       );
@@ -162,12 +157,7 @@ export function StepCard({
 
     if (step.status === "completed") {
       return (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-green-600"
-          disabled
-        >
+        <Button size="sm" variant="ghost" className="text-green-600" disabled>
           <CheckCircle2Icon className="mr-2 h-4 w-4" />
           Complete
         </Button>
@@ -186,16 +176,22 @@ export function StepCard({
             <div className="flex items-start gap-3 flex-1">
               <div className={statusDisplay.color}>{statusDisplay.icon}</div>
               <div className="flex-1 space-y-1">
-                <CardTitle className="text-base leading-tight">{step.title}</CardTitle>
+                <CardTitle className="text-base leading-tight">
+                  {step.title}
+                </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{step.id}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {step.id}
+                  </Badge>
                   {step.metadata?.preExisting && (
-                    <Badge variant="secondary" className="text-xs">Pre-existing</Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      Pre-existing
+                    </Badge>
                   )}
                 </div>
               </div>
             </div>
-            
+
             {/* Dropdown menu for all secondary actions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -204,14 +200,24 @@ export function StepCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem 
-                  onClick={() => dispatch(openStepDetailsModal({ step, outputs }))}
+                <DropdownMenuItem
+                  onClick={() =>
+                    dispatch(openStepDetailsModal({ step, outputs }))
+                  }
                 >
                   <InfoIcon className="mr-2 h-4 w-4" />
                   View Instructions
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => dispatch(openStepOutputsModal({ step, outputs, allStepsStatus: {} }))}
+                <DropdownMenuItem
+                  onClick={() =>
+                    dispatch(
+                      openStepOutputsModal({
+                        step,
+                        outputs,
+                        allStepsStatus: {},
+                      }),
+                    )
+                  }
                 >
                   <ChevronRightIcon className="mr-2 h-4 w-4" />
                   Dependencies & Outputs
@@ -219,7 +225,11 @@ export function StepCard({
                 <DropdownMenuSeparator />
                 {step.metadata?.resourceUrl && (
                   <DropdownMenuItem asChild>
-                    <a href={step.metadata.resourceUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={step.metadata.resourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <ExternalLinkIcon className="mr-2 h-4 w-4" />
                       View Resource
                     </a>
@@ -227,10 +237,12 @@ export function StepCard({
                 )}
                 {step.adminUrls?.configure && (
                   <DropdownMenuItem asChild>
-                    <a 
-                      href={typeof step.adminUrls.configure === "function" 
-                        ? step.adminUrls.configure(outputs) || "#" 
-                        : step.adminUrls.configure}
+                    <a
+                      href={
+                        typeof step.adminUrls.configure === "function"
+                          ? step.adminUrls.configure(outputs) || "#"
+                          : step.adminUrls.configure
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -249,12 +261,10 @@ export function StepCard({
           </p>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-3 pb-3 space-y-3">
         {/* Primary action button */}
-        <div className="flex justify-end">
-          {getPrimaryAction()}
-        </div>
+        <div className="flex justify-end">{getPrimaryAction()}</div>
 
         {/* Error display */}
         {step.status === "failed" && step.error && (

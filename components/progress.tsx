@@ -82,30 +82,42 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   return (
     <div className="mt-8 space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Automation Progress</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Automation Progress
+        </h2>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Complete the steps below to set up Google Workspace and Microsoft Entra ID integration.
+          Complete the steps below to set up Google Workspace and Microsoft
+          Entra ID integration.
         </p>
       </div>
 
       {/* Progress summary by category */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20">
-          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Google Workspace</p>
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+            Google Workspace
+          </p>
           <p className="text-2xl font-bold text-blue-600">
-            {googleSteps.filter(s => s.status === "completed").length}/{googleSteps.length}
+            {googleSteps.filter((s) => s.status === "completed").length}/
+            {googleSteps.length}
           </p>
         </div>
         <div className="text-center p-4 rounded-lg bg-purple-50 dark:bg-purple-950/20">
-          <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Microsoft Entra ID</p>
+          <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+            Microsoft Entra ID
+          </p>
           <p className="text-2xl font-bold text-purple-600">
-            {microsoftSteps.filter(s => s.status === "completed").length}/{microsoftSteps.length}
+            {microsoftSteps.filter((s) => s.status === "completed").length}/
+            {microsoftSteps.length}
           </p>
         </div>
         <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-950/20">
-          <p className="text-sm font-medium text-green-900 dark:text-green-100">SSO Configuration</p>
+          <p className="text-sm font-medium text-green-900 dark:text-green-100">
+            SSO Configuration
+          </p>
           <p className="text-2xl font-bold text-green-600">
-            {ssoSteps.filter(s => s.status === "completed").length}/{ssoSteps.length}
+            {ssoSteps.filter((s) => s.status === "completed").length}/
+            {ssoSteps.length}
           </p>
         </div>
       </div>
