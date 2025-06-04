@@ -3,6 +3,7 @@ import { appConfigSlice } from "./slices/app-config";
 import { setupStepsSlice } from "./slices/setup-steps";
 import { modalsSlice } from "./slices/modals";
 import { errorsSlice } from "./slices/errors";
+import { debugPanelSlice } from "./slices/debug-panel";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     setupSteps: setupStepsSlice.reducer,
     modals: modalsSlice.reducer,
     errors: errorsSlice.reducer,
+    debugPanel: debugPanelSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

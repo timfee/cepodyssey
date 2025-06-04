@@ -1,3 +1,5 @@
+import { ApiLogger } from "./api-logger";
+
 /**
  * Error thrown when an API call fails.
  * @param message human readable error message
@@ -51,16 +53,44 @@ export async function fetchWithAuth(
   token: string,
   init?: RequestInit,
 ): Promise<Response> {
-  return withRetry(() =>
-    fetch(url, {
+  return withRetry(async () => {
+    const startTime = Date.now();
+    const logId = ApiLogger.logRequest(url, {
       ...init,
       headers: {
         ...init?.headers,
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    }),
-  );
+    });
+
+    try {
+      const response = await fetch(url, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const responseClone = response.clone();
+      let responseBody: unknown;
+      try {
+        responseBody = await responseClone.json();
+      } catch {
+        // Not JSON
+      }
+
+      const duration = Date.now() - startTime;
+      ApiLogger.logResponse(logId, response, responseBody, duration);
+
+      return response;
+    } catch (error) {
+      ApiLogger.logError(logId, error);
+      throw error;
+    }
+  });
 }
 
 /**
