@@ -9,7 +9,7 @@ import React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
-import { StepCard } from "./enhanced-step-card";
+import { StepCard } from "./step-card";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: string) => void;
@@ -60,58 +60,6 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const microsoftSteps = managedSteps.filter((s) => s.category === "Microsoft");
   const ssoSteps = managedSteps.filter((s) => s.category === "SSO");
 
-  const renderStepList = (
-    title: string,
-    stepsToList: ManagedStep[],
-    categoryKey: string,
-  ) => {
-    const completedCount = stepsToList.filter(
-      (s) => s.status === "completed",
-    ).length;
-    const totalCount = stepsToList.length;
-    const progressPercent =
-      totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
-
-    return (
-      <div
-        key={categoryKey}
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm"
-      >
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
-          <div className="mt-2">
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <span>
-                {completedCount} of {totalCount} completed
-              </span>
-              <span>{Math.round(progressPercent)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          {stepsToList.map((step) => (
-            <StepCard
-              key={step.id}
-              step={step}
-              outputs={appConfig.outputs}
-              onExecute={onExecuteStep}
-              canRunGlobal={canRunGlobalSteps}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   if (managedSteps.length === 0) {
     return (
       <Card className="mt-8 shadow-lg">
@@ -132,21 +80,47 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   }
 
   return (
-    <div className="mt-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Automation Progress
-        </h2>
+    <div className="mt-8 space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Automation Progress</h2>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Click on steps to expand details. Automated steps can be run
-          individually or via Run All Pending.
+          Complete the steps below to set up Google Workspace and Microsoft Entra ID integration.
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-3">
-        {renderStepList("Google Workspace", googleSteps, "google")}
-        {renderStepList("Microsoft Entra ID", microsoftSteps, "microsoft")}
-        {renderStepList("Single Sign-On", ssoSteps, "sso")}
+      {/* Progress summary by category */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="text-center p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Google Workspace</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {googleSteps.filter(s => s.status === "completed").length}/{googleSteps.length}
+          </p>
+        </div>
+        <div className="text-center p-4 rounded-lg bg-purple-50 dark:bg-purple-950/20">
+          <p className="text-sm font-medium text-purple-900 dark:text-purple-100">Microsoft Entra ID</p>
+          <p className="text-2xl font-bold text-purple-600">
+            {microsoftSteps.filter(s => s.status === "completed").length}/{microsoftSteps.length}
+          </p>
+        </div>
+        <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-950/20">
+          <p className="text-sm font-medium text-green-900 dark:text-green-100">SSO Configuration</p>
+          <p className="text-2xl font-bold text-green-600">
+            {ssoSteps.filter(s => s.status === "completed").length}/{ssoSteps.length}
+          </p>
+        </div>
+      </div>
+
+      {/* All steps in a responsive grid */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {managedSteps.map((step) => (
+          <StepCard
+            key={step.id}
+            step={step}
+            outputs={appConfig.outputs}
+            onExecute={onExecuteStep}
+            canRunGlobal={canRunGlobalSteps}
+          />
+        ))}
       </div>
     </div>
   );
