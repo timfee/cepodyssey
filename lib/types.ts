@@ -130,4 +130,5 @@ export const OUTPUT_KEYS = {
   FLAG_M3_PROV_CREDS_CONFIGURED: "flagM3ProvCredsConfigured",
   FLAG_M4_PROV_MAPPINGS_CONFIGURED: "flagM4ProvMappingsConfigured",
   FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "flagM7SamlAppSettingsConfigured",
+  FLAG_M10_SSO_TESTED: "flagM10SsoTested",
 };

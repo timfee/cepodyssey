@@ -37,9 +37,9 @@ export function handleCheckError(
 
 export async function handleExecutionError(
   error: unknown,
-  stepId?: string
+  stepId: string
 ): Promise<StepExecutionResult> {
-  console.error(`Execution Action Failed (Step ${stepId || "Unknown"}):`, error);
+  console.error(`Execution Action Failed (Step ${stepId}):`, error);
 
   if (isAuthenticationError(error)) {
     return {
@@ -67,5 +67,5 @@ export async function handleExecutionError(
       ? error.message
       : "An unknown error occurred during execution.";
 
-  return { success: false, error: { message } };
+  return { success: false, error: { message, code: "UNKNOWN_ERROR" } };
 }

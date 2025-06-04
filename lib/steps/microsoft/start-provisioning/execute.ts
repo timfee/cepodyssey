@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Start the provisioning synchronization job in Azure AD.
@@ -14,22 +15,19 @@ export async function executeStartProvisioning(
   context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
-    const { microsoftToken } = await getTokens();
-    const required = [
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
-      OUTPUT_KEYS.PROVISIONING_JOB_ID,
-      OUTPUT_KEYS.PROVISIONING_APP_ID,
-    ];
-    const missing = required.filter((k) => !context.outputs[k]);
-    if (missing.length > 0) {
-      return {
-        success: false,
-        error: {
-          message: `Missing required outputs: ${missing.join(", ")}. Ensure M-4 (Configure Provisioning Attribute Mappings) completed successfully.`,
-          code: "MISSING_DEPENDENCY",
-        },
-      };
+    const validation = validateRequiredOutputs(
+      context,
+      [
+        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+        OUTPUT_KEYS.PROVISIONING_JOB_ID,
+        OUTPUT_KEYS.PROVISIONING_APP_ID,
+      ],
+      "M-4 (Configure Provisioning Attribute Mappings)"
+    );
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
     }
+    const { microsoftToken } = await getTokens();
     const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;

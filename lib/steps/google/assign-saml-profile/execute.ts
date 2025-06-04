@@ -21,7 +21,7 @@ export async function executeAssignSamlProfile(
     if (!profileFullName) {
       return {
         success: false,
-        error: { message: "Missing SAML profile name." },
+        error: { message: "Missing SAML profile name.", code: "MISSING_DEPENDENCY" },
       };
     }
     await google.assignSamlToOrgUnits(token, profileFullName, [
