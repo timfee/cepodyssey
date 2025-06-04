@@ -1,8 +1,7 @@
 import { useAppDispatch } from "./use-redux";
-import { showError } from "@/lib/redux/slices/errors";
+import { showError, ErrorActionType } from "@/lib/redux/slices/errors";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
-import { LogInIcon, ExternalLinkIcon } from "lucide-react";
 
 export function useErrorHandler() {
   const dispatch = useAppDispatch();
@@ -21,9 +20,10 @@ export function useErrorHandler() {
             provider: error.provider,
             actions: [
               {
+                type: ErrorActionType.SIGN_IN,
                 label: "Sign In",
                 variant: "default",
-                icon: <LogInIcon className="mr-2 h-4 w-4" />,
+                icon: "LogInIcon",
               },
             ],
           },
@@ -49,9 +49,11 @@ export function useErrorHandler() {
             actions: enableUrl
               ? [
                   {
+                    type: ErrorActionType.ENABLE_API,
                     label: "Enable API",
                     variant: "default",
-                    icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
+                    icon: "ExternalLinkIcon",
+                    payload: { url: enableUrl },
                   },
                 ]
               : [],

@@ -12,58 +12,20 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState, type ReactElement } from "react";
+import { useState } from "react";
 import { Logger } from "@/lib/utils/logger";
+import { useErrorActions } from "@/hooks/use-error-actions";
+import type { ErrorInfo } from "@/lib/redux/slices/errors";
 
 export interface ErrorDialogProps {
-  error: {
-    title: string;
-    message: string;
-    code?: string;
-    provider?: "google" | "microsoft" | "both";
-    details?: Record<string, unknown>;
-    diagnostics?: {
-      timestamp: string;
-      stepId?: string;
-      stepTitle?: string;
-      sessionInfo?: {
-        hasGoogleAuth: boolean;
-        hasMicrosoftAuth: boolean;
-        domain?: string;
-        tenantId?: string;
-      };
-      apiResponse?: {
-        status?: number;
-        statusText?: string;
-        headers?: Record<string, string>;
-        body?: unknown;
-      };
-      stackTrace?: string;
-      environment?: {
-        nodeEnv: string;
-        logLevel: string;
-      };
-    };
-    actions?: Array<{
-      label: string;
-      onClick?: () => void;
-      variant?: "default" | "outline" | "destructive";
-      icon?: React.ReactNode;
-    }>;
-  };
+  error: ErrorInfo;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Displays a detailed error dialog with optional diagnostics information.
- */
-export function ErrorDialog({
-  error,
-  open,
-  onOpenChange,
-}: ErrorDialogProps): ReactElement {
+export function ErrorDialog({ error, open, onOpenChange }: ErrorDialogProps) {
   const [showDiag, setShowDiag] = useState(false);
+  const { resolveAction } = useErrorActions();
 
   const handleCopy = (): void => {
     if (error.diagnostics) {
@@ -85,24 +47,15 @@ export function ErrorDialog({
           <div className="flex gap-2 justify-end">
             {hasActions ? (
               error.actions!.map((action, index) => {
-                console.log("Rendering action button:", action);
-                console.log("onClick type:", typeof action.onClick);
+                const resolvedAction = resolveAction(action);
                 return (
                   <Button
                     key={`${action.label}-${index}`}
-                    onClick={() => {
-                      console.log("Button clicked, action:", action);
-                      if (typeof action.onClick === "function") {
-                        action.onClick();
-                      } else {
-                        console.error("onClick is not a function:", action);
-                      }
-                      onOpenChange(false);
-                    }}
-                    variant={action.variant || "default"}
+                    onClick={resolvedAction.onClick}
+                    variant={resolvedAction.variant || "default"}
                   >
-                    {action.icon}
-                    {action.label}
+                    {resolvedAction.icon}
+                    {resolvedAction.label}
                   </Button>
                 );
               })
@@ -112,7 +65,7 @@ export function ErrorDialog({
               </Button>
             )}
           </div>
-          {error.diagnostics ? (
+          {error.diagnostics && (
             <Collapsible open={showDiag} onOpenChange={setShowDiag}>
               <CollapsibleTrigger>
                 <Button variant="ghost" size="sm" className="w-full">
@@ -128,7 +81,7 @@ export function ErrorDialog({
                 </Button>
               </CollapsibleContent>
             </Collapsible>
-          ) : null}
+          )}
         </div>
       </DialogContent>
     </Dialog>

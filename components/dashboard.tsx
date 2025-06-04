@@ -16,7 +16,7 @@ import { useStore } from "react-redux";
 import { toast } from "sonner";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { showError } from "@/lib/redux/slices/errors";
+import { showError, ErrorActionType } from "@/lib/redux/slices/errors";
 import { APIError } from "@/lib/api/utils";
 import {
   loadProgress,
@@ -240,10 +240,10 @@ export function AutomationDashboard({
                 provider: err.provider,
                 actions: [
                   {
+                    type: ErrorActionType.SIGN_IN,
                     label: "Sign In",
-                    onClick: () => router.push("/login"),
-                    variant: "default" as const,
-                    icon: <LogInIcon className="mr-2 h-4 w-4" />,
+                    variant: "default",
+                    icon: "LogInIcon",
                   },
                 ],
               },
@@ -284,10 +284,11 @@ export function AutomationDashboard({
                 actions: enableUrl
                   ? [
                       {
+                        type: ErrorActionType.ENABLE_API,
                         label: "Enable API",
-                        onClick: () => window.open(enableUrl, "_blank"),
                         variant: "default",
-                        icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
+                        icon: "ExternalLinkIcon",
+                        payload: { url: enableUrl },
                       },
                     ]
                   : [],
@@ -370,10 +371,10 @@ export function AutomationDashboard({
                   | "microsoft",
                 actions: [
                   {
+                    type: ErrorActionType.SIGN_IN,
                     label: "Sign In",
-                    onClick: () => router.push("/login"),
-                    variant: "default" as const,
-                    icon: <LogInIcon className="mr-2 h-4 w-4" />,
+                    variant: "default",
+                    icon: "LogInIcon",
                   },
                 ],
               },
@@ -431,10 +432,11 @@ export function AutomationDashboard({
                   actions: enableUrl
                     ? [
                         {
+                          type: ErrorActionType.ENABLE_API,
                           label: "Enable API",
-                          onClick: () => window.open(enableUrl, "_blank"),
                           variant: "default",
-                          icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
+                          icon: "ExternalLinkIcon",
+                          payload: { url: enableUrl },
                         },
                       ]
                     : [],
