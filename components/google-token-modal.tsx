@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,20 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card } from "@/components/ui/card";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { addOutput } from "@/lib/redux/slices/app-config";
+import { OUTPUT_KEYS } from "@/lib/types";
 import {
   CheckCircle2Icon,
   CopyIcon,
   ExternalLinkIcon,
   InfoIcon,
 } from "lucide-react";
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { addOutput } from "@/lib/redux/slices/app-config";
-import { OUTPUT_KEYS } from "@/lib/types";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface GoogleTokenModalProps {
@@ -54,7 +54,7 @@ export function GoogleTokenModal({
       addOutput({
         key: OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN,
         value: token.trim(),
-      }),
+      })
     );
 
     toast.success("Google provisioning token saved successfully!");
@@ -68,7 +68,10 @@ export function GoogleTokenModal({
 
   const steps = [
     { num: 1, text: "Sign in to Google Admin Console" },
-    { num: 2, text: "Navigate to: Security > Authentication > SSO with third party IdP" },
+    {
+      num: 2,
+      text: "Navigate to: Security > Authentication > SSO with third party IdP",
+    },
     { num: 3, text: "Find your 'Azure AD SSO' profile" },
     { num: 4, text: "Click on the profile to open it" },
     { num: 5, text: "Look for 'Automatic user provisioning' section" },
@@ -82,7 +85,8 @@ export function GoogleTokenModal({
         <DialogHeader>
           <DialogTitle>Get Google Workspace Provisioning Token</DialogTitle>
           <DialogDescription>
-            Follow these steps to retrieve the secret token from Google Admin Console
+            Follow these steps to retrieve the secret token from Google Admin
+            Console
           </DialogDescription>
         </DialogHeader>
 
@@ -90,8 +94,9 @@ export function GoogleTokenModal({
           <Alert>
             <InfoIcon className="h-4 w-4" />
             <AlertDescription>
-              This token allows Azure AD to create and manage users in your Google Workspace.
-              Google requires this to be set up manually for security reasons.
+              This token allows Azure AD to create and manage users in your
+              Google Workspace. Google requires this to be set up manually for
+              security reasons.
             </AlertDescription>
           </Alert>
 
@@ -120,10 +125,12 @@ export function GoogleTokenModal({
                 size="sm"
                 className="w-full justify-start"
                 onClick={() => {
-                  const profileName = outputs?.[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+                  const profileName = outputs?.[
+                    OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+                  ] as string;
                   const profileId = profileName?.split("/").pop();
                   const url = profileId
-                    ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+                    ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
                     : "https://admin.google.com/ac/security/sso";
                   window.open(url, "_blank");
                 }}
@@ -132,7 +139,10 @@ export function GoogleTokenModal({
                 Open Your SAML Profile
               </Button>
               <div className="text-xs text-muted-foreground">
-                The token will look like: <code className="font-mono bg-white dark:bg-gray-800 px-1 py-0.5 rounded">2.MqPt7f3qkV0IFG...</code>
+                The token will look like:{" "}
+                <code className="font-mono bg-white dark:bg-gray-800 px-1 py-0.5 rounded">
+                  2.MqPt7f3qkV0IFG...
+                </code>
               </div>
             </div>
           </Card>
@@ -159,7 +169,8 @@ export function GoogleTokenModal({
             </div>
             {token && !isTokenFormatValid && (
               <p className="text-xs text-red-500">
-                Token appears invalid. It should be a long string without spaces.
+                Token appears invalid. It should be a long string without
+                spaces.
               </p>
             )}
             {token && isTokenFormatValid && (
@@ -175,7 +186,10 @@ export function GoogleTokenModal({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSaveToken} disabled={!isTokenFormatValid || isValidating}>
+          <Button
+            onClick={handleSaveToken}
+            disabled={!isTokenFormatValid || isValidating}
+          >
             {isValidating ? "Saving..." : "Save Token"}
           </Button>
         </DialogFooter>

@@ -16,7 +16,6 @@ export type GoogleDomain = admin_directory_v1.Schema$Domains & {
 };
 export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
-
 export interface InboundSamlSsoProfile {
   /** Output only. Resource name, e.g. inboundSamlSsoProfiles/{profileId} */
   name?: string;
@@ -417,7 +416,10 @@ export async function createSamlProfile(
       }
     );
 
-    const data = await handleApiResponse<{ done: boolean; response: InboundSamlSsoProfile }>(res);
+    const data = await handleApiResponse<{
+      done: boolean;
+      response: InboundSamlSsoProfile;
+    }>(res);
 
     if ("alreadyExists" in data) {
       return { alreadyExists: true };
@@ -429,7 +431,11 @@ export async function createSamlProfile(
 
     return data.response;
   } catch (error) {
-    if (typeof error === "object" && error !== null && "alreadyExists" in error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "alreadyExists" in error
+    ) {
       return { alreadyExists: true };
     }
     handleGoogleError(error);
@@ -465,7 +471,7 @@ export async function listSamlProfiles(
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
+      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`,
       token
     );
     const data = await handleApiResponse<{

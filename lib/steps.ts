@@ -1,4 +1,3 @@
-
 import type { StepDefinition } from "./types";
 import { OUTPUT_KEYS } from "./types";
 
@@ -45,10 +44,12 @@ export const allStepDefinitions: StepDefinition[] = [
     requires: ["G-5"],
     adminUrls: {
       configure: (outputs) => {
-        const profileName = outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+        const profileName = outputs[
+          OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+        ] as string;
         const profileId = profileName?.split("/").pop();
         return profileId
-          ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+          ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
           : "https://admin.google.com/ac/security/sso";
       },
     },
@@ -329,5 +330,5 @@ export const allStepDefinitions: StepDefinition[] = [
  * Useful when resolving dependencies or executing actions.
  */
 export const stepDefinitionMap = new Map<string, StepDefinition>(
-  allStepDefinitions.map((def) => [def.id, def]),
+  allStepDefinitions.map((def) => [def.id, def])
 );

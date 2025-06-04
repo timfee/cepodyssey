@@ -101,7 +101,6 @@ async function getTokens(): Promise<{
   };
 }
 
-
 // Google Execution Actions
 
 /**
@@ -169,7 +168,7 @@ export async function executeG5InitiateGoogleSamlProfile(
       }
       const profileId = existingProfile.name.split("/").pop();
       const resourceUrl = profileId
-        ? `https://admin.google.com/ac/sso/profile/${profileId}`
+        ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
         : "https://admin.google.com/ac/sso";
       return {
         success: true,
@@ -201,7 +200,7 @@ export async function executeG5InitiateGoogleSamlProfile(
     }
     const profileId = result.name.split("/").pop();
     const resourceUrl = profileId
-      ? `https://admin.google.com/ac/sso/profile/${profileId}`
+      ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
       : "https://admin.google.com/ac/sso";
     return {
       success: true,
@@ -254,7 +253,7 @@ export async function executeGS0EnableProvisioning(
         "4. Return here and click 'Enter Token'\n\n" +
         "This uses the same SAML profile from step G-5 - no temporary app needed!",
       resourceUrl: profileId
-        ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+        ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
         : "https://admin.google.com/ac/security/sso",
     };
   } catch (e) {
@@ -300,11 +299,7 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
         singleSignOnServiceUri: ssoUrl,
       },
     });
-    await google.addIdpCredentials(
-      googleToken,
-      profileFullName,
-      certificate,
-    );
+    await google.addIdpCredentials(googleToken, profileFullName, certificate);
     return {
       success: true,
       message: "Google SAML Profile updated with Azure AD IdP information.",
