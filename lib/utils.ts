@@ -69,11 +69,16 @@ export function getGoogleSamlProfileUrl(profileFullName: string): string {
  * @returns The properly formatted Azure Portal URL
  */
 export function getAzurePortalUrl(
-  blade: "Overview" | "ProvisioningManagement" | "SingleSignOn" | "UsersAndGroups",
+  blade:
+    | "Overview"
+    | "ProvisioningManagement"
+    | "SingleSignOn"
+    | "UsersAndGroups",
   spId: string,
   appId: string,
 ): string {
-  const base = "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~";
+  const base =
+    "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~";
 
   switch (blade) {
     case "Overview":

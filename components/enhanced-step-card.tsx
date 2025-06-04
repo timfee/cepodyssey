@@ -228,7 +228,11 @@ export function StepCard({
         {/* Expandable Details */}
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
           <CollapsibleTrigger>
-            <Button variant="ghost" size="sm" className="w-full justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between"
+            >
               <span className="flex items-center gap-2">
                 <InfoIcon className="h-4 w-4" />
                 View Details
@@ -263,7 +267,9 @@ export function StepCard({
                         <TableCell className="font-mono text-xs">
                           {input.key}
                         </TableCell>
-                        <TableCell className="text-sm">{input.fromStep}</TableCell>
+                        <TableCell className="text-sm">
+                          {input.fromStep}
+                        </TableCell>
                         <TableCell className="text-sm truncate max-w-xs">
                           {input.available ? (
                             <code className="text-xs">
@@ -277,7 +283,9 @@ export function StepCard({
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={input.available ? "default" : "destructive"}
+                            variant={
+                              input.available ? "default" : "destructive"
+                            }
                             className="text-xs"
                           >
                             {input.available ? "Available" : "Missing"}
@@ -359,4 +367,3 @@ export function StepCard({
     </Card>
   );
 }
-

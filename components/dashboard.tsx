@@ -258,9 +258,9 @@ export function AutomationDashboard({
     ],
   );
 
-const executeCheck = useCallback(
-  async (stepId: string) => {
-    if (!appConfig.domain || !appConfig.tenantId) return;
+  const executeCheck = useCallback(
+    async (stepId: string) => {
+      if (!appConfig.domain || !appConfig.tenantId) return;
 
       const context: StepContext = {
         domain: appConfig.domain,
@@ -276,7 +276,10 @@ const executeCheck = useCallback(
         }
 
         // Handle auth errors from the check result
-        if (!checkResult.completed && checkResult.outputs?.errorCode === "AUTH_EXPIRED") {
+        if (
+          !checkResult.completed &&
+          checkResult.outputs?.errorCode === "AUTH_EXPIRED"
+        ) {
           dispatch(
             updateStep({
               id: stepId,
@@ -291,7 +294,8 @@ const executeCheck = useCallback(
           );
 
           toast.error("Authentication expired", {
-            description: checkResult.message || "Please sign in again to continue.",
+            description:
+              checkResult.message || "Please sign in again to continue.",
             duration: 10000,
             action: {
               label: "Sign In",

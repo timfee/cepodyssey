@@ -17,7 +17,9 @@ export const g1CreateAutomationOu: StepDefinition = {
     configure: portalUrls.google.orgUnits.list(),
     verify: (outputs) =>
       outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH]
-        ? portalUrls.google.orgUnits.details(outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string)
+        ? portalUrls.google.orgUnits.details(
+            outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string,
+          )
         : portalUrls.google.orgUnits.list(),
   },
 };

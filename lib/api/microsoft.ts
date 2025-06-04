@@ -17,7 +17,6 @@ import { microsoftGraphUrls, microsoftAuthUrls } from "./url-builder";
  * Note: Microsoft uses inconsistent parameter names (servicePrincipalId vs objectId) across blades.
  */
 
-
 function handleMicrosoftError(error: unknown): never {
   if (error instanceof APIError && error.status === 401) {
     throw wrapAuthError(error, "microsoft");

@@ -69,20 +69,17 @@ async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   try {
     const tenantForRefresh =
       token.microsoftTenantId || process.env.MICROSOFT_TENANT_ID || "common";
-    const response = await fetch(
-      microsoftAuthUrls.token(tenantForRefresh),
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: process.env.MICROSOFT_CLIENT_ID!,
-          client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
-          grant_type: "refresh_token",
-          refresh_token: token.microsoftRefreshToken as string,
-          scope: process.env.MICROSOFT_GRAPH_SCOPES!,
-        }),
-      },
-    );
+    const response = await fetch(microsoftAuthUrls.token(tenantForRefresh), {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.MICROSOFT_CLIENT_ID!,
+        client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: token.microsoftRefreshToken as string,
+        scope: process.env.MICROSOFT_GRAPH_SCOPES!,
+      }),
+    });
     const refreshed = await response.json();
     if (!response.ok) {
       console.error("Microsoft token refresh API error:", refreshed);

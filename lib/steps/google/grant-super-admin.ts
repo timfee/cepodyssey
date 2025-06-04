@@ -16,11 +16,15 @@ export const g3GrantSuperAdmin: StepDefinition = {
   adminUrls: {
     configure: (outputs) =>
       outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-        ? portalUrls.google.users.details(outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string)
+        ? portalUrls.google.users.details(
+            outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string,
+          )
         : portalUrls.google.users.list(),
     verify: (outputs) =>
       outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-        ? portalUrls.google.users.details(outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string)
+        ? portalUrls.google.users.details(
+            outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string,
+          )
         : portalUrls.google.users.list(),
   },
 };

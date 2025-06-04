@@ -325,7 +325,9 @@ export async function executeG5InitiateGoogleSamlProfile(
           },
         };
       }
-      const resourceUrl = portalUrls.google.sso.samlProfile(existingProfile.name);
+      const resourceUrl = portalUrls.google.sso.samlProfile(
+        existingProfile.name,
+      );
       return {
         success: true,
         message: `SAML Profile '${profileDisplayName}' already exists. Using its details.`,

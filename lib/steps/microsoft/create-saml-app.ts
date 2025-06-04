@@ -18,13 +18,19 @@ export const m6CreateSamlApp: StepDefinition = {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return portalUrls.azure.enterpriseApp.overview(spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.overview(
+        spId as string,
+        appId as string,
+      );
     },
     verify: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return portalUrls.azure.enterpriseApp.overview(spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.overview(
+        spId as string,
+        appId as string,
+      );
     },
   },
 };
