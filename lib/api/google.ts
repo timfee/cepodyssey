@@ -6,6 +6,7 @@ import {
 } from "./api-enablement-error";
 import { wrapAuthError } from "./auth-interceptor";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import { googleDirectoryUrls, googleIdentityUrls } from "./url-builder";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -55,28 +56,6 @@ export interface IdpCredential {
 
 const GWS_CUSTOMER_ID = "my_customer";
 
-/** Build the base URL for Directory API calls. */
-function getDirectoryApiBaseUrl(): string {
-  const envBase = process.env.GOOGLE_API_BASE;
-  if (!envBase) {
-    console.error("CRITICAL: GOOGLE_API_BASE environment variable is not set!");
-    throw new Error("Google API base URL is not configured.");
-  }
-  return `${envBase}/admin/directory/v1`;
-}
-
-/** Build the base URL for Cloud Identity API calls. */
-function getCloudIdentityApiBaseUrl(): string {
-  const envBase = process.env.GOOGLE_IDENTITY_BASE;
-  if (!envBase) {
-    console.error(
-      "CRITICAL: GOOGLE_IDENTITY_BASE environment variable is not set!",
-    );
-    throw new Error("Google Cloud Identity API base URL is not configured.");
-  }
-  return `${envBase}/v1`;
-}
-
 function handleGoogleError(error: unknown): never {
   if (
     error instanceof APIError &&
@@ -101,11 +80,8 @@ export async function getDomainVerificationStatus(
   domainName: string,
 ): Promise<boolean> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
-        domainName,
-      )}`,
+      googleDirectoryUrls.domains.get(GWS_CUSTOMER_ID, domainName),
       token,
     );
     if (res.status === 404) return false;
@@ -129,9 +105,8 @@ interface ListOrgUnitsResponse {
 /** List all organizational units. */
 export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits?type=all`,
+      googleDirectoryUrls.orgUnits.list(GWS_CUSTOMER_ID),
       token,
     );
     const data = await handleApiResponse<ListOrgUnitsResponse>(res);
@@ -152,9 +127,8 @@ export async function createOrgUnit(
   parentOrgUnitPath = "/",
 ): Promise<GoogleOrgUnit | { alreadyExists: true }> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits`,
+      googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
       token,
       {
         method: "POST",
@@ -164,7 +138,7 @@ export async function createOrgUnit(
     console.log("Sending request to createOrgUnit:", {
       name,
       parentOrgUnitPath,
-      url: `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits`,
+      url: googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
     });
 
     return handleApiResponse<GoogleOrgUnit>(res);
@@ -179,7 +153,6 @@ export async function getOrgUnit(
   ouPath: string,
 ): Promise<GoogleOrgUnit | null> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     console.log(
       `getOrgUnit: Fetching OU by path '${ouPath}' with token ${token}`,
     );
@@ -193,9 +166,10 @@ export async function getOrgUnit(
     if (!relativePath) {
       return null;
     }
-    const fetchUrl = `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
+    const fetchUrl = googleDirectoryUrls.orgUnits.get(
+      GWS_CUSTOMER_ID,
       relativePath,
-    )}`;
+    );
     const res = await fetchWithAuth(fetchUrl, token);
 
     if (res.status === 404) {
@@ -218,8 +192,7 @@ export async function createUser(
   user: Partial<DirectoryUser>,
 ): Promise<DirectoryUser | { alreadyExists: true }> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
-    const res = await fetchWithAuth(`${baseUrl}/users`, token, {
+    const res = await fetchWithAuth(googleDirectoryUrls.users.create(), token, {
       method: "POST",
       body: JSON.stringify(user),
     });
@@ -235,11 +208,8 @@ export async function getUser(
   userKey: string,
 ): Promise<DirectoryUser | null> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/users/${encodeURIComponent(
-        userKey,
-      )}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath`,
+      googleDirectoryUrls.users.get(userKey),
       token,
     );
     if (res.status === 404) return null;
@@ -264,14 +234,7 @@ export async function listUsers(
   },
 ): Promise<DirectoryUser[]> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
-    const queryParams = new URLSearchParams();
-    if (params?.domain) queryParams.append("domain", params.domain);
-    if (params?.query) queryParams.append("query", params.query);
-    if (params?.orderBy) queryParams.append("orderBy", params.orderBy);
-    if (params?.maxResults)
-      queryParams.append("maxResults", params.maxResults.toString());
-    const url = `${baseUrl}/users${queryParams.toString() ? `?${queryParams}` : ""}`;
+    const url = googleDirectoryUrls.users.list(params);
     const res = await fetchWithAuth(url, token);
     const data = await handleApiResponse<{ users?: DirectoryUser[] }>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data) {
@@ -289,9 +252,8 @@ export async function addDomain(
   domainName: string,
 ): Promise<GoogleDomain | { alreadyExists: true }> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains`,
+      googleDirectoryUrls.domains.create(GWS_CUSTOMER_ID),
       token,
       {
         method: "POST",
@@ -310,11 +272,8 @@ export async function getDomain(
   domainName: string,
 ): Promise<GoogleDomain | null> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
-        domainName,
-      )}`,
+      googleDirectoryUrls.domains.get(GWS_CUSTOMER_ID, domainName),
       token,
     );
     if (res.status === 404) return null;
@@ -335,9 +294,8 @@ interface ListAdminRolesResponse {
 /** List available admin roles. */
 export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roles`,
+      googleDirectoryUrls.roles.list(GWS_CUSTOMER_ID),
       token,
     );
     const data = await handleApiResponse<ListAdminRolesResponse>(res);
@@ -356,9 +314,8 @@ export async function assignAdminRole(
   roleId: string,
 ): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments`,
+      googleDirectoryUrls.roles.assignments.create(GWS_CUSTOMER_ID),
       token,
       {
         method: "POST",
@@ -381,11 +338,8 @@ export async function listRoleAssignments(
   userKey: string,
 ): Promise<GoogleRoleAssignment[]> {
   try {
-    const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
-      `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
-        userKey,
-      )}`,
+      googleDirectoryUrls.roles.assignments.list(GWS_CUSTOMER_ID, userKey),
       token,
     );
     const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(
@@ -406,9 +360,8 @@ export async function createSamlProfile(
   displayName: string,
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`,
+      googleIdentityUrls.samlProfiles.create(),
       token,
       {
         method: "POST",
@@ -447,9 +400,8 @@ export async function getSamlProfile(
   profileFullName: string,
 ): Promise<InboundSamlSsoProfile | null> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/${profileFullName}`,
+      googleIdentityUrls.samlProfiles.get(profileFullName),
       token,
     );
     if (res.status === 404) return null;
@@ -469,9 +421,8 @@ export async function listSamlProfiles(
   token: string,
 ): Promise<InboundSamlSsoProfile[]> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`,
+      googleIdentityUrls.samlProfiles.list(),
       token,
     );
     const data = await handleApiResponse<{
@@ -492,15 +443,12 @@ export async function updateSamlProfile(
   config: Partial<Pick<InboundSamlSsoProfile, "idpConfig">>,
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const updateMaskPaths: string[] = [];
     if (config.idpConfig) updateMaskPaths.push("idpConfig");
     const updateMask = updateMaskPaths.join(",");
 
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/${profileFullName}${
-        updateMask ? `?updateMask=${updateMask}` : ""
-      }`,
+      googleIdentityUrls.samlProfiles.update(profileFullName, updateMask),
       token,
       {
         method: "PATCH",
@@ -523,9 +471,8 @@ export async function assignSamlToOrgUnits(
   assignments: AssignSamlSsoPayload["assignments"],
 ): Promise<object | { alreadyExists: true }> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/${profileFullName}:assignToOrgUnits`,
+      googleIdentityUrls.samlProfiles.assignToOrgUnits(profileFullName),
       token,
       {
         method: "POST",
@@ -549,10 +496,9 @@ export async function addIdpCredentials(
   pemData?: string,
 ): Promise<{ success: boolean } | { alreadyExists: true }> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const body = pemData ? { pemData } : {};
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/${profileFullName}/idpCredentials:add`,
+      googleIdentityUrls.samlProfiles.idpCredentials.add(profileFullName),
       token,
       {
         method: "POST",
@@ -574,9 +520,8 @@ export async function listIdpCredentials(
   profileFullName: string,
 ): Promise<IdpCredential[]> {
   try {
-    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/${profileFullName}/idpCredentials`,
+      googleIdentityUrls.samlProfiles.idpCredentials.list(profileFullName),
       token,
     );
     const data = await handleApiResponse<{ idpCredentials?: IdpCredential[] }>(

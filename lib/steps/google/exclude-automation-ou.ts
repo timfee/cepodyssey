@@ -1,4 +1,5 @@
 import type { StepDefinition } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 
 /**
  * Step definition for optionally excluding the Automation OU from SSO.
@@ -12,7 +13,7 @@ export const g8ExcludeAutomationOu: StepDefinition = {
   automatable: true,
   requires: ["G-7"],
   adminUrls: {
-    configure: "https://admin.google.com/ac/sso",
-    verify: "https://admin.google.com/ac/sso",
+    configure: portalUrls.google.sso.main(),
+    verify: portalUrls.google.sso.main(),
   },
 };

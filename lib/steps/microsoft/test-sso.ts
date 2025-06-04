@@ -1,4 +1,5 @@
 import type { StepDefinition } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 
 /**
  * Step definition for manual testing of the complete SSO flow.
@@ -12,7 +13,7 @@ export const m10TestSso: StepDefinition = {
   automatable: false,
   requires: ["G-7", "M-9"],
   adminUrls: {
-    configure: "https://myapps.microsoft.com",
-    verify: "https://myapps.microsoft.com",
+    configure: portalUrls.azure.myApps(),
+    verify: portalUrls.azure.myApps(),
   },
 };

@@ -1,6 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
-import { getAzurePortalUrl } from "../../utils";
+import { portalUrls } from "@/lib/api/url-builder";
 /**
  * Step definition for creating the enterprise application used for provisioning.
  */
@@ -18,13 +18,13 @@ export const m1CreateProvisioningApp: StepDefinition = {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
       if (!spId || !appId) return null;
-      return getAzurePortalUrl("Overview", spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.overview(spId as string, appId as string);
     },
     verify: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
       if (!spId || !appId) return null;
-      return getAzurePortalUrl("Overview", spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.overview(spId as string, appId as string);
     },
   },
 };

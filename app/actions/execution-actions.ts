@@ -7,7 +7,8 @@ import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { validateRequiredOutputs, getGoogleSamlProfileUrl } from "@/lib/utils";
+import { validateRequiredOutputs } from "@/lib/utils";
+import { portalUrls } from "@/lib/api/url-builder";
 import type * as MicrosoftGraph from "microsoft-graph";
 
 /**
@@ -127,7 +128,7 @@ export async function executeG1CreateAutomationOu(
             [OUTPUT_KEYS.AUTOMATION_OU_ID]: existing.orgUnitId,
             [OUTPUT_KEYS.AUTOMATION_OU_PATH]: existing.orgUnitPath,
           },
-          resourceUrl: `https://admin.google.com/ac/orgunits/details?ouPath=${existing.orgUnitPath}`,
+          resourceUrl: portalUrls.google.orgUnits.details(existing.orgUnitPath),
         };
       }
       return {
@@ -145,7 +146,7 @@ export async function executeG1CreateAutomationOu(
         [OUTPUT_KEYS.AUTOMATION_OU_ID]: result.orgUnitId,
         [OUTPUT_KEYS.AUTOMATION_OU_PATH]: result.orgUnitPath,
       },
-      resourceUrl: `https://admin.google.com/ac/orgunits/details?ouPath=${result.orgUnitPath}`,
+      resourceUrl: portalUrls.google.orgUnits.details(result.orgUnitPath),
     };
   } catch (e) {
     return handleExecutionError(e, "G-1");
@@ -192,7 +193,7 @@ export async function executeG2CreateProvisioningUser(
             [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: existing.primaryEmail,
             [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: existing.id,
           },
-          resourceUrl: `https://admin.google.com/ac/users/${existing.primaryEmail}`,
+          resourceUrl: portalUrls.google.users.details(existing.primaryEmail),
         };
       }
       return { success: true, message: `User '${email}' already exists.` };
@@ -210,7 +211,7 @@ export async function executeG2CreateProvisioningUser(
         [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: result.primaryEmail,
         [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: result.id,
       },
-      resourceUrl: `https://admin.google.com/ac/users/${result.primaryEmail}`,
+      resourceUrl: portalUrls.google.users.details(result.primaryEmail),
     };
   } catch (e) {
     return handleExecutionError(e, "G-2");
@@ -237,7 +238,7 @@ export async function executeG3GrantAdminToProvisioningUser(
         success: true,
         message: `User '${email}' is already an admin.`,
         outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
-        resourceUrl: `https://admin.google.com/ac/users/${email}`,
+        resourceUrl: portalUrls.google.users.details(email),
       };
     }
     const roles = await google.listRoleAssignments(googleToken, email);
@@ -246,7 +247,7 @@ export async function executeG3GrantAdminToProvisioningUser(
         success: true,
         message: `User '${email}' already has Super Admin role.`,
         outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
-        resourceUrl: `https://admin.google.com/ac/users/${email}`,
+        resourceUrl: portalUrls.google.users.details(email),
       };
     }
     await google.assignAdminRole(googleToken, email, "3");
@@ -254,7 +255,7 @@ export async function executeG3GrantAdminToProvisioningUser(
       success: true,
       message: `Super Admin role assigned to '${email}'.`,
       outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
-      resourceUrl: `https://admin.google.com/ac/users/${email}`,
+      resourceUrl: portalUrls.google.users.details(email),
     };
   } catch (e) {
     return handleExecutionError(e, "G-3");
@@ -279,13 +280,13 @@ export async function executeG4AddAndVerifyDomain(
       return {
         success: true,
         message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
-        resourceUrl: `https://admin.google.com/ac/domains/manage?domain=${encodeURIComponent(context.domain)}`,
+        resourceUrl: portalUrls.google.domains.manage(context.domain),
       };
     }
     return {
       success: true,
       message: `Domain '${context.domain}' added. Please ensure it is verified in your Google Workspace Admin console for SAML SSO.`,
-      resourceUrl: `https://admin.google.com/ac/domains/manage?domain=${encodeURIComponent(context.domain)}`,
+      resourceUrl: portalUrls.google.domains.manage(context.domain),
     };
   } catch (e) {
     return handleExecutionError(e, "G-4");
@@ -324,7 +325,7 @@ export async function executeG5InitiateGoogleSamlProfile(
           },
         };
       }
-      const resourceUrl = getGoogleSamlProfileUrl(existingProfile.name);
+      const resourceUrl = portalUrls.google.sso.samlProfile(existingProfile.name);
       return {
         success: true,
         message: `SAML Profile '${profileDisplayName}' already exists. Using its details.`,
@@ -353,7 +354,7 @@ export async function executeG5InitiateGoogleSamlProfile(
         },
       };
     }
-    const resourceUrl = getGoogleSamlProfileUrl(result.name);
+    const resourceUrl = portalUrls.google.sso.samlProfile(result.name);
     return {
       success: true,
       message: `SAML Profile '${profileDisplayName}' created in Google Workspace.`,
@@ -402,7 +403,7 @@ export async function executeGS0EnableProvisioning(
         "3. Copy the 'Authorization token'\n" +
         "4. Return here and click 'Enter Token'\n\n" +
         "This uses the same SAML profile from step G-5 - no temporary app needed!",
-      resourceUrl: getGoogleSamlProfileUrl(profileFullName),
+      resourceUrl: portalUrls.google.sso.samlProfile(profileFullName),
     };
   } catch (e) {
     return handleExecutionError(e, "G-S0");
@@ -451,7 +452,7 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
     return {
       success: true,
       message: "Google SAML Profile updated with Azure AD IdP information.",
-      resourceUrl: "https://admin.google.com/ac/sso",
+      resourceUrl: portalUrls.google.sso.main(),
     };
   } catch (e) {
     return handleExecutionError(e, "G-6");
@@ -489,7 +490,7 @@ export async function executeG7AssignGoogleSamlToRootOu(
       success: true,
       message:
         "SAML profile assigned to Root OU for all users. Specific OU/Group assignments can be adjusted in Google Admin console.",
-      resourceUrl: "https://admin.google.com/ac/sso",
+      resourceUrl: portalUrls.google.sso.main(),
     };
   } catch (e) {
     return handleExecutionError(e, "G-7");
@@ -537,7 +538,7 @@ export async function executeG8ExcludeAutomationOuFromSso(
     return {
       success: true,
       message: `SAML explicitly disabled for the 'Automation' OU (${automationOu.orgUnitPath}).`,
-      resourceUrl: "https://admin.google.com/ac/sso",
+      resourceUrl: portalUrls.google.sso.main(),
     };
   } catch (e) {
     return handleExecutionError(e, "G-8");
@@ -573,7 +574,10 @@ export async function executeM1CreateProvisioningApp(
           existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
-          const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+          const resourceUrl = portalUrls.azure.enterpriseApp.overview(
+            sp.id as string,
+            existingApp.appId as string,
+          );
           return {
             success: true,
             message: `Enterprise app '${appName}' for provisioning already exists.`,
@@ -594,7 +598,10 @@ export async function executeM1CreateProvisioningApp(
     return {
       success: true,
       message: `Enterprise app '${appName}' created.`,
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+      resourceUrl: portalUrls.azure.enterpriseApp.overview(
+        result.servicePrincipal.id as string,
+        result.application.appId as string,
+      ),
       outputs: {
         [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: result.application.id,
@@ -635,7 +642,10 @@ export async function executeM2ConfigureProvisioningAppProperties(
     await microsoft.patchServicePrincipal(microsoftToken, spObjectId, {
       accountEnabled: true,
     });
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${spObjectId}/appId/${appId}`;
+    const resourceUrl = portalUrls.azure.enterpriseApp.overview(
+      spObjectId,
+      appId,
+    );
     return {
       success: true,
       message: "Provisioning app service principal enabled.",
@@ -661,8 +671,8 @@ export async function executeM3AuthorizeProvisioningConnection(
     | undefined;
   const resourceUrl =
     spId && appId
-      ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`
-      : "https://portal.azure.com";
+      ? portalUrls.azure.enterpriseApp.provisioning(spId, appId)
+      : portalUrls.azure.myApps();
 
   return {
     success: true,
@@ -789,7 +799,10 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
       jobId,
       schemaPayload,
     );
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
+    const resourceUrl = portalUrls.azure.enterpriseApp.provisioning(
+      spObjectId,
+      appId,
+    );
     return {
       success: true,
       message:
@@ -831,7 +844,10 @@ export async function executeM5StartProvisioningJob(
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
     await microsoft.startProvisioningJob(microsoftToken, spObjectId, jobId);
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
+    const resourceUrl = portalUrls.azure.enterpriseApp.provisioning(
+      spObjectId,
+      appId,
+    );
     return {
       success: true,
       message:
@@ -871,7 +887,10 @@ export async function executeM6CreateSamlSsoApp(
           existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
-          const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
+          const resourceUrl = portalUrls.azure.enterpriseApp.overview(
+            sp.id as string,
+            existingApp.appId,
+          );
           return {
             success: true,
             message: `Enterprise app '${appName}' for SAML SSO already exists.`,
@@ -892,7 +911,10 @@ export async function executeM6CreateSamlSsoApp(
     return {
       success: true,
       message: `Enterprise app '${appName}' for SAML SSO created.`,
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${result.application.appId}/objectId/${result.servicePrincipal.id}`,
+      resourceUrl: portalUrls.azure.enterpriseApp.overview(
+        result.servicePrincipal.id as string,
+        result.application.appId as string,
+      ),
       outputs: {
         [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.application.appId,
         [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.application.id,
@@ -965,7 +987,10 @@ export async function executeM7ConfigureAzureSamlAppSettings(
       message:
         "Azure AD SAML app (Identifier URIs, Reply URL) configured. Verify 'User Attributes & Claims' (NameID should be UPN) manually in Azure Portal.",
       outputs: { [OUTPUT_KEYS.FLAG_M7_SAML_APP_SETTINGS_CONFIGURED]: true },
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${appId}/objectId/${spObjectId}`,
+      resourceUrl: portalUrls.azure.enterpriseApp.singleSignOn(
+        spObjectId,
+        appId,
+      ),
     };
   } catch (e) {
     return handleExecutionError(e, "M-7");
@@ -999,7 +1024,10 @@ export async function executeM8RetrieveAzureIdpMetadata(
     ] as string;
 
     const metadata = await microsoft.getSamlMetadata(tenantId, samlSsoAppId);
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/${samlSsoAppId}/objectId=${spObjectId}`;
+    const resourceUrl = portalUrls.azure.enterpriseApp.singleSignOn(
+      spObjectId,
+      samlSsoAppId,
+    );
     return {
       success: true,
       message:
@@ -1044,7 +1072,10 @@ export async function executeM9AssignUsersToAzureSsoApp(
       success: true,
       message:
         "Guidance: Assign users/groups to the 'Google Workspace SAML SSO' app in Azure AD via its 'Users and groups' section to grant them SSO access.",
-      resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${ssoSpObjectId}/appId/${appId}`,
+      resourceUrl: portalUrls.azure.enterpriseApp.usersAndGroups(
+        ssoSpObjectId,
+        appId,
+      ),
     };
   } catch (e) {
     return handleExecutionError(e, "M-9");

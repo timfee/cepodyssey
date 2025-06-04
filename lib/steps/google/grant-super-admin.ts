@@ -1,5 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 /**
  * Step definition for granting super admin privileges to the provisioning user.
  */
@@ -15,11 +16,11 @@ export const g3GrantSuperAdmin: StepDefinition = {
   adminUrls: {
     configure: (outputs) =>
       outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-        ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
-        : "https://admin.google.com/ac/users",
+        ? portalUrls.google.users.details(outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string)
+        : portalUrls.google.users.list(),
     verify: (outputs) =>
       outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-        ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
-        : "https://admin.google.com/ac/users",
+        ? portalUrls.google.users.details(outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string)
+        : portalUrls.google.users.list(),
   },
 };
