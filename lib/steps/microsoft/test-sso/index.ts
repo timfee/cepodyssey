@@ -6,8 +6,7 @@ import { executeTestSso } from "./execute";
 export const m10TestSso: StepDefinition = {
   id: "M-10",
   title: "Test & Validate SSO Sign-in",
-  description:
-    "Manual: Test the complete SAML SSO flow by attempting to log into a Google service with an Azure AD user account that has been provisioned (if applicable) and assigned to the SSO app in Azure AD.",
+  description: "Test signing in with a Microsoft account",
   category: "SSO",
   automatable: false,
   requires: ["G-7", "M-9"],

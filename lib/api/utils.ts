@@ -107,7 +107,7 @@ export async function handleApiResponse<T>(
       error?: { message?: string; code?: string };
     };
     const message =
-      errorBody.error?.message ?? `Request failed with status ${res.status}`;
+      errorBody.error?.message ?? `Connection failed. Please try again.`;
     throw new APIError(message, res.status, errorBody.error?.code);
   }
   if (res.status === 204) {

@@ -7,8 +7,7 @@ import { executeGrantSuperAdmin } from "./execute";
 export const g3GrantSuperAdmin: StepDefinition = {
   id: "G-3",
   title: "Grant Super Admin Privileges to Provisioning User",
-  description:
-    "Assigns Super Admin role to the provisioning user so Azure can manage users and groups.",
+  description: "Give the sync user admin permissions",
   category: "Google",
   automatable: true,
   requires: ["G-2"],

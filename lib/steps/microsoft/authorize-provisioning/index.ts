@@ -7,8 +7,7 @@ import { executeAuthorizeProvisioning } from "./execute";
 export const m3AuthorizeProvisioning: StepDefinition = {
   id: "M-3",
   title: "Authorize Azure AD Provisioning to Google Workspace",
-  description:
-    "Manual step to authorize Azure AD to provision via OAuth. In the Azure portal, open the provisioning app, navigate to Provisioning settings, click 'Authorize', and sign in with the Google provisioning user created in G-2. After successful authorization, test the connection to ensure it works.",
+  description: "Connect Microsoft to Google: Click 'Authorize' in Azure and sign in with the Google sync user",
   category: "Microsoft",
   automatable: false,
   requires: ["M-2", "G-3"],

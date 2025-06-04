@@ -145,7 +145,7 @@ export function StepCard({
           }}
         >
           <KeyIcon className="mr-2 h-4 w-4" />
-          Manual Step
+          View instructions
         </Button>
       );
     }
@@ -161,7 +161,7 @@ export function StepCard({
           {step.status === "in_progress" ? (
             <>
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-              Running...
+              Working...
             </>
           ) : step.status === "failed" ? (
             <>
@@ -182,7 +182,7 @@ export function StepCard({
       return (
         <Button size="sm" variant="ghost" className="text-green-600" disabled>
           <CheckCircle2Icon className="mr-2 h-4 w-4" />
-          Complete
+          Done
         </Button>
       );
     }
@@ -216,7 +216,7 @@ export function StepCard({
                   </Badge>
                   {step.metadata?.preExisting && (
                     <Badge variant="secondary" className="text-xs">
-                      Pre-existing
+                      Already exists
                     </Badge>
                   )}
                 </div>
@@ -237,7 +237,7 @@ export function StepCard({
                   }
                 >
                   <InfoIcon className="mr-2 h-4 w-4" />
-                  View Instructions
+                  Instructions
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
@@ -251,7 +251,7 @@ export function StepCard({
                   }
                 >
                   <ChevronRightIcon className="mr-2 h-4 w-4" />
-                  Dependencies & Outputs
+                  Details
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {step.metadata?.resourceUrl && (
@@ -262,7 +262,7 @@ export function StepCard({
                       rel="noopener noreferrer"
                     >
                       <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                      View Resource
+                      View
                     </a>
                   </DropdownMenuItem>
                 )}
@@ -278,7 +278,7 @@ export function StepCard({
                       rel="noopener noreferrer"
                     >
                       <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                      Open Console
+                      Configure
                     </a>
                   </DropdownMenuItem>
                 )}

@@ -45,6 +45,6 @@ export async function checkProvisioningUser(
         message: `Service account 'azuread-provisioning@${context.domain}' not found.`,
       };
     }
-    return handleCheckError(e, "Failed to check service account existence.");
+    return handleCheckError(e, "Couldn't verify service account existence.");
   }
 }

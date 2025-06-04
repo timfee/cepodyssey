@@ -39,7 +39,7 @@ export async function executeStepCheck(
     // Fallback for non-Error objects
     return {
       completed: false,
-      message: "An unknown error occurred",
+      message: "Something went wrong. Please try again.",
       outputs: {
         errorCode: "UNKNOWN_ERROR",
         errorMessage: String(error),

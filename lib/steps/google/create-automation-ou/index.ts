@@ -7,8 +7,7 @@ import { executeCreateAutomationOu } from "./execute";
 export const g1CreateAutomationOu: StepDefinition = {
   id: "G-1",
   title: "Create 'Automation' Organizational Unit",
-  description:
-    "Creates a dedicated Organizational Unit named 'Automation' to house the provisioning user.",
+  description: "Create an 'Automation' folder for the sync user",
   category: "Google",
   automatable: true,
   requires: [],

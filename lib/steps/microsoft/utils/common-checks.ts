@@ -45,7 +45,7 @@ export async function checkMicrosoftServicePrincipal(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check for Service Principal with App Client ID '${appClientId}'.`,
+      `Couldn't verify for Service Principal with App Client ID '${appClientId}'.`,
     );
   }
 }
@@ -71,7 +71,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check if Service Principal '${spObjectId}' is enabled.`,
+      `Couldn't verify if Service Principal '${spObjectId}' is enabled.`,
     );
   }
 }
@@ -140,7 +140,7 @@ export async function checkMicrosoftProvisioningJobDetails(
     }
     return handleCheckError(
       e,
-      `Failed to check provisioning job for SP '${spObjectId}'.`,
+      `Couldn't verify provisioning job for SP '${spObjectId}'.`,
     );
   }
 }
@@ -189,7 +189,7 @@ export async function checkMicrosoftSamlAppSettingsApplied(
       )}.`;
     return { completed: false, message: message.trim() };
   } catch (e) {
-    return handleCheckError(e, "Failed to check Azure AD SAML app settings.");
+    return handleCheckError(e, "Couldn't verify Azure AD SAML app settings.");
   }
 }
 
@@ -250,7 +250,7 @@ export async function checkMicrosoftAttributeMappingsApplied(
           "Synchronization schema or job not found. Mappings cannot be checked.",
       };
     }
-    return handleCheckError(e, "Failed to check attribute mappings.");
+    return handleCheckError(e, "Couldn't verify attribute mappings.");
   }
 }
 
@@ -282,7 +282,7 @@ export async function checkMicrosoftAppAssignments(
     }
     return handleCheckError(
       e,
-      "Failed to check app assignments for SP " + servicePrincipalObjectId,
+      "Couldn't verify app assignments for SP " + servicePrincipalObjectId,
     );
   }
 }

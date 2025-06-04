@@ -6,8 +6,7 @@ import { executeExcludeAutomationOu } from "./execute";
 export const g8ExcludeAutomationOu: StepDefinition = {
   id: "G-8",
   title: "Exclude Automation OU from SSO (Optional)",
-  description:
-    "If an 'Automation' OU exists (from manual creation), ensures SAML SSO is explicitly disabled for that OU. This allows any accounts within it to log in directly with Google credentials, bypassing Azure AD SSO.",
+  description: "Keep sync user using Google sign-in (optional)",
   category: "SSO",
   automatable: true,
   requires: ["G-7"],

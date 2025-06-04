@@ -56,7 +56,7 @@ export async function checkExcludeAutomationOu(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check SAML Profile '${profileName}'.`,
+      `Couldn't verify SAML Profile '${profileName}'.`,
     );
   }
 }

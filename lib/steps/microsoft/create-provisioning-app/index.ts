@@ -7,8 +7,7 @@ import { executeCreateProvisioningApp } from "./execute";
 export const m1CreateProvisioningApp: StepDefinition = {
   id: "M-1",
   title: "Create Azure AD Enterprise App for Provisioning",
-  description:
-    "Adds the 'Google Cloud / G Suite Connector by Microsoft' gallery application in Azure AD. This specific app instance will be dedicated to managing user provisioning from Azure AD to Google Workspace.",
+  description: "Add Google sync app from Microsoft's gallery",
   category: "Microsoft",
   automatable: true,
   requires: [],

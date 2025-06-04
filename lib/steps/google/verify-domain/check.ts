@@ -39,7 +39,7 @@ export async function checkDomain(
     }
     return handleCheckError(
       e,
-      `Failed to check domain verification for '${context.domain}'.`,
+      `Couldn't verify domain verification for '${context.domain}'.`,
     );
   }
 }

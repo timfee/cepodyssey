@@ -68,8 +68,8 @@ export async function validateSessionTokens(): Promise<SessionValidation> {
             missingProvider === "both"
               ? "Both providers authentication required"
               : missingProvider === "google"
-                ? "Google Workspace authentication required"
-                : "Microsoft authentication required",
+                ? "Please sign in with Google"
+                : "Please sign in with Microsoft",
           code: "AUTH_MISSING",
         },
       };

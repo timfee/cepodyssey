@@ -41,6 +41,6 @@ export async function checkAutomationOu(
         message: `Organizational Unit '/Automation' not found.`,
       };
     }
-    return handleCheckError(e, `Failed to check for OU '/Automation'.`);
+    return handleCheckError(e, `Couldn't verify for OU '/Automation'.`);
   }
 }

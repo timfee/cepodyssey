@@ -7,8 +7,7 @@ import { executeCreateSamlApp } from "./execute";
 export const m6CreateSamlApp: StepDefinition = {
   id: "M-6",
   title: "Create Azure AD Enterprise App for SAML SSO",
-  description:
-    "Adds a second instance of the 'Google Cloud / G Suite Connector by Microsoft' gallery app (or a non-gallery app configured for SAML) in Azure AD. This instance will be dedicated to SAML Single Sign-On.",
+  description: "Add a second Google app for single sign-on",
   category: "SSO",
   automatable: true,
   requires: [],

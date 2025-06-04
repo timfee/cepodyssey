@@ -45,6 +45,6 @@ export async function checkSuperAdmin(
       message: `Service account exists but lacks admin privileges.`,
     };
   } catch (e) {
-    return handleCheckError(e, `Failed to check admin status.`);
+    return handleCheckError(e, `Couldn't verify admin status.`);
   }
 }

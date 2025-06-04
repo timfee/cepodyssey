@@ -7,8 +7,7 @@ import { executeCreateProvisioningUser } from "./execute";
 export const g2CreateProvisioningUser: StepDefinition = {
   id: "G-2",
   title: "Create Provisioning User in 'Automation' OU",
-  description:
-    "Creates the dedicated user 'azuread-provisioning' inside the Automation OU for Azure provisioning.",
+  description: "Create a sync user for Microsoft to connect with",
   category: "Google",
   automatable: true,
   requires: ["G-1"],

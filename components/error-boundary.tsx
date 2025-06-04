@@ -34,7 +34,7 @@ export default function ErrorBoundary({
             {error.message || "An unexpected error occurred"}
           </p>
           <Button onClick={reset} className="w-full">
-            Try again
+            Retry
           </Button>
         </CardContent>
       </Card>

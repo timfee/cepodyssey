@@ -49,7 +49,7 @@ export async function checkSamlProfile(
   } catch (e) {
     return handleCheckError(
       e,
-      `Failed to check SAML Profile '${profileDisplayName}'.`,
+      `Couldn't verify SAML Profile '${profileDisplayName}'.`,
     );
   }
 }

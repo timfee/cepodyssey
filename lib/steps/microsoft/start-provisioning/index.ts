@@ -7,8 +7,7 @@ import { executeStartProvisioning } from "./execute";
 export const m5StartProvisioning: StepDefinition = {
   id: "M-5",
   title: "Define Scope & Start Provisioning Job",
-  description:
-    "This action starts the Azure AD provisioning job. IMPORTANT: Before starting, manually configure the provisioning scope (which users/groups to sync) in the Azure Portal for the 'Google Workspace User Provisioning' app.",
+  description: "Start syncing users (configure who to sync first)",
   category: "Microsoft",
   automatable: true,
   requires: ["M-4"],

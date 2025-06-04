@@ -70,16 +70,14 @@ export function ConfigForm() {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="text-xl">Current Configuration</CardTitle>
+        <CardTitle className="text-xl">Your settings</CardTitle>
         <CardDescription>
-          This configuration is based on your authenticated session. Domain is
-          from your Google Workspace login (&quot;hd&quot; claim) and Tenant ID
-          is from your Microsoft Entra ID login (&quot;tid&quot; claim).
+          These values were detected from your sign-in
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-1.5">
-          <Label htmlFor="displayDomain">Primary Google Workspace Domain</Label>
+          <Label htmlFor="displayDomain">Google domain</Label>
           <Input
             id="displayDomain"
             {...register("domain")}
@@ -95,7 +93,7 @@ export function ConfigForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="displayTenantId">Microsoft Entra ID Tenant ID</Label>
+          <Label htmlFor="displayTenantId">Microsoft Tenant ID</Label>
           <Input
             id="displayTenantId"
             {...register("tenantId")}

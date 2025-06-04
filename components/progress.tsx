@@ -57,11 +57,9 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
     <Tabs defaultValue="all" className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Automation Progress
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight">Progress</h2>
           <p className="text-muted-foreground">
-            Configure Google Workspace and Microsoft Entra ID integration
+            Track your setup progress below
           </p>
         </div>
         <TabsList>
@@ -86,8 +84,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === "completed").length} of{" "}
-                  {cat.steps.length} completed
+                  {cat.steps.filter((s) => s.status === "completed").length}/{cat.steps.length} done
                 </span>
               </div>
             </CardHeader>

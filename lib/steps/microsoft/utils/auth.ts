@@ -7,7 +7,7 @@ export async function getMicrosoftToken(): Promise<string> {
   const session = await auth();
   if (!session?.microsoftToken) {
     throw new APIError(
-      "Microsoft authentication required",
+      "Please sign in with Microsoft",
       401,
       "MS_AUTH_REQUIRED",
     );

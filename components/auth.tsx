@@ -34,7 +34,7 @@ export function AuthStatus() {
   const handleSignIn = (provider: "google" | "microsoft-entra-id") => {
     if (!isConfigReady) {
       handleError(
-        new Error("Please set the domain and tenant ID before connecting."),
+        new Error("Enter your domain and Tenant ID first"),
         { stepTitle: "Authentication" },
       );
       return;
@@ -97,8 +97,7 @@ export function AuthStatus() {
       <CardHeader>
         <CardTitle>Authentication Status</CardTitle>
         <CardDescription>
-          Connect to both platforms to enable automation. The configured domain
-          and Tenant ID will be used for sign-in.
+          Sign in as an admin to both Google and Microsoft
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
