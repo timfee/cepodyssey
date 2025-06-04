@@ -34,13 +34,22 @@ export function useAutoCheck(
       if (hasChecked.current || isValidating) return;
 
       // Skip if config not ready
-      if (!appConfig.domain || !appConfig.tenantId) return;
+      if (!appConfig.domain || !appConfig.tenantId) {
+        Logger.info("[Hook]", "Skipping auto-check: domain or tenantId missing");
+        return;
+      }
 
       // Skip if session is still loading
-      if (status === "loading") return;
+      if (status === "loading") {
+        Logger.info("[Hook]", "Skipping auto-check: session loading");
+        return;
+      }
 
       // Skip if session not ready
-      if (!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) return;
+      if (!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) {
+        Logger.info("[Hook]", "Skipping auto-check: session not authenticated");
+        return;
+      }
 
       // Check for existing auth errors
       const authErrorPresent = Object.values(stepsStatus).some(
@@ -71,7 +80,7 @@ export function useAutoCheck(
         if (session.error === "RefreshTokenError") {
           Logger.warn(
             "[Hook]",
-            "Session has refresh token error, skipping auto-check",
+            "Skipping auto-check: RefreshTokenError present",
           );
           setIsValidating(false);
           return;

@@ -27,6 +27,20 @@ function getUserKey(_userOrToken?: User | JWT): string {
  */
 async function refreshGoogleToken(token: JWT): Promise<JWT> {
   try {
+    Logger.debug(
+      "[Auth]",
+      "Attempting to refresh Google token. Has refresh token:",
+      !!token.googleRefreshToken,
+    );
+
+    if (!token.googleRefreshToken) {
+      Logger.error("[Auth]", "Google refresh token is missing. Cannot refresh.");
+      return {
+        ...token,
+        error: "RefreshTokenError",
+        googleAccessToken: undefined,
+      };
+    }
     const response = await fetch(googleOAuthUrls.token(), {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -39,7 +53,13 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
     });
     const refreshed = await response.json();
     if (!response.ok) {
-      Logger.error("[Auth]", "Google token refresh API error", refreshed);
+      Logger.error(
+        "[Auth]",
+        "Google token refresh API error. Status:",
+        response.status,
+        "Body:",
+        refreshed,
+      );
       throw refreshed;
     }
     return {
@@ -392,7 +412,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           } else if (!finalToken.error) {
             Logger.error(
               "[Auth]",
-              "Google token expired but no refresh token available",
+              "Google token expired AND no refresh token available. Marking RefreshTokenError.",
             );
             finalToken.error = "RefreshTokenError";
             finalToken.googleAccessToken = undefined;

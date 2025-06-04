@@ -221,13 +221,13 @@ export function AutomationDashboard({
               },
             }),
           );
-          // toast.error(
-          //   `${definition.title}: ${result.error?.message ?? "Failed"}`,
-          //   {
-          //     id: toastId,
-          //     duration: 10000,
-          //   },
-          // );
+          toast.error(
+            `${definition.title}: ${result.error?.message ?? "Failed"}`,
+            {
+              id: toastId,
+              duration: 10000,
+            },
+          );
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
