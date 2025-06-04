@@ -59,6 +59,24 @@ const stateConfig: Record<
     label: "Marked as Done",
     tooltip: "You've marked this step as completed.",
   },
+  pending: {
+    icon: Info,
+    colorClass: "text-muted-foreground",
+    label: "Pending",
+    tooltip: "This step has not been started yet.",
+  },
+  in_progress: {
+    icon: Loader2,
+    colorClass: "text-blue-500",
+    label: "In Progress",
+    tooltip: "This step is currently being executed.",
+  },
+  failed: {
+    icon: AlertTriangle,
+    colorClass: "text-destructive",
+    label: "Failed",
+    tooltip: "This step encountered an error.",
+  },
   available: {
     icon: Info,
     colorClass: "text-primary",
@@ -70,12 +88,6 @@ const stateConfig: Record<
     colorClass: "text-muted-foreground",
     label: "Blocked",
     tooltip: "Prerequisites must be completed first.",
-  },
-  error: {
-    icon: AlertTriangle,
-    colorClass: "text-destructive",
-    label: "Error",
-    tooltip: "An error occurred during the last attempt.",
   },
 };
 

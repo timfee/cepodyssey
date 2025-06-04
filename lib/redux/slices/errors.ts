@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../store';
 
 export interface ErrorInfo {
@@ -29,7 +29,14 @@ export const errorsSlice = createSlice({
 
 export const { setError, clearError } = errorsSlice.actions;
 
-export const selectError = (state: RootState): ErrorInfo =>
-  state.errors.error || { message: '' };
+export const selectError = createSelector(
+  (state: RootState) => state.errors.error,
+  (error): ErrorInfo => error || { message: '', details: undefined },
+);
+
+export const selectHasError = createSelector(
+  (state: RootState) => state.errors.error,
+  (error): boolean => !!error,
+);
 
 export default errorsSlice.reducer;

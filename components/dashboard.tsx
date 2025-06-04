@@ -7,8 +7,8 @@ import {
   LogInIcon,
 } from "lucide-react";
 import type { Session } from "next-auth";
-import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { useSessionSync } from "@/hooks/use-session-sync";
+import { useStepExecution } from "@/hooks/use-step-execution";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useStore } from "react-redux";
@@ -25,10 +25,7 @@ import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
 import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
-import {
-  executeStepAction,
-  executeStepCheck,
-} from "@/app/actions/step-actions";
+import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
@@ -152,123 +149,19 @@ export function AutomationDashboard({
     ],
   );
 
-  const executeStep = useCallback(
+  const { executeStep } = useStepExecution();
+
+  const handleExecute = useCallback(
     async (stepId: string) => {
       if (!canRunAutomation) {
         dispatch(
-          setError({
-            message:
-              "Please sign in to both Google and Microsoft to continue.",
-          }),
+          setError({ message: 'Please sign in to both Google and Microsoft to continue.' })
         );
         return;
       }
-
-      const definition = allStepDefinitions.find((s) => s.id === stepId);
-      if (!definition) {
-        dispatch(
-          setError({
-            message: `Step ${stepId} not found in definitions.`,
-          }),
-        );
-        return;
-      }
-
-      dispatch(
-        updateStep({
-          id: stepId,
-          status: "in_progress",
-          error: null,
-          message: undefined,
-        }),
-      );
-
-      const toastId = `step-exec-${stepId}-${Date.now()}`;
-      toast.loading(`Running: ${definition.title}...`, { id: toastId });
-
-      const context: StepContext = {
-        domain: appConfig.domain!,
-        tenantId: appConfig.tenantId!,
-        outputs: store.getState().appConfig.outputs,
-      };
-
-      try {
-        const result = await executeStepAction(stepId, context);
-
-        if (result.outputs) {
-          dispatch(addOutputs(result.outputs));
-        }
-
-        if (result.success) {
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "completed",
-              message: result.message,
-              metadata: {
-                resourceUrl: result.resourceUrl,
-                completedAt: new Date().toISOString(),
-                ...(result.outputs || {}),
-              },
-            }),
-          );
-          toast.success(`${definition.title}: Success!`, {
-            id: toastId,
-            duration: 3000,
-          });
-        } else {
-          toast.dismiss(toastId);
-
-          const errorMessage = result.error?.message ?? "Execution failed";
-
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "failed",
-              error: errorMessage,
-              message: result.message,
-              metadata: result.outputs || {},
-            }),
-          );
-
-          if (result.outputs?.errorCode === "AUTH_EXPIRED") {
-            dispatch(setError({ message: errorMessage }));
-          } else {
-            dispatch(
-              setError({
-                message: `${definition.title} Failed: ${errorMessage}`,
-                details: { stepId, ...result.outputs },
-              }),
-            );
-          }
-        }
-      } catch (err) {
-        toast.dismiss(toastId);
-
-        const message =
-          err instanceof Error ? err.message : "Unexpected error occurred";
-
-        dispatch(
-          updateStep({
-            id: stepId,
-            status: "failed",
-            error: message,
-          }),
-        );
-
-        if (isAuthenticationError(err)) {
-          dispatch(setError({ message: err.message }));
-        } else {
-          dispatch(
-            setError({
-              message: `Failed to execute ${definition.title}: ${message}`,
-              details: { stepId },
-            }),
-          );
-        }
-      }
+      await executeStep(stepId);
     },
-    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId],
+    [executeStep, canRunAutomation, dispatch]
   );
 
   const executeCheck = useCallback(
@@ -399,7 +292,7 @@ export function AutomationDashboard({
           currentStepState.status === "pending" ||
           currentStepState.status === "failed")
       ) {
-        await executeStep(step.id);
+        await handleExecute(step.id);
         if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
           // toast.error("Automation paused", {
           //   description: `Check the error in ${step.title}`,
@@ -415,7 +308,7 @@ export function AutomationDashboard({
         duration: 5000,
       });
     }
-  }, [executeStep, store, canRunAutomation]);
+  }, [handleExecute, store, canRunAutomation]);
 
   const ProgressSummary = () => {
     const totalSteps = allStepDefinitions.length;
@@ -540,7 +433,7 @@ export function AutomationDashboard({
             </AlertDescription>
           </Alert>
         )}
-        <ProgressVisualizer onExecuteStep={executeStep} />
+        <ProgressVisualizer onExecuteStep={handleExecute} />
       </main>
     </div>
   );

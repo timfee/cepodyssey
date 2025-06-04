@@ -2,6 +2,7 @@ import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import { store } from "@/lib/redux/store";
 import { addAppError, addApiLog } from "@/lib/redux/slices/debug-panel";
+import { ErrorManager } from "@/lib/error-handling/error-manager";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
 export function handleCheckError(
@@ -22,7 +23,6 @@ export function handleCheckError(
   );
 
   if (isAuthenticationError(error)) {
-    // Log authentication errors before throwing so they appear in the debug panel
     store.dispatch(
       addApiLog({
         id: `auth-error-${Date.now()}`,
@@ -33,28 +33,17 @@ export function handleCheckError(
         provider: error.provider === "google" ? "google" : "microsoft",
       }),
     );
-    throw error; // Propagate auth errors to be handled by the UI
+    throw error;
   }
 
-  if (error instanceof APIError) {
-    return {
-      completed: false,
-      message: error.message,
-      outputs: {
-        errorCode: error.code,
-        errorMessage: error.message,
-        errorStatus: error.status,
-      },
-    };
-  }
-
-  const message = error instanceof Error ? error.message : defaultMessage;
+  const managed = ErrorManager.handle(error);
   return {
     completed: false,
-    message,
+    message: managed.message,
     outputs: {
-      errorCode: "UNKNOWN_ERROR",
-      errorMessage: message,
+      errorCode: managed.code || "UNKNOWN_ERROR",
+      errorMessage: managed.message,
+      errorCategory: managed.category,
     },
   };
 }
@@ -86,10 +75,18 @@ export async function handleExecutionError(
     };
   }
 
-  const message =
-    error instanceof Error
-      ? error.message
-      : "Something went wrong. Please try again.";
+  const managed = ErrorManager.handle(error, { stepId });
 
-  return { success: false, error: { message, code: "UNKNOWN_ERROR" } };
+  return {
+    success: false,
+    error: {
+      message: managed.message,
+      code: managed.code || "UNKNOWN_ERROR",
+    },
+    outputs: {
+      errorCode: managed.code || "UNKNOWN_ERROR",
+      errorProvider: managed.provider,
+      errorCategory: managed.category,
+    },
+  };
 }
