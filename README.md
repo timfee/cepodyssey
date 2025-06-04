@@ -11,6 +11,37 @@ This Next.js application automates connecting Google Workspace and Microsoft Ent
 
 Automation steps are defined in `lib/steps.ts` and executed through server actions in `app/actions`.
 
+## Workflow Overview
+
+This project automates the provisioning and single sign-on setup between
+Google Workspace (or Cloud Identity) and Microsoft Entra ID. It follows the
+[Google federation guide](https://cloud.google.com/architecture/identity/federating-gcp-with-azure-active-directory)
+and replicates the manual workflow in discrete steps:
+
+1. **Prepare Cloud Identity**
+   - Create an `Automation` organizational unit and a user named
+     `azuread-provisioning`.
+   - Grant that user either super-admin privileges or a delegated admin role
+     with `Users`, `Groups`, and `Organization Units` permissions.
+   - Register and verify all domains used for user and group email addresses.
+2. **Configure Microsoft Entra ID provisioning**
+   - Add the *Google Cloud/G Suite Connector by Microsoft* gallery app as
+     `Google Cloud (Provisioning)`.
+   - Authorize the app using the `azuread-provisioning` account and adjust the
+     attribute mappings for users and groups.
+   - Optionally assign specific users or groups and then enable automatic
+     provisioning.
+3. **Set up single sign-on**
+   - Create a SAML profile in the Admin Console named `Entra ID`.
+   - Add a second enterprise application called `Google Cloud` and configure its
+     SAML settings using the Entity ID and ACS URL from the profile.
+   - Upload the Microsoft Entra ID signing certificate and assign the profile to
+     the appropriate organizational units.
+
+After these steps, Entra ID users can sign in to Google Cloud resources and are
+provisioned automatically. The Directory Setup Assistant breaks this workflow
+into idempotent steps so the process can be run multiple times.
+
 ## Development
 
 1. Install dependencies with `pnpm install`.
