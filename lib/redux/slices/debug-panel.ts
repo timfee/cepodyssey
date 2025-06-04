@@ -14,6 +14,15 @@ export interface ApiLogEntry {
   provider?: "google" | "microsoft" | "other";
 }
 
+export interface AppErrorLogEntry {
+  id: string;
+  timestamp: string;
+  category: string;
+  message: string;
+  error?: string;
+  stackTrace?: string;
+}
+
 export interface DebugPanelState {
   isOpen: boolean;
   logs: ApiLogEntry[];
@@ -62,6 +71,20 @@ export const debugPanelSlice = createSlice({
         Object.assign(log, action.payload.updates);
       }
     },
+    addAppError(state, action: PayloadAction<Omit<AppErrorLogEntry, "id">>) {
+      const entry: ApiLogEntry = {
+        id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: action.payload.timestamp,
+        method: "ERROR",
+        url: action.payload.category,
+        error: action.payload.message,
+        provider: "other",
+      };
+      state.logs.unshift(entry);
+      if (state.logs.length > state.maxLogs) {
+        state.logs.pop();
+      }
+    },
   },
 });
 
@@ -70,6 +93,7 @@ export const {
   openDebugPanel,
   closeDebugPanel,
   addApiLog,
+  addAppError,
   clearLogs,
   setFilter,
   updateApiLog,

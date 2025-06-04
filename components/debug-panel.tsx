@@ -5,6 +5,7 @@ import {
   selectDebugPanel,
   selectFilteredLogs,
   toggleDebugPanel,
+  openDebugPanel,
   clearLogs,
   setFilter,
   type DebugPanelState,
@@ -22,7 +23,7 @@ import {
   AlertCircleIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,12 +38,9 @@ export function DebugPanel() {
   const logs = useAppSelector(selectFilteredLogs);
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
-  if (
+  const debugDisabled =
     process.env.NODE_ENV !== "development" &&
-    !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-  ) {
-    return null;
-  }
+    !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
 
   const toggleLogExpansion = (id: string) => {
     setExpandedLogs((prev) => {
@@ -71,6 +69,18 @@ export function DebugPanel() {
   const errorCount = logs.filter(
     (log) => log.error || (log.responseStatus && log.responseStatus >= 400),
   ).length;
+
+  // Auto-open panel when there are errors
+  useEffect(() => {
+    if (debugDisabled) return;
+    if (errorCount > 0 && !isOpen) {
+      dispatch(openDebugPanel());
+    }
+  }, [errorCount, isOpen, dispatch, debugDisabled]);
+
+  if (debugDisabled) {
+    return null;
+  }
 
   if (!isOpen) {
     return (

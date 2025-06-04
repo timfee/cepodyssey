@@ -235,19 +235,19 @@ export function AutomationDashboard({
             showError({
               error: {
                 title: "Authentication Required",
-                message: `Your ${err.provider === "google" ? "Google Workspace" : "Microsoft"} session has expired.`,
+                message: err.message,
                 code: "AUTH_EXPIRED",
                 provider: err.provider,
                 actions: [
                   {
                     label: "Sign In",
                     onClick: () => router.push("/login"),
-                    variant: "default",
+                    variant: "default" as const,
                     icon: <LogInIcon className="mr-2 h-4 w-4" />,
                   },
                 ],
               },
-              dismissible: true,
+              dismissible: false,
             }),
           );
 
@@ -372,12 +372,12 @@ export function AutomationDashboard({
                   {
                     label: "Sign In",
                     onClick: () => router.push("/login"),
-                    variant: "default",
+                    variant: "default" as const,
                     icon: <LogInIcon className="mr-2 h-4 w-4" />,
                   },
                 ],
               },
-              dismissible: true,
+              dismissible: false,
             }),
           );
           dispatch(

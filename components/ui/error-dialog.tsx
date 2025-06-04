@@ -84,9 +84,9 @@ export function ErrorDialog({
           <p>{error.message}</p>
           <div className="flex gap-2 justify-end">
             {hasActions ? (
-              error.actions!.map((action) => (
+              error.actions!.map((action, index) => (
                 <Button
-                  key={action.label}
+                  key={`${action.label}-${index}`}
                   onClick={() => {
                     action.onClick();
                     onOpenChange(false);

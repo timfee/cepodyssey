@@ -475,7 +475,7 @@ export async function getSamlMetadata(
 ): Promise<SamlMetadata> {
   try {
     const url = microsoftAuthUrls.samlMetadata(tenantId, appId);
-    const res = await fetch(url);
+    const res = await fetchWithAuth(url, "");
     if (!res.ok) {
       throw new APIError(
         `Failed to fetch SAML metadata: ${res.statusText}`,
