@@ -7,8 +7,7 @@ import { executeConfigureAttributeMappings } from "./execute";
 export const m4ConfigureAttributeMappings: StepDefinition = {
   id: "M-4",
   title: "Configure Attribute Mappings (Provisioning)",
-  description:
-    "Define attribute mappings for user sync from Azure AD to Google Workspace in the provisioning app (e.g., UPN to primaryEmail). This tool applies a common default set.",
+  description: "Set up how user data syncs between systems",
   category: "Microsoft",
   automatable: true,
   requires: ["M-3"],

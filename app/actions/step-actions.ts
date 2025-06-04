@@ -24,7 +24,7 @@ export async function executeStepCheck(
         },
       };
     }
-    return { completed: false, message: "An unknown error occurred" };
+    return { completed: false, message: "Something went wrong. Please try again." };
   }
 }
 

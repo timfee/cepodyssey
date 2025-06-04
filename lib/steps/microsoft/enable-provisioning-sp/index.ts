@@ -7,8 +7,7 @@ import { executeEnableProvisioningSp } from "./execute";
 export const m2EnableProvisioningSp: StepDefinition = {
   id: "M-2",
   title: "Enable Provisioning App Service Principal",
-  description:
-    "Ensures the Service Principal associated with the Azure AD provisioning application is enabled, allowing it to operate.",
+  description: "Enable the sync app",
   category: "Microsoft",
   automatable: true,
   requires: ["M-1"],

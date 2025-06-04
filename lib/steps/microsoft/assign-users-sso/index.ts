@@ -7,8 +7,7 @@ import { executeAssignUsers } from "./execute";
 export const m9AssignUsersSso: StepDefinition = {
   id: "M-9",
   title: "Assign Users/Groups to Azure AD SSO App",
-  description:
-    "In Azure AD, assign the relevant users or groups to the Google Workspace SAML SSO application to grant them access to sign in via Azure AD. This tool provides a link to the Azure portal page for manual assignment.",
+  description: "Choose who can use single sign-on",
   category: "SSO",
   automatable: true,
   requires: ["M-6"],

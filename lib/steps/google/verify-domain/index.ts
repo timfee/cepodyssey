@@ -6,8 +6,7 @@ import { executeVerifyDomain } from "./execute";
 export const g4VerifyDomain: StepDefinition = {
   id: "G-4",
   title: "Add & Verify Domain for Federation",
-  description:
-    "Ensures the primary domain you intend to federate with Azure AD (as configured in this tool) is added and verified within your Google Workspace account. This is essential for SAML-based Single Sign-On.",
+  description: "Verify your domain is ready for single sign-on",
   category: "Google",
   automatable: true,
   requires: [],

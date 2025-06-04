@@ -115,7 +115,7 @@ export function AutomationDashboard({
         dispatch(initializeSteps(persisted.steps));
         // Merge outputs saved for this domain.
         dispatch(addOutputs(persisted.outputs || {}));
-        toast.info("Loaded saved step progress for this domain.", {
+        toast.info("Previous progress restored", {
           duration: 2000,
         });
       } else {
@@ -157,7 +157,7 @@ export function AutomationDashboard({
   const executeStep = useCallback(
     async (stepId: string) => {
       if (!canRunAutomation) {
-        // toast.error("Please complete configuration and authentication first.");
+        // toast.error("Sign in to both services to start");
         return;
       }
 
@@ -255,7 +255,7 @@ export function AutomationDashboard({
             updateStep({
               id: stepId,
               status: "failed",
-              error: "Authentication expired. Please sign in again.",
+              error: "Your session expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
                 errorProvider: err.provider,
@@ -276,7 +276,7 @@ export function AutomationDashboard({
           dispatch(
             showError({
               error: {
-                title: "Google Cloud API Not Enabled",
+                title: "Enable this Google API",
                 message:
                   "A required API is not enabled for your Google Cloud project.",
                 code: "API_NOT_ENABLED",
@@ -384,7 +384,7 @@ export function AutomationDashboard({
             updateStep({
               id: stepId,
               status: "failed",
-              error: checkResult.message || "Authentication expired",
+              error: checkResult.message || "Your session expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
                 errorProvider: checkResult.outputs.errorProvider,
@@ -424,7 +424,7 @@ export function AutomationDashboard({
             dispatch(
               showError({
                 error: {
-                  title: "Google Cloud API Not Enabled",
+                  title: "Enable this Google API",
                   message: "Enable the required API to continue.",
                   code: "API_NOT_ENABLED",
                   details: { apiUrl: enableUrl },
@@ -486,11 +486,11 @@ export function AutomationDashboard({
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) {
       // toast.error(
-      //   "Complete configuration and authentication to run all steps.",
+      //   "Complete setup to run automation",
       // );
       return;
     }
-    toast.info("Starting automation for pending runnable steps...", {
+    toast.info("Running automation...", {
       duration: 5000,
     });
     let anyStepFailed = false;
@@ -504,8 +504,8 @@ export function AutomationDashboard({
       ) {
         await executeStep(step.id);
         if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
-          // toast.error("Automation stopped: failed step.", {
-          //   description: `Review error for: ${step.title}`,
+          // toast.error("Automation paused", {
+          //   description: `Check the error in ${step.title}`,
           //   duration: 10000,
           // });
           anyStepFailed = true;
@@ -514,7 +514,7 @@ export function AutomationDashboard({
       }
     }
     if (!anyStepFailed) {
-      toast.success("Automation sequence for pending steps complete.", {
+      toast.success("All steps completed", {
         duration: 5000,
       });
     }
@@ -530,9 +530,9 @@ export function AutomationDashboard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Setup Progress</CardTitle>
+          <CardTitle>Progress</CardTitle>
           <CardDescription>
-            {completedSteps} of {totalSteps} steps completed
+            {completedSteps}/{totalSteps} done
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -541,7 +541,7 @@ export function AutomationDashboard({
           {canRunAutomation && completedSteps < totalSteps && (
             <Button onClick={runAllPending} className="w-full" size="lg">
               <PlayIcon className="mr-2 h-5 w-5" />
-              Run All Pending Steps ({totalSteps - completedSteps} remaining)
+              Run all ({totalSteps - completedSteps} remaining)
             </Button>
           )}
         </CardContent>
@@ -587,7 +587,7 @@ export function AutomationDashboard({
             size="lg"
           >
             <LogInIcon className="mr-2 h-5 w-5" />
-            Return to Login
+            Sign in
           </Button>
         </div>
       </div>
@@ -599,10 +599,10 @@ export function AutomationDashboard({
       <main className="container mx-auto max-w-5xl space-y-8 p-4 py-8 md:p-8">
         <header className="border-b pb-6">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            Directory Setup Assistant
+            Google + Microsoft Integration
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Automate Google Workspace & Microsoft Entra ID Integration
+            Connect your directories in minutes
           </p>
         </header>
         <SessionWarning />
@@ -620,14 +620,12 @@ export function AutomationDashboard({
               <ul className="list-disc space-y-1 pl-5 mt-1">
                 {!appConfig.domain && !session?.authFlowDomain && (
                   <li>
-                    Google Workspace domain not identified from session. Please
-                    re-login with Google if needed.
+                    Sign in with Google to detect your domain
                   </li>
                 )}
                 {!appConfig.tenantId && !session?.microsoftTenantId && (
                   <li>
-                    Microsoft Entra ID Tenant ID not identified from session.
-                    Please re-login with Microsoft if needed.
+                    Sign in with Microsoft to detect your Tenant ID
                   </li>
                 )}
                 {(appConfig.domain || session?.authFlowDomain) &&
@@ -641,9 +639,7 @@ export function AutomationDashboard({
                     <li>Connect to Microsoft Entra ID.</li>
                   )}
               </ul>
-              <p className="mt-2">
-                All prerequisites must be met to enable automation steps.
-              </p>
+              <p className="mt-2">Complete all requirements to continue</p>
             </AlertDescription>
           </Alert>
         )}

@@ -7,8 +7,7 @@ import { executeConfigureSamlApp } from "./execute";
 export const m7ConfigureSamlApp: StepDefinition = {
   id: "M-7",
   title: "Configure Azure AD SAML App for Google",
-  description:
-    "In the Azure AD SAML app, configure Basic SAML Settings (Identifier (Entity ID) & Reply URL (ACS URL) from Google - obtained in G-5) and ensure User Attributes & Claims are mapped correctly (e.g., NameID to UPN).",
+  description: "Configure single sign-on settings with Google's details",
   category: "SSO",
   automatable: true,
   requires: ["M-6", "G-5"],

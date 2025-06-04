@@ -19,7 +19,7 @@ export function validateRequiredOutputs(
     return {
       valid: false,
       error: {
-        message: `Missing required outputs: ${missing.join(", ")}.${hint}`,
+        message: `Complete these steps first: ${missing.join(", ")}.${hint}`,
         code: "MISSING_DEPENDENCY",
       },
     };

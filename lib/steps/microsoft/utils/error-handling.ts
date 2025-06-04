@@ -65,7 +65,7 @@ export async function handleExecutionError(
   const message =
     error instanceof Error
       ? error.message
-      : "An unknown error occurred during execution.";
+      : "Something went wrong. Please try again.";
 
   return { success: false, error: { message, code: "UNKNOWN_ERROR" } };
 }

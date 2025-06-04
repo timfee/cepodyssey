@@ -46,7 +46,7 @@ export function AuthErrorBoundary({
           <div className="flex gap-2">
             <Button onClick={() => router.push("/login")} className="flex-1">
               <LogInIcon className="mr-2 h-4 w-4" />
-              Go to Login
+              Sign in
             </Button>
             <Button onClick={reset} variant="outline">
               Retry

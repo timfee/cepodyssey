@@ -7,7 +7,7 @@ export async function getGoogleToken(): Promise<string> {
   const session = await auth();
   if (!session?.googleToken) {
     throw new APIError(
-      "Google authentication required",
+      "Please sign in with Google",
       401,
       "GOOGLE_AUTH_REQUIRED",
     );
@@ -19,7 +19,7 @@ export async function getMicrosoftToken(): Promise<string> {
   const session = await auth();
   if (!session?.microsoftToken) {
     throw new APIError(
-      "Microsoft authentication required",
+      "Please sign in with Microsoft",
       401,
       "MS_AUTH_REQUIRED",
     );

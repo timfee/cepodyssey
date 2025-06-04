@@ -45,7 +45,7 @@ export function useErrorHandler() {
       dispatch(
         showError({
           error: {
-            title: "Google Cloud API Not Enabled",
+            title: "Enable this Google API",
             message: "Enable the required API to continue.",
             code: "API_NOT_ENABLED",
             details: { apiUrl: enableUrl },

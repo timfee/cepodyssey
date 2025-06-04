@@ -61,12 +61,12 @@ function LoginPage() {
       let errorMessage = "Authentication failed. Please try again.";
       if (error === "GoogleAdminRequired")
         errorMessage =
-          "Sign-in failed: Google Super Administrator privileges required.";
+          "You need Google Super Admin access to continue";
       if (error === "MicrosoftAdminRequired")
         errorMessage =
-          "Sign-in failed: Microsoft Global Administrator privileges required.";
+          "You need Microsoft Global Admin access to continue";
       if (error === "SignInInformationMissing")
-        errorMessage = "Sign-in failed: Essential user information missing.";
+        errorMessage = "Something went wrong. Please try signing in again.";
       toast.error(errorMessage, {
         id: `login-error-${error}`,
         duration: 10000,
@@ -107,9 +107,7 @@ function LoginPage() {
 
   const onGoogleSignIn = () => {
     if (!domain) {
-      toast.error(
-        "Primary Google Workspace domain is required for Google Sign-In.",
-      );
+      toast.error("Please enter your domain first");
       return;
     }
     startGoogleLoginTransition(async () => {
@@ -125,7 +123,7 @@ function LoginPage() {
     // Domain is optional for MS login but used as hint when provided
     if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
       toast.info(
-        "Microsoft Tenant ID is not specified. Attempting sign-in with common endpoint.",
+        "No Tenant ID found. Using default Microsoft sign-in.",
         { duration: 7000 },
       );
     }
@@ -153,19 +151,18 @@ function LoginPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            Connect Your Admin Accounts
+            Sign in to get started
           </CardTitle>
           <CardDescription>
-            First, enter your Google Workspace domain (for Google sign-in) and
-            optionally your Microsoft Tenant ID (or use lookup). Then, sign in
-            to both services with administrator privileges.
+            Enter your Google Workspace domain and Microsoft Tenant ID, then
+            sign in as an admin to both services.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4 rounded-md border bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div>
               <Label htmlFor="domain-login" className="text-base font-semibold">
-                1. Primary Google Workspace Domain
+                Google Workspace domain
               </Label>
               <Input
                 id="domain-login"
@@ -182,7 +179,7 @@ function LoginPage() {
                 htmlFor="tenantId-login"
                 className="text-base font-semibold"
               >
-                2. Microsoft Entra ID Tenant ID
+                Microsoft Tenant ID
               </Label>
               <div className="mt-1 flex items-center gap-2">
                 <Input
@@ -216,7 +213,7 @@ function LoginPage() {
                   {isLookingUpTenant ? (
                     <Loader2Icon className="h-4 w-4 animate-spin" />
                   ) : null}{" "}
-                  Lookup
+                  Find
                 </Button>
               </div>
               {lookupMessage && (
@@ -236,7 +233,7 @@ function LoginPage() {
             </div>
           </div>
           <CardTitle className="pt-2 text-center text-xl font-semibold">
-            3. Sign In to Services
+            Sign in to both services
           </CardTitle>
           <div className="space-y-4">
             <Button
