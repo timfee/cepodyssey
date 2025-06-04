@@ -33,6 +33,17 @@ export interface InboundSamlSsoProfile {
   }[];
 }
 
+export interface IdpCredential {
+  name?: string;
+  updateTime?: string;
+  rsaKeyInfo?: {
+    keySize?: number;
+  };
+  dsaKeyInfo?: {
+    keySize?: number;
+  };
+}
+
 const GWS_CUSTOMER_ID = "my_customer";
 
 /** Build the base URL for Directory API calls. */
@@ -494,6 +505,56 @@ export async function assignSamlToOrgUnits(
       },
     );
     return handleApiResponse<object>(res);
+  } catch (error) {
+    handleGoogleError(error);
+  }
+}
+
+/**
+ * Enable provisioning on a SAML profile by adding IdP credentials.
+ * Based on the Cloud Identity API endpoint:
+ * https://cloud.google.com/identity/docs/reference/rest/v1/inboundSamlSsoProfiles.idpCredentials/add
+ */
+export async function addIdpCredentials(
+  token: string,
+  profileFullName: string,
+  pemData?: string,
+): Promise<{ success: boolean } | { alreadyExists: true }> {
+  try {
+    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
+    const body = pemData ? { pemData } : {};
+    const res = await fetchWithAuth(
+      `${cloudIdentityBaseUrl}/${profileFullName}/idpCredentials:add`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    );
+    return handleApiResponse(res);
+  } catch (error) {
+    handleGoogleError(error);
+  }
+}
+
+/**
+ * List IdP credentials for a SAML profile
+ * Based on the documented IdpCredential resource
+ */
+export async function listIdpCredentials(
+  token: string,
+  profileFullName: string,
+): Promise<IdpCredential[]> {
+  try {
+    const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
+    const res = await fetchWithAuth(
+      `${cloudIdentityBaseUrl}/${profileFullName}/idpCredentials`,
+      token,
+    );
+    const data = await handleApiResponse<{ idpCredentials?: IdpCredential[] }>(res);
+    if (typeof data === "object" && data !== null && "alreadyExists" in data)
+      return [];
+    return data.idpCredentials ?? [];
   } catch (error) {
     handleGoogleError(error);
   }

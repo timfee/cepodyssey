@@ -10,71 +10,13 @@ import { OUTPUT_KEYS } from "./types";
 export const allStepDefinitions: StepDefinition[] = [
   // Phase 1: Initial Google Workspace Setup
   {
-    id: "G-1",
-    title: "Create 'Automation' OU (Optional)",
-    description:
-      "Creates an Organizational Unit (OU) named 'Automation' in Google Workspace. This can be useful for applying specific settings or housing accounts related to automated processes, although this tool primarily operates using the logged-in administrator's permissions.",
-    category: "Google",
-    automatable: true,
-    requires: [],
-    adminUrls: {
-      configure: "https://admin.google.com/ac/orgunits",
-      verify: "https://admin.google.com/ac/orgunits",
-    },
-  },
-  {
-    id: "G-2",
-    title: "Create Service Account in Automation OU",
-    description:
-      "Creates a dedicated service account user in the Automation OU for administrative operations. This account can be used for API access and automated tasks.",
-    category: "Google",
-    automatable: true,
-    requires: ["G-1"],
-    adminUrls: {
-      configure: "https://admin.google.com/ac/users",
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]}`
-          : null,
-    },
-  },
-  {
-    id: "G-3",
-    title: "Grant Service Account Admin Privileges",
-    description:
-      "Assigns Super Admin role to the service account, enabling it to perform all administrative operations in Google Workspace.",
-    category: "Google",
-    automatable: true,
-    requires: ["G-2"],
-    adminUrls: {
-      configure: "https://admin.google.com/ac/roles",
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
-          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]}`
-          : null,
-    },
-  },
-  {
-    id: "G-S0",
-    title: "Get Google Secret Token for User Provisioning",
-    description:
-      "Manual: Enable 'Automated user provisioning' in Google Workspace Admin console and copy the generated OAuth Bearer Token (Secret Token). This token is required by Azure AD to provision users into your Google Workspace. Input this token when prompted by this tool.",
-    category: "Google",
-    automatable: false,
-    requires: ["G-3"],
-    adminUrls: {
-      configure: "https://admin.google.com/ac/apps/unified#/settings/scim",
-      verify: "https://admin.google.com/ac/apps/unified#/settings/scim",
-    },
-  },
-  {
     id: "G-4",
     title: "Add & Verify Domain for Federation",
     description:
       "Ensures the primary domain you intend to federate with Azure AD (as configured in this tool) is added and verified within your Google Workspace account. This is essential for SAML-based Single Sign-On.",
     category: "Google",
     automatable: true,
-    requires: ["G-3"],
+    requires: [],
     adminUrls: {
       configure: "https://admin.google.com/ac/domains/manage",
       verify: "https://admin.google.com/ac/domains/manage",
@@ -91,6 +33,24 @@ export const allStepDefinitions: StepDefinition[] = [
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
+    },
+  },
+  {
+    id: "G-S0",
+    title: "Enable Provisioning on SAML Profile",
+    description:
+      "Enables automatic user provisioning on the Azure AD SAML profile created in G-5. This requires copying a token from Google Admin Console.",
+    category: "Google",
+    automatable: false,
+    requires: ["G-5"],
+    adminUrls: {
+      configure: (outputs) => {
+        const profileName = outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+        const profileId = profileName?.split("/").pop();
+        return profileId
+          ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+          : "https://admin.google.com/ac/security/sso";
+      },
     },
   },
 
@@ -313,10 +273,10 @@ export const allStepDefinitions: StepDefinition[] = [
     id: "G-8",
     title: "Exclude Automation OU from SSO (Optional)",
     description:
-      "If an 'Automation' OU exists (from G-1), ensures SAML SSO is explicitly disabled for that OU. This allows any accounts within it (e.g., specific service accounts) to log in directly with Google credentials, bypassing Azure AD SSO.",
+      "If an 'Automation' OU exists (from manual creation), ensures SAML SSO is explicitly disabled for that OU. This allows any accounts within it to log in directly with Google credentials, bypassing Azure AD SSO.",
     category: "SSO",
     automatable: true,
-    requires: ["G-1", "G-7"],
+    requires: ["G-7"],
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",

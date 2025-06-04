@@ -20,7 +20,7 @@ import {
   ExternalLinkIcon,
   InfoIcon,
 } from "lucide-react";
-import { useAppDispatch } from "@/hooks/use-redux";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { addOutput } from "@/lib/redux/slices/app-config";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ export function GoogleTokenModal({
   onComplete,
 }: GoogleTokenModalProps) {
   const dispatch = useAppDispatch();
+  const outputs = useAppSelector((state) => state.appConfig.outputs);
   const [token, setToken] = useState("");
   const [isValidating, setIsValidating] = useState(false);
 
@@ -67,13 +68,12 @@ export function GoogleTokenModal({
 
   const steps = [
     { num: 1, text: "Sign in to Google Admin Console" },
-    { num: 2, text: "Navigate to: Apps > Web and mobile apps" },
-    { num: 3, text: "Click 'Add app' > 'Add custom SAML app'" },
-    { num: 4, text: "Enter any name (e.g., 'Azure AD Provisioning')" },
-    { num: 5, text: "Click 'Continue' through the SAML setup screens" },
-    { num: 6, text: "Find 'Automatic user provisioning' section" },
-    { num: 7, text: "Click 'SET UP AUTOMATIC USER PROVISIONING'" },
-    { num: 8, text: "Copy the 'Authorization token' value" },
+    { num: 2, text: "Navigate to: Security > Authentication > SSO with third party IdP" },
+    { num: 3, text: "Find your 'Azure AD SSO' profile" },
+    { num: 4, text: "Click on the profile to open it" },
+    { num: 5, text: "Look for 'Automatic user provisioning' section" },
+    { num: 6, text: "Click 'SET UP AUTOMATIC USER PROVISIONING'" },
+    { num: 7, text: "Copy the 'Authorization token' value" },
   ];
 
   return (
@@ -119,10 +119,17 @@ export function GoogleTokenModal({
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() => window.open("https://admin.google.com/ac/apps/unified", "_blank")}
+                onClick={() => {
+                  const profileName = outputs?.[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+                  const profileId = profileName?.split("/").pop();
+                  const url = profileId
+                    ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+                    : "https://admin.google.com/ac/security/sso";
+                  window.open(url, "_blank");
+                }}
               >
                 <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                Open Google Admin Console - Apps
+                Open Your SAML Profile
               </Button>
               <div className="text-xs text-muted-foreground">
                 The token will look like: <code className="font-mono bg-white dark:bg-gray-800 px-1 py-0.5 rounded">2.MqPt7f3qkV0IFG...</code>

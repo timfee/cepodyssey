@@ -101,211 +101,8 @@ async function getTokens(): Promise<{
   };
 }
 
+
 // Google Execution Actions
-/**
- * G-1: Create the Automation organizational unit if it does not exist.
- */
-export async function executeG1CreateAutomationOu(
-  _context: StepContext
-): Promise<StepExecutionResult> {
-  try {
-    const { googleToken } = await getTokens();
-    const result = await google.createOrgUnit(googleToken, "Automation", "/");
-    if (typeof result === "object" && "alreadyExists" in result) {
-      const existingOu = await google.getOrgUnit(googleToken, "/Automation");
-      if (!existingOu?.orgUnitId || !existingOu?.orgUnitPath) {
-        return {
-          success: false,
-          error: {
-            message:
-              "Google reported the 'Automation' organizational unit already exists, but its details could not be retrieved. Delete any partial OU in the Admin console and rerun step G-1.",
-            code: "OU_FETCH_FAILED",
-          },
-        };
-      }
-      const resourceUrl = existingOu.orgUnitPath
-        ? `https://admin.google.com/ac/orgunits#path=${encodeURIComponent(existingOu.orgUnitPath)}`
-        : "https://admin.google.com/ac/orgunits";
-      return {
-        success: true,
-        message: "Organizational Unit 'Automation' already exists.",
-        resourceUrl,
-        outputs: {
-          [OUTPUT_KEYS.AUTOMATION_OU_ID]: existingOu.orgUnitId,
-          [OUTPUT_KEYS.AUTOMATION_OU_PATH]: existingOu.orgUnitPath,
-        },
-      };
-    }
-    const resourceUrl = result.orgUnitPath
-      ? `https://admin.google.com/ac/orgunits#path=${encodeURIComponent(result.orgUnitPath)}`
-      : "https://admin.google.com/ac/orgunits";
-    return {
-      success: true,
-      message: "Successfully created 'Automation' Organizational Unit.",
-      resourceUrl,
-      outputs: {
-        [OUTPUT_KEYS.AUTOMATION_OU_ID]: result.orgUnitId,
-        [OUTPUT_KEYS.AUTOMATION_OU_PATH]: result.orgUnitPath,
-      },
-    };
-  } catch (e) {
-    return handleExecutionError(e, "G-1");
-  }
-}
-
-export async function executeG2CreateServiceAccount(
-  context: StepContext
-): Promise<StepExecutionResult> {
-  try {
-    const { googleToken } = await getTokens();
-    const validation = validateRequiredOutputs(context.outputs, [
-      OUTPUT_KEYS.AUTOMATION_OU_PATH,
-    ]);
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-1 (Create Automation OU) completed successfully.`,
-          code: "MISSING_DEPENDENCY",
-        },
-      };
-    }
-    const automationOuPath = context.outputs[
-      OUTPUT_KEYS.AUTOMATION_OU_PATH
-    ] as string;
-    const domain = context.domain;
-    const timestamp = Date.now();
-    const serviceAccountEmail = `automation-${timestamp}@${domain}`;
-    const password = generateSecurePassword();
-    const userPayload = {
-      primaryEmail: serviceAccountEmail,
-      name: { givenName: "Automation", familyName: "Service Account" },
-      password,
-      orgUnitPath: automationOuPath,
-      changePasswordAtNextLogin: false,
-    } as Partial<google.DirectoryUser>;
-
-    const result = await google.createUser(googleToken, userPayload);
-
-    if (typeof result === "object" && "alreadyExists" in result) {
-      const users = await google.listUsers(googleToken, {
-        query: `orgUnitPath='${automationOuPath}' email:automation-*`,
-      });
-      const existingServiceAccount = users.find(
-        (u) =>
-          u.primaryEmail?.startsWith("automation-") &&
-          u.orgUnitPath === automationOuPath
-      );
-      if (existingServiceAccount) {
-        return {
-          success: true,
-          message: `Service account '${existingServiceAccount.primaryEmail}' already exists in Automation OU.`,
-          outputs: {
-            [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]:
-              existingServiceAccount.primaryEmail,
-            [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: existingServiceAccount.id,
-          },
-          resourceUrl: `https://admin.google.com/ac/users/${existingServiceAccount.primaryEmail}`,
-        };
-      }
-      return {
-        success: false,
-        error: {
-          message:
-            "Service account creation reported as duplicate but could not find existing account.",
-        },
-      };
-    }
-
-    return {
-      success: true,
-      message: `Service account '${result.primaryEmail}' created successfully. Password stored securely in outputs.`,
-      outputs: {
-        [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: result.primaryEmail,
-        [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: result.id,
-        [OUTPUT_KEYS.SERVICE_ACCOUNT_PASSWORD]: password,
-      },
-      resourceUrl: `https://admin.google.com/ac/users/${result.primaryEmail}`,
-    };
-  } catch (e) {
-    if (isAuthenticationError(e)) {
-      return {
-        success: false,
-        error: {
-          message: e.message,
-          code: "AUTH_EXPIRED",
-        },
-      };
-    }
-    return handleExecutionError(e, "G-2");
-  }
-}
-
-export async function executeG3GrantAdminPrivileges(
-  context: StepContext
-): Promise<StepExecutionResult> {
-  try {
-    const { googleToken } = await getTokens();
-    const validation = validateRequiredOutputs(context.outputs, [
-      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
-    ]);
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-2 (Create Service Account) completed successfully.`,
-          code: "MISSING_DEPENDENCY",
-        },
-      };
-    }
-    const serviceAccountEmail = context.outputs[
-      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL
-    ] as string;
-    const roles = await google.listAdminRoles(googleToken);
-    const superAdminRole = roles.find(
-      (r) => r.roleName === "_SEED_ADMIN_ROLE" || r.roleId === "3"
-    );
-    if (!superAdminRole?.roleId) {
-      return {
-        success: false,
-        error: {
-          message: "Could not find Super Admin role in Google Workspace.",
-        },
-      };
-    }
-    const result = await google.assignAdminRole(
-      googleToken,
-      serviceAccountEmail,
-      superAdminRole.roleId
-    );
-    if (typeof result === "object" && "alreadyExists" in result) {
-      return {
-        success: true,
-        message: `Service account '${serviceAccountEmail}' already has admin privileges.`,
-        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: superAdminRole.roleId },
-        resourceUrl: "https://admin.google.com/ac/roles/admins",
-      };
-    }
-    return {
-      success: true,
-      message: `Super Admin role assigned to service account '${serviceAccountEmail}'.`,
-      outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: superAdminRole.roleId },
-      resourceUrl: "https://admin.google.com/ac/roles/admins",
-    };
-  } catch (e) {
-    return handleExecutionError(e, "G-3");
-  }
-}
-
-function generateSecurePassword(): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-  let password = "";
-  for (let i = 0; i < 20; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
 
 /**
  * G-4: Add the primary domain to Google Workspace and notify for verification.
@@ -424,6 +221,48 @@ export async function executeG5InitiateGoogleSamlProfile(
 }
 
 /**
+ * G-S0: Enable provisioning on the existing SAML profile and guide token retrieval
+ */
+export async function executeGS0EnableProvisioning(
+  context: StepContext
+): Promise<StepExecutionResult> {
+  try {
+    const profileFullName = context.outputs[
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+    ] as string;
+
+    if (!profileFullName) {
+      return {
+        success: false,
+        error: {
+          message:
+            "SAML profile not found. Complete G-5 (Initiate Google SAML Profile) first.",
+          code: "MISSING_DEPENDENCY",
+        },
+      };
+    }
+
+    const profileId = profileFullName.split("/").pop();
+
+    return {
+      success: true,
+      message:
+        "To enable provisioning on your existing SAML profile:\n\n" +
+        "1. Click below to open your 'Azure AD SSO' profile\n" +
+        "2. Click 'SET UP AUTOMATIC USER PROVISIONING'\n" +
+        "3. Copy the 'Authorization token'\n" +
+        "4. Return here and click 'Enter Token'\n\n" +
+        "This uses the same SAML profile from step G-5 - no temporary app needed!",
+      resourceUrl: profileId
+        ? `https://admin.google.com/ac/security/sso/inboundsamlssoprofiles/${profileId}`
+        : "https://admin.google.com/ac/security/sso",
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-S0");
+  }
+}
+
+/**
  * G-6: Update the Google SAML profile with Azure IdP metadata.
  */
 export async function executeG6UpdateGoogleSamlWithAzureIdp(
@@ -536,22 +375,24 @@ export async function executeG8ExcludeAutomationOuFromSso(
     const profileFullName = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
-    const automationOuId = context.outputs[
-      OUTPUT_KEYS.AUTOMATION_OU_ID
-    ] as string;
 
-    if (!automationOuId)
+    // Check if an Automation OU exists (it might have been created manually)
+    const automationOu = await google.getOrgUnit(googleToken, "/Automation");
+
+    if (!automationOu?.orgUnitId) {
       return {
         success: true,
-        message: "Automation OU ID missing; skipping SSO disable for it.",
+        message:
+          "No Automation OU found. This step is optional and only needed if you have a dedicated OU for service accounts.",
       };
+    }
 
     await google.assignSamlToOrgUnits(googleToken, profileFullName, [
-      { orgUnitId: automationOuId, ssoMode: "SSO_OFF" },
+      { orgUnitId: automationOu.orgUnitId, ssoMode: "SSO_OFF" },
     ]);
     return {
       success: true,
-      message: "SAML explicitly disabled for the 'Automation' OU.",
+      message: `SAML explicitly disabled for the 'Automation' OU (${automationOu.orgUnitPath}).`,
       resourceUrl: "https://admin.google.com/ac/sso",
     };
   } catch (e) {

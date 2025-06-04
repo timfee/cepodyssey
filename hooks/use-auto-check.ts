@@ -69,7 +69,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
         // 1. Are automatable
         // 2. Have check functions
         // 3. Are not already completed (unless they failed with non-auth error)
-        const autoCheckSteps = ["G-1", "G-4", "G-5", "M-1", "M-6"];
+        const autoCheckSteps = ["G-4", "G-5", "M-1", "M-6"];
 
         for (const stepId of autoCheckSteps) {
           const status = stepsStatus[stepId];
