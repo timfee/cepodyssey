@@ -20,7 +20,7 @@ export function useAutoCheck(
     hasChecked.current = true;
     Logger.info("[Hook]", "Running auto-checks for steps");
 
-    const autoCheckSteps = ["G-4", "G-5", "M-1", "M-6"];
+    const autoCheckSteps = ["G-1", "G-4", "G-5", "M-1", "M-6"];
 
     for (const stepId of autoCheckSteps) {
       const status = stepsStatus[stepId];
