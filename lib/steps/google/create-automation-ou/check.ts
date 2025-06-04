@@ -7,6 +7,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../utils/error-handling";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**
  * Confirm the 'Automation' Organizational Unit exists in Google Workspace.
@@ -26,6 +27,13 @@ export async function checkAutomationOu(
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
           resourceUrl: portalUrls.google.orgUnits.details(orgUnit.orgUnitPath),
+          producedOutputs: getStepOutputs("G-1").map((o) => ({
+            ...o,
+            value:
+              o.key === OUTPUT_KEYS.AUTOMATION_OU_ID
+                ? orgUnit.orgUnitId
+                : orgUnit.orgUnitPath,
+          })),
         },
       };
     }
@@ -33,12 +41,20 @@ export async function checkAutomationOu(
     return {
       completed: false,
       message: `Organizational Unit '/Automation' not found.`,
+      outputs: {
+        inputs: getStepInputs("G-1"),
+        expectedOutputs: getStepOutputs("G-1"),
+      },
     };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
       return {
         completed: false,
         message: `Organizational Unit '/Automation' not found.`,
+        outputs: {
+          inputs: getStepInputs("G-1"),
+          expectedOutputs: getStepOutputs("G-1"),
+        },
       };
     }
     return handleCheckError(e, `Couldn't verify for OU '/Automation'.`);

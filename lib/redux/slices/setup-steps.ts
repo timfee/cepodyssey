@@ -3,10 +3,12 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface SetupStepsState {
   steps: Record<string, StepStatusInfo>;
+  userCompletions: Record<string, boolean>;
 }
 
 const initialState: SetupStepsState = {
   steps: {},
+  userCompletions: {},
 };
 
 export const setupStepsSlice = createSlice({
@@ -26,9 +28,30 @@ export const setupStepsSlice = createSlice({
       const existingStep = state.steps[id] ?? { status: "pending" };
       state.steps[id] = { ...existingStep, ...statusInfo };
     },
+    markStepComplete(state, action: PayloadAction<{ id: string; isUserMarked: boolean }>) {
+      const { id, isUserMarked } = action.payload;
+      state.steps[id] = {
+        ...state.steps[id],
+        status: "completed",
+        completionType: isUserMarked ? "user-marked" : "server-verified",
+      };
+      if (isUserMarked) {
+        state.userCompletions[id] = true;
+      }
+    },
+    markStepIncomplete(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      state.steps[id] = {
+        ...state.steps[id],
+        status: "pending",
+        completionType: undefined,
+      };
+      state.userCompletions[id] = false;
+    },
   },
 });
 
-export const { initializeSteps, updateStep } = setupStepsSlice.actions;
+export const { initializeSteps, updateStep, markStepComplete, markStepIncomplete } =
+  setupStepsSlice.actions;
 
 export default setupStepsSlice.reducer;

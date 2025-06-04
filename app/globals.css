@@ -131,4 +131,22 @@
   .dark .border {
     @apply border-gray-800;
   }
+  /* Success state colors */
+  .text-success {
+    @apply text-green-600 dark:text-green-500;
+  }
+  /* Warning state colors */
+  .bg-warning {
+    @apply bg-amber-50 dark:bg-amber-950;
+  }
+  .text-warning-foreground {
+    @apply text-amber-800 dark:text-amber-200;
+  }
+  /* Google-style card shadows */
+  .shadow-google-card {
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  }
+  .shadow-google-card-hover {
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15);
+  }
 }

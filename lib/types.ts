@@ -2,13 +2,15 @@
  * Defines the dynamic status and metadata of a step, typically stored in Redux.
  */
 export interface StepStatusInfo {
-  status: "pending" | "in_progress" | "completed" | "failed";
+  status: "pending" | "in_progress" | "completed" | "failed" | "blocked";
+  completionType?: "server-verified" | "user-marked";
   error?: string | null;
   message?: string;
   metadata?: {
     completedAt?: string;
     preExisting?: boolean;
     resourceUrl?: string;
+    errorDetails?: unknown;
     [key: string]: unknown;
   };
 }
@@ -45,6 +47,23 @@ export interface StepExecutionResult {
   };
 }
 
+export interface StepInput {
+  type: "keyValue" | "stepCompletion";
+  data: {
+    key?: string;
+    value?: unknown;
+    description?: string;
+    stepId?: string; // For stepCompletion type
+  };
+  stepTitle?: string; // Human readable title of the required step
+}
+
+export interface StepOutput {
+  key: string;
+  value?: unknown;
+  description?: string;
+}
+
 /**
  * Provides context (current config and outputs from previous steps)
  * from the frontend to the check/execute lambdas in lib/steps/,
@@ -54,32 +73,46 @@ export interface StepContext {
   domain: string;
   tenantId: string;
   outputs: Record<string, unknown>;
+  inputs?: StepInput[];
+  producedOutputs?: StepOutput[];
 }
 
 /**
  * Defines the static properties of a single automation step.
  */
 export interface StepDefinition {
+  // Core identification
   id: string;
   title: string;
-  description: string;
+  description: string; // One sentence, human readable
+  details: string; // 2-3 short sentences, technical details
+
+  // Categorization
   category: "Google" | "Microsoft" | "SSO";
-  automatable: boolean;
+  activity: "Provisioning" | "SSO" | "Foundation";
+  provider: "Google" | "Microsoft";
+
+  // Execution characteristics
+  automatability: "automated" | "supervised" | "manual";
+  automatable: boolean; // Keep for backward compatibility, derive from automatability
+
+  // Dependencies and flow
   requires?: string[];
-  /**
-   * Optional deep links to relevant admin console locations. These may be
-   * provided as static strings or as functions that derive URLs from any
-   * previously captured step outputs.
-   */
-  adminUrls?: {
-    configure?:
-      | string
-      | ((outputs: Record<string, unknown>) => string | null | undefined);
-    verify?:
-      | string
-      | ((outputs: Record<string, unknown>) => string | null | undefined);
+  nextStep?: {
+    id: string;
+    description: string;
   };
-  // Optional server functions for verification and execution
+
+  // Technical implementation
+  actions?: string[]; // API calls that will be performed
+
+  // Resource links
+  adminUrls?: {
+    configure?: string | ((outputs: Record<string, unknown>) => string | null | undefined);
+    verify?: string | ((outputs: Record<string, unknown>) => string | null | undefined);
+  };
+
+  // Server functions
   check?: (context: StepContext) => Promise<StepCheckResult>;
   execute?: (context: StepContext) => Promise<StepExecutionResult>;
 }
