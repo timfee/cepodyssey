@@ -19,6 +19,7 @@ export async function handleGoogleLogin(formData: FormData): Promise<void> {
     signInOptions,
     {
       hd: domain ?? "",
+      scope: process.env.GOOGLE_ADMIN_SCOPES,
       access_type: "offline",
       prompt: "consent",
     },
@@ -47,6 +48,7 @@ export async function handleMicrosoftLogin(formData: FormData): Promise<void> {
     "microsoft-entra-id",
     signInOptions,
     {
+      scope: process.env.MICROSOFT_GRAPH_SCOPES,
       prompt: "consent",
     },
   );
