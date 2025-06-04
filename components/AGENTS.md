@@ -8,19 +8,82 @@ All components follow React 18 patterns with clear separation of concerns and st
 
 ### shadcn/ui Components (`ui/`)
 
-- Pre-built components following Radix UI patterns
-- Styled with Tailwind CSS utility classes
-- Use existing variants: `variant="default" | "outline" | "destructive"`
-- Import pattern: `import { Button } from "@/components/ui/button"`
+Required components for the enhanced UI:
+- Core: `button`, `card`, `badge`, `alert`, `dialog`, `input`, `label`
+- Data Display: `table`, `separator`, `collapsible`
+- Feedback: `toast` (via sonner), `tooltip`
+- Form: `form` (react-hook-form integration)
 
 ### Feature Components
 
 - `dashboard.tsx`: Main orchestration component
-- `progress.tsx`: Step visualization and progress tracking
-- `step.tsx` & `collapsible-step.tsx`: Individual step rendering
+- `enhanced-step-card.tsx`: Comprehensive step display with inputs/outputs
+- `progress.tsx`: Step list visualization using enhanced cards
 - `auth.tsx`: Authentication status and controls
 - `form.tsx`: Configuration display (read-only)
-- `google-token-modal.tsx`: Legacy modal for entering a Google provisioning token. With the new OAuth-based M-3 step this component is largely obsolete and may be removed.
+- `session-warning.tsx`: Token expiration warnings
+
+## Step Card Pattern
+
+The `StepCard` component follows these principles:
+
+```typescript
+interface StepCardProps {
+  step: ManagedStep;
+  outputs: Record<string, unknown>;
+  onExecute: (stepId: string) => void;
+  canRunGlobal: boolean;
+}
+```
+
+### Display Hierarchy
+
+1. **Header**: Status icon, title, description, badges (Manual/Automated, Step ID)
+2. **Actions**: Execute/Retry button, Mark Complete (manual steps), Resource links
+3. **Collapsible Details**:
+   - Required Inputs table with availability status
+   - Produced Outputs table with generated values
+   - Error details with resolution guidance
+
+### Status Visual Design
+
+```typescript
+const statusDisplay = {
+  completed: {
+    borderColor: "border-green-200 dark:border-green-800",
+    bgColor: "bg-green-50 dark:bg-green-950/30",
+  },
+  in_progress: {
+    borderColor: "border-blue-200 dark:border-blue-800",
+    bgColor: "bg-blue-50 dark:bg-blue-950/30",
+  },
+  failed: {
+    borderColor: "border-red-200 dark:border-red-800",
+    bgColor: "bg-red-50 dark:bg-red-950/30",
+  },
+  pending: {
+    borderColor: "border-gray-200 dark:border-gray-800",
+    bgColor: "bg-gray-50 dark:bg-gray-950/30",
+  },
+};
+```
+
+## URL Handling in Components
+
+Components should never construct URLs directly. Instead:
+
+```typescript
+import { portalUrls } from "@/lib/api/url-builder";
+import { OUTPUT_KEYS } from "@/lib/types";
+
+// Good: Using centralized URL builder
+const profileUrl = portalUrls.google.sso.samlProfile(
+  outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string
+);
+
+// Bad: Hardcoding URLs
+const profileUrl = `https://admin.google.com/ac/security/sso/${profileId}`;
+```
 
 ## React 18 Patterns
 

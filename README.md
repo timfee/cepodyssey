@@ -55,21 +55,35 @@ into idempotent steps so the process can be run multiple times.
 
 `.env.local` should define the following keys:
 
-```
-AUTH_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_ADMIN_SCOPES=
+```env
+# Authentication
+AUTH_SECRET=<generate-with-openssl-rand-base64-32>
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=<your-client-id>
+GOOGLE_CLIENT_SECRET=<your-client-secret>
+GOOGLE_ADMIN_SCOPES="openid email profile https://www.googleapis.com/auth/admin.directory.user https://www.googleapis.com/auth/admin.directory.orgunit https://www.googleapis.com/auth/admin.directory.domain https://www.googleapis.com/auth/admin.directory.rolemanagement https://www.googleapis.com/auth/cloud-identity.inboundsso"
+
+# Google API Endpoints
 GOOGLE_API_BASE=https://admin.googleapis.com
 GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
-MICROSOFT_GRAPH_SCOPES=
-MICROSOFT_TENANT_ID=
-NEXT_PUBLIC_MICROSOFT_TENANT_ID=
+GOOGLE_OAUTH_BASE=https://oauth2.googleapis.com
+GOOGLE_ADMIN_CONSOLE_BASE=https://admin.google.com
+
+# Microsoft OAuth Configuration
+MICROSOFT_CLIENT_ID=<your-client-id>
+MICROSOFT_CLIENT_SECRET=<your-client-secret>
+MICROSOFT_TENANT_ID=<your-tenant-id>
+NEXT_PUBLIC_MICROSOFT_TENANT_ID=<your-tenant-id>
+MICROSOFT_GRAPH_SCOPES="openid profile email offline_access User.Read Directory.Read.All Application.ReadWrite.All AppRoleAssignment.ReadWrite.All Synchronization.ReadWrite.All"
+
+# Microsoft API Endpoints
 GRAPH_API_BASE=https://graph.microsoft.com/v1.0
-`NEXT_PUBLIC_MICROSOFT_TENANT_ID` can be set to pre-fill the tenant field on the login page.
+MICROSOFT_LOGIN_BASE=https://login.microsoftonline.com
+AZURE_PORTAL_BASE=https://portal.azure.com
 ```
+
+Note: `NEXT_PUBLIC_MICROSOFT_TENANT_ID` can be set to pre-fill the tenant field on the login page.
 
 ### Google OAuth Setup
 
@@ -126,6 +140,33 @@ To find your project ID:
 - **"Request had insufficient authentication scopes"**: Re-authenticate after updating scopes in your environment
 - **403 Forbidden errors**: Ensure the signed-in admin or the `azuread-provisioning` service user has sufficient rights
 - **Problems creating the Automation OU or user**: Verify the Google account has privileges to manage organizational units and users
+
+### URL Configuration
+
+This application uses a centralized URL builder system (`lib/api/url-builder.ts`) that:
+- Handles all URL encoding automatically
+- Uses environment variables for base URLs
+- Provides type-safe URL construction
+- Supports different environments (dev/staging/prod)
+
+All external URLs are constructed through this system, ensuring consistency and proper encoding across the application.
+
+### Enhanced UI Features
+
+The dashboard now features enhanced step cards that display:
+- **Input Requirements**: Shows which outputs from other steps are required
+- **Output Generation**: Displays what data this step will produce
+- **Real-time Status**: Visual indicators for pending, in-progress, completed, and failed states
+- **Direct Resource Links**: Quick access to created resources in admin consoles
+- **Detailed Error Information**: Expandable sections showing error details and resolution steps
+
+### Authentication Error Handling
+
+The application includes robust authentication error handling:
+- Automatic detection of expired tokens
+- Clear user notifications with action buttons
+- Graceful fallback for API errors
+- Session persistence across token refreshes
 
 ## Testing
 
