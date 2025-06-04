@@ -1,6 +1,7 @@
 import type * as MicrosoftGraph from "microsoft-graph";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
 import { wrapAuthError } from "./auth-interceptor";
+import { microsoftGraphUrls, microsoftAuthUrls } from "./url-builder";
 
 /**
  * Azure Portal URL Reference:
@@ -16,7 +17,6 @@ import { wrapAuthError } from "./auth-interceptor";
  * Note: Microsoft uses inconsistent parameter names (servicePrincipalId vs objectId) across blades.
  */
 
-const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
 
 function handleMicrosoftError(error: unknown): never {
   if (error instanceof APIError && error.status === 401) {
@@ -42,10 +42,7 @@ export async function listApplications(
   filter?: string,
 ): Promise<Application[]> {
   try {
-    let url = `${GRAPH_BASE_URL}/applications`;
-    if (filter) {
-      url += `?$filter=${encodeURIComponent(filter)}`;
-    }
+    const url = microsoftGraphUrls.applications.list(filter);
     const res = await fetchWithAuth(url, token);
     const result = await handleApiResponse<{ value: Application[] }>(res);
     if (
@@ -71,7 +68,7 @@ export async function getServicePrincipalByAppId(
 ): Promise<ServicePrincipal | null> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals?$filter=appId eq '${appId}'&$select=id,appId,displayName,accountEnabled,appOwnerOrganizationId`,
+      microsoftGraphUrls.servicePrincipals.list(`appId eq '${appId}'`),
       token,
     );
     if (res.status === 404) return null;
@@ -98,7 +95,7 @@ export async function getServicePrincipalDetails(
 ): Promise<ServicePrincipal | null> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${spObjectId}?$select=id,appId,displayName,accountEnabled`,
+      microsoftGraphUrls.servicePrincipals.get(spObjectId),
       token,
     );
     if (res.status === 404) return null;
@@ -123,7 +120,7 @@ export async function getApplicationDetails(
 ): Promise<Application | null> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/applications/${applicationObjectId}?$select=id,appId,displayName,identifierUris,web`,
+      microsoftGraphUrls.applications.get(applicationObjectId),
       token,
     );
     if (res.status === 404) return null;
@@ -152,7 +149,7 @@ export async function createEnterpriseApp(
 > {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/applicationTemplates/${templateId}/instantiate`,
+      microsoftGraphUrls.applicationTemplates.instantiate(templateId),
       token,
       {
         method: "POST",
@@ -177,7 +174,7 @@ export async function patchServicePrincipal(
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}`,
+      microsoftGraphUrls.servicePrincipals.update(servicePrincipalId),
       token,
       {
         method: "PATCH",
@@ -201,7 +198,7 @@ export async function updateApplication(
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/applications/${applicationObjectId}`,
+      microsoftGraphUrls.applications.update(applicationObjectId),
       token,
       {
         method: "PATCH",
@@ -225,7 +222,9 @@ export async function createProvisioningJob(
 ): Promise<SynchronizationJob | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.create(
+        servicePrincipalId,
+      ),
       token,
       {
         method: "POST",
@@ -248,7 +247,9 @@ export async function listSynchronizationJobs(
 ): Promise<SynchronizationJob[]> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.list(
+        servicePrincipalId,
+      ),
       token,
     );
     const result = await handleApiResponse<{ value: SynchronizationJob[] }>(res);
@@ -276,7 +277,10 @@ export async function getProvisioningJob(
 ): Promise<SynchronizationJob | null> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.get(
+        servicePrincipalId,
+        jobId,
+      ),
       token,
     );
     if (res.status === 404) return null;
@@ -302,7 +306,10 @@ export async function getSynchronizationSchema(
 ): Promise<SynchronizationSchema | null> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.schema(
+        servicePrincipalId,
+        jobId,
+      ),
       token,
     );
     if (res.status === 404) return null;
@@ -328,7 +335,9 @@ export async function updateProvisioningCredentials(
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/secrets`,
+      microsoftGraphUrls.servicePrincipals.synchronization.secrets(
+        servicePrincipalId,
+      ),
       token,
       {
         method: "PUT",
@@ -353,7 +362,10 @@ export async function startProvisioningJob(
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/start`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.start(
+        servicePrincipalId,
+        jobId,
+      ),
       token,
       { method: "POST" },
     );
@@ -377,7 +389,10 @@ export async function configureAttributeMappings(
 ): Promise<SynchronizationSchema | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs/${jobId}/schema`,
+      microsoftGraphUrls.servicePrincipals.synchronization.jobs.schema(
+        servicePrincipalId,
+        jobId,
+      ),
       token,
       {
         method: "PUT",
@@ -402,7 +417,9 @@ export async function assignUsersToApp(
 ): Promise<AppRoleAssignment | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/appRoleAssignedTo`,
+      microsoftGraphUrls.servicePrincipals.appRoleAssignments.create(
+        servicePrincipalId,
+      ),
       token,
       {
         method: "POST",
@@ -428,7 +445,9 @@ export async function listAppRoleAssignments(
 ): Promise<AppRoleAssignment[]> {
   try {
     const res = await fetchWithAuth(
-      `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalObjectId}/appRoleAssignedTo`,
+      microsoftGraphUrls.servicePrincipals.appRoleAssignments.list(
+        servicePrincipalObjectId,
+      ),
       token,
     );
     const result = await handleApiResponse<{ value: AppRoleAssignment[] }>(res);
@@ -454,7 +473,7 @@ export async function getSamlMetadata(
   appId: string,
 ): Promise<SamlMetadata> {
   try {
-    const url = `https://login.microsoftonline.com/${tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid=${appId}`;
+    const url = microsoftAuthUrls.samlMetadata(tenantId, appId);
     const res = await fetch(url);
     if (!res.ok) {
       throw new APIError(

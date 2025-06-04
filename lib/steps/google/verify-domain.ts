@@ -1,4 +1,5 @@
 import type { StepDefinition } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 
 /**
  * Step definition for verifying the primary domain used for federation.
@@ -12,7 +13,7 @@ export const g4VerifyDomain: StepDefinition = {
   automatable: true,
   requires: [],
   adminUrls: {
-    configure: "https://admin.google.com/ac/domains/manage",
-    verify: "https://admin.google.com/ac/domains/manage",
+    configure: portalUrls.google.domains.manage(),
+    verify: portalUrls.google.domains.manage(),
   },
 };

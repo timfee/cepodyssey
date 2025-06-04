@@ -1,5 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 /**
  * Step definition for creating the dedicated `Automation` organizational unit.
  */
@@ -13,10 +14,10 @@ export const g1CreateAutomationOu: StepDefinition = {
   automatable: true,
   requires: [],
   adminUrls: {
-    configure: "https://admin.google.com/ac/orgunits",
+    configure: portalUrls.google.orgUnits.list(),
     verify: (outputs) =>
       outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH]
-        ? `https://admin.google.com/ac/orgunits/details?ouPath=${outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string}`
-        : "https://admin.google.com/ac/orgunits",
+        ? portalUrls.google.orgUnits.details(outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string)
+        : portalUrls.google.orgUnits.list(),
   },
 };

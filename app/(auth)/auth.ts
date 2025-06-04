@@ -1,4 +1,5 @@
 import { withRetry } from "@/lib/api/utils";
+import { googleOAuthUrls, microsoftAuthUrls } from "@/lib/api/url-builder";
 import type { User } from "next-auth";
 import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -25,7 +26,7 @@ function getUserKey(_userOrToken?: User | JWT): string {
  */
 async function refreshGoogleToken(token: JWT): Promise<JWT> {
   try {
-    const response = await fetch("https://oauth2.googleapis.com/token", {
+    const response = await fetch(googleOAuthUrls.token(), {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
@@ -69,7 +70,7 @@ async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
     const tenantForRefresh =
       token.microsoftTenantId || process.env.MICROSOFT_TENANT_ID || "common";
     const response = await fetch(
-      `https://login.microsoftonline.com/${tenantForRefresh}/oauth2/v2.0/token`,
+      microsoftAuthUrls.token(tenantForRefresh),
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },

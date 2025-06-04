@@ -1,4 +1,5 @@
 import type { StepDefinition } from "../../types";
+import { portalUrls } from "@/lib/api/url-builder";
 
 /**
  * Step definition for updating the Google SAML profile with Azure AD metadata.
@@ -12,7 +13,7 @@ export const g6UpdateSamlProfile: StepDefinition = {
   automatable: true,
   requires: ["G-5", "M-8"],
   adminUrls: {
-    configure: "https://admin.google.com/ac/sso",
-    verify: "https://admin.google.com/ac/sso",
+    configure: portalUrls.google.sso.main(),
+    verify: portalUrls.google.sso.main(),
   },
 };
