@@ -1,9 +1,10 @@
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
+import { Logger } from "@/lib/utils/logger";
 
 export function handleCheckError(error: unknown, defaultMessage: string): StepCheckResult {
-  console.error(`Check Action Error - ${defaultMessage}:`, error);
+  Logger.error("[Step]", `Check failed - ${defaultMessage}`, error);
 
   if (isAuthenticationError(error)) {
     throw error;
@@ -33,7 +34,7 @@ export function handleCheckError(error: unknown, defaultMessage: string): StepCh
 }
 
 export async function handleExecutionError(error: unknown, stepId: string): Promise<StepExecutionResult> {
-  console.error(`Execution Action Failed (Step ${stepId}):`, error);
+  Logger.error("[Step]", `Execution failed for step ${stepId}`, error);
 
   if (isAuthenticationError(error)) {
     return {

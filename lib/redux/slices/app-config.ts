@@ -1,5 +1,6 @@
 import type { AppConfigState } from "@/lib/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { Logger } from "@/lib/utils/logger";
 
 const initialState: AppConfigState = {
   domain: null,
@@ -33,7 +34,7 @@ export const appConfigSlice = createSlice({
     },
     resetAuthState(state) {
       state.outputs = {};
-      console.log("Auth state reset due to session expiration");
+      Logger.info("[Redux]", "Auth state reset due to session expiration");
     },
     clearAllData(state) {
       state.domain = null;

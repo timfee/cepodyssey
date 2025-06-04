@@ -105,8 +105,8 @@ return {
 - ❌ Don't mix server-side and client-side authentication logic
 - ❌ Don't create multiple ways to handle the same API error types
 - ❌ Don't hardcode URLs or configuration values
-- ❌ Don't use Pages Router patterns in App Router context
-- ❌ Don't describe user provisioning authorization as fetching a SCIM token from Google's SAML settings; it's an OAuth flow in Azure
+- ❌ Avoid outdated routing patterns; always use the App Router
+- ❌ Don't describe user provisioning authorization as fetching a SCIM token from Google's SAML settings; use the OAuth consent flow through the Azure Portal
 
 ## Integration Points
 

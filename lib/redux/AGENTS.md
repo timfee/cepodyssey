@@ -83,7 +83,6 @@ export function SomeModal() {
 1. **Step Details Modal**: Shows detailed information about a step
 2. **Step Outputs Modal**: Displays input/output dependencies
 
-Note: The legacy Google Token modal has been removed as modern provisioning uses OAuth consent flow through the Azure Portal (step M-3).
 
 ## Persistence Strategy
 

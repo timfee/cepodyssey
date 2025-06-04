@@ -1,4 +1,5 @@
 import type { AppConfigState, StepStatusInfo } from "@/lib/types";
+import { Logger } from "@/lib/utils/logger";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -21,7 +22,7 @@ export function saveProgress(
     const key = getStorageKey(domain);
     localStorage.setItem(key, JSON.stringify(progress));
   } catch (error) {
-    console.error("Failed to save progress to localStorage:", error);
+    Logger.error("[Redux]", "Failed to save progress to localStorage", error);
   }
 }
 
@@ -38,7 +39,7 @@ export function loadProgress(domain: string): PersistedProgress | null {
     if (!savedData) return null;
     return JSON.parse(savedData) as PersistedProgress;
   } catch (error) {
-    console.error("Failed to load or parse progress from localStorage:", error);
+    Logger.error("[Redux]", "Failed to load or parse progress from localStorage", error);
     return null;
   }
 }
