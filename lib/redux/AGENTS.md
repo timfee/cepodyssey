@@ -31,7 +31,6 @@ interface RootState {
     steps: Record<string, StepStatusInfo>;
   };
   modals: {
-    googleToken: GoogleTokenModalState;
     stepDetails: StepDetailsModalState;
     stepOutputs: StepOutputsModalState;
   };
@@ -43,9 +42,6 @@ interface RootState {
 ### Opening Modals
 
 ```typescript
-// Simple modal
-dispatch(openGoogleTokenModal({}));
-
 // Modal with data
 dispatch(openStepDetailsModal({
   step: currentStep,
@@ -81,6 +77,13 @@ export function SomeModal() {
   );
 }
 ```
+
+### Available Modals
+
+1. **Step Details Modal**: Shows detailed information about a step
+2. **Step Outputs Modal**: Displays input/output dependencies
+
+Note: The legacy Google Token modal has been removed as modern provisioning uses OAuth consent flow through the Azure Portal (step M-3).
 
 ## Persistence Strategy
 

@@ -140,7 +140,6 @@ store: {
     steps: Record<string, StepStatusInfo>;
   },
   modals: {
-    googleToken: { isOpen: boolean };
     stepDetails: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown> };
     stepOutputs: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown>; allStepsStatus: Record<string, { status: string }> };
   }
@@ -149,22 +148,37 @@ store: {
 
 ### Modal Management
 
-All modals are managed through Redux, providing:
+The application uses Redux to manage modal dialogs:
 - Centralized state for all modal visibility
 - Type-safe modal data passing
 - Consistent open/close patterns
 - No prop drilling for modal callbacks
 
 ```typescript
-// Opening a modal
-dispatch(openStepDetailsModal({ step, outputs }));
-
-// Closing a modal
-dispatch(closeStepDetailsModal());
-
-// Modal components read state directly
-const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
+store: {
+  modals: {
+    stepDetails: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown> };
+    stepOutputs: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown>; allStepsStatus: Record<string, { status: string }> };
+  }
+}
 ```
+
+**Available Modals:**
+- **StepDetailsModal**: Shows detailed step information, instructions, and admin console links
+- **StepOutputsDialog**: Displays step inputs/outputs dependencies and data flow
+
+### OAuth-Based Provisioning
+
+The integration uses OAuth consent flow for provisioning authorization:
+
+1. **Google Side**: Create a dedicated provisioning user (step G-2) with Super Admin privileges (step G-3)
+2. **Azure Side**: In step M-3, administrators manually authorize in the Azure Portal by:
+   - Opening the provisioning app in Azure Portal
+   - Clicking "Authorize" in the provisioning settings
+   - Signing in with the Google provisioning user credentials
+   - Completing the OAuth consent flow
+
+This OAuth-based approach is more secure than manual token copying and follows Google's recommended practices.
 
 ### State Persistence
 
