@@ -36,7 +36,8 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { AuthStatus } from "./auth";
 import { ConfigForm } from "./form";
 import { ProgressVisualizer } from "./progress";
@@ -433,50 +434,25 @@ export function AutomationDashboard({
     const completedSteps = Object.values(stepsStatusMap).filter(
       (s) => s.status === "completed",
     ).length;
-
-    const manualSteps = allStepDefinitions.filter((s) => !s.automatable);
-    const completedManualSteps = manualSteps.filter(
-      (s) => stepsStatusMap[s.id]?.status === "completed",
-    ).length;
-
     const progressPercent = (completedSteps / totalSteps) * 100;
 
     return (
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
           <CardTitle>Setup Progress</CardTitle>
+          <CardDescription>
+            {completedSteps} of {totalSteps} steps completed
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>
-                  {completedSteps} of {totalSteps} steps completed
-                  {manualSteps.length > 0 && (
-                    <span className="text-muted-foreground ml-2">
-                      ({completedManualSteps}/{manualSteps.length} manual)
-                    </span>
-                  )}
-                </span>
-                <span className="font-medium">
-                  {Math.round(progressPercent)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            </div>
+        <CardContent className="space-y-4">
+          <Progress value={progressPercent} className="h-3" />
 
-            {canRunAutomation && completedSteps < totalSteps && (
-              <Button onClick={runAllPending} className="w-full" size="lg">
-                <PlayIcon className="mr-2 h-5 w-5" />
-                Run All Pending Steps ({totalSteps - completedSteps} remaining)
-              </Button>
-            )}
-          </div>
+          {canRunAutomation && completedSteps < totalSteps && (
+            <Button onClick={runAllPending} className="w-full" size="lg">
+              <PlayIcon className="mr-2 h-5 w-5" />
+              Run All Pending Steps ({totalSteps - completedSteps} remaining)
+            </Button>
+          )}
         </CardContent>
       </Card>
     );

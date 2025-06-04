@@ -11,6 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
   CheckCircle2Icon,
   CircleIcon,
   AlertCircleIcon,
@@ -91,6 +96,19 @@ export function StepCard({
   };
 
   const statusDisplay = getStatusDisplay();
+
+  const dependencies = (step.requires || []).map((reqId) => {
+    const reqStep = allStepDefinitions.find((s) => s.id === reqId);
+    const outputKey = Object.values(OUTPUT_KEYS).find((v) =>
+      v.toLowerCase().startsWith(reqId.toLowerCase().replace("-", "")),
+    );
+    const met = outputKey ? Boolean(outputs[outputKey]) : false;
+    return {
+      id: reqId,
+      title: reqStep ? reqStep.title : reqId,
+      met,
+    };
+  });
 
   // Check if step can be executed
   const prerequisitesMet =
@@ -273,6 +291,37 @@ export function StepCard({
               {step.error}
             </AlertDescription>
           </Alert>
+        )}
+
+        {dependencies.length > 0 && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-auto p-1 text-xs">
+                <InfoIcon className="h-3 w-3 mr-1" />
+                {dependencies.filter((d) => d.met).length}/
+                {dependencies.length} dependencies met
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Dependencies</h4>
+                {dependencies.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span>{dep.title}</span>
+                    <Badge
+                      variant={dep.met ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {dep.met ? "Met" : "Missing"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         )}
       </CardContent>
     </Card>
