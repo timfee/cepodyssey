@@ -5,7 +5,6 @@ import {
   Loader2Icon,
   PlayIcon,
   LogInIcon,
-  ExternalLinkIcon,
 } from "lucide-react";
 import type { Session } from "next-auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
@@ -218,16 +217,28 @@ export function AutomationDashboard({
               metadata: {
                 ...(result.outputs || {}),
                 resourceUrl: result.resourceUrl,
+                errorCode: result.error?.code,
               },
             }),
           );
-          // toast.error(
-          //   `${definition.title}: ${result.error?.message ?? "Failed"}`,
-          //   {
-          //     id: toastId,
-          //     duration: 10000,
-          //   },
-          // );
+          dispatch(
+            showError({
+              error: {
+                title: `${definition.title} Failed`,
+                message:
+                  result.error?.message ??
+                  "Step execution reported a failure.",
+                code: result.error?.code ?? "STEP_EXECUTION_FAILED",
+                details: {
+                  stepId,
+                  stepTitle: definition.title,
+                  resultOutputs: result.outputs,
+                },
+              },
+              dismissible: true,
+            }),
+          );
+          toast.dismiss(toastId);
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
@@ -262,6 +273,7 @@ export function AutomationDashboard({
               },
             }),
           );
+          toast.dismiss(toastId);
           return;
         }
 
@@ -296,6 +308,15 @@ export function AutomationDashboard({
               dismissible: true,
             }),
           );
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: "A required Google Cloud API is not enabled.",
+              metadata: { errorCode: "API_NOT_ENABLED", fullError: err.message },
+            }),
+          );
+          toast.dismiss(toastId);
         } else {
           dispatch(
             showError({
@@ -308,19 +329,19 @@ export function AutomationDashboard({
               dismissible: true,
             }),
           );
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: message,
+              metadata: { errorCode: "UNEXPECTED_ERROR" },
+            }),
+          );
+          toast.dismiss(toastId);
         }
-
-        dispatch(updateStep({ id: stepId, status: "failed", error: message }));
       }
     },
-    [
-      canRunAutomation,
-      dispatch,
-      store,
-      appConfig.domain,
-      appConfig.tenantId,
-      router,
-    ],
+    [canRunAutomation, dispatch, store, appConfig.domain, appConfig.tenantId],
   );
 
   const executeCheck = useCallback(
@@ -480,7 +501,7 @@ export function AutomationDashboard({
         // });
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store, router],
+    [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
   useAutoCheck(executeCheck);

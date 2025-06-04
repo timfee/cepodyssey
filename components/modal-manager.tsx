@@ -5,7 +5,7 @@ import {
   selectStepDetailsModal,
   selectStepOutputsModal,
 } from "@/lib/redux/slices/modals";
-import { selectActiveError, dismissError, ErrorActionType } from "@/lib/redux/slices/errors";
+import { selectActiveError, dismissError } from "@/lib/redux/slices/errors";
 import { StepDetailsModal } from "./step-details-modal";
 import { StepOutputsDialog } from "./step-outputs-dialog";
 import { ErrorDialog } from "@/components/ui/error-dialog";

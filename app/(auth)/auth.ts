@@ -26,6 +26,18 @@ function getUserKey(_userOrToken?: User | JWT): string {
  * failure.
  */
 async function refreshGoogleToken(token: JWT): Promise<JWT> {
+  if (!token.googleRefreshToken) {
+    Logger.error(
+      "[Auth]",
+      "Google refresh token is MISSING. Cannot refresh."
+    );
+    return {
+      ...token,
+      googleAccessToken: undefined,
+      googleExpiresAt: undefined,
+      error: "RefreshTokenError",
+    };
+  }
   try {
     const response = await fetch(googleOAuthUrls.token(), {
       method: "POST",
@@ -37,11 +49,27 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
         refresh_token: token.googleRefreshToken as string,
       }),
     });
-    const refreshed = await response.json();
+    const refreshedText = await response.text();
     if (!response.ok) {
-      Logger.error("[Auth]", "Google token refresh API error", refreshed);
-      throw refreshed;
+      Logger.error(
+        "[Auth]",
+        "Google token refresh API error. Status:",
+        response.status,
+        "Response Body:",
+        refreshedText
+      );
+      let refreshedJson: Record<string, unknown> = {};
+      try {
+        refreshedJson = JSON.parse(refreshedText);
+      } catch {
+        Logger.warn(
+          "[Auth]",
+          "Failed to parse Google refresh error response as JSON."
+        );
+      }
+      throw refreshedJson;
     }
+    const refreshed = JSON.parse(refreshedText);
     return {
       ...token,
       googleAccessToken: refreshed.access_token,
@@ -50,12 +78,16 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
       error: undefined,
     };
   } catch (error) {
-    Logger.error("[Auth]", "Exception during Google token refresh", error);
+    Logger.error(
+      "[Auth]",
+      "Exception during Google token refresh process. Details:",
+      error
+    );
     return {
       ...token,
       googleAccessToken: undefined,
-      googleRefreshToken: undefined,
       googleExpiresAt: undefined,
+      // Do not clear refresh token here; refreshGoogleToken may have failed due to temporary issues
       error: "RefreshTokenError",
     };
   }
@@ -386,16 +418,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (timeUntilExpiry < bufferTime) {
           if (finalToken.googleRefreshToken) {
-            Logger.info("[Auth]", "Refreshing Google token...");
+            Logger.info("[Auth]", "Refreshing Google token (JWT callback)...");
             finalToken = await refreshGoogleToken(finalToken);
             tokenNeedsUpdateInStore = true;
-          } else if (!finalToken.error) {
+            if (finalToken.error === "RefreshTokenError") {
+              Logger.error(
+                "[Auth]",
+                "Google token refresh failed within JWT callback. Access token is now undefined."
+              );
+            }
+          } else {
             Logger.error(
               "[Auth]",
-              "Google token expired but no refresh token available",
+              "Google access token expired, but NO refresh token available in JWT. Marking RefreshTokenError."
             );
-            finalToken.error = "RefreshTokenError";
             finalToken.googleAccessToken = undefined;
+            finalToken.googleExpiresAt = undefined;
+            finalToken.error = "RefreshTokenError";
           }
         }
       }

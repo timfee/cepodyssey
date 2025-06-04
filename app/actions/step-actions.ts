@@ -15,17 +15,9 @@ export async function executeStepCheck(
   try {
     return await checkStep(stepId, context);
   } catch (error) {
-    // For authentication errors, return a proper StepCheckResult instead of throwing
+    // Allow AuthenticationError to propagate so the UI can handle it globally
     if (isAuthenticationError(error)) {
-      return {
-        completed: false,
-        message: error.message,
-        outputs: {
-          errorCode: "AUTH_EXPIRED",
-          errorProvider: error.provider,
-          errorMessage: error.message,
-        },
-      };
+      throw error;
     }
 
     // For other errors, convert to StepCheckResult
