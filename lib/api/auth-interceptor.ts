@@ -31,12 +31,18 @@ const AUTH_ERROR_PATTERNS = {
   ],
 } as const;
 
-export function isAuthenticationError(error: unknown): error is AuthenticationError {
+export function isAuthenticationError(
+  error: unknown,
+): error is AuthenticationError {
   if (error instanceof AuthenticationError) return true;
 
   if (error instanceof APIError) {
     // Check numeric and string status codes
-    if (error.status === 401 || error.code === "401" || Number(error.code) === 401) {
+    if (
+      error.status === 401 ||
+      error.code === "401" ||
+      Number(error.code) === 401
+    ) {
       return true;
     }
 
@@ -44,8 +50,12 @@ export function isAuthenticationError(error: unknown): error is AuthenticationEr
     if (error.message) {
       const errorMessage = error.message.toLowerCase();
       return (
-        AUTH_ERROR_PATTERNS.google.some((pattern) => pattern.test(errorMessage)) ||
-        AUTH_ERROR_PATTERNS.microsoft.some((pattern) => pattern.test(errorMessage))
+        AUTH_ERROR_PATTERNS.google.some((pattern) =>
+          pattern.test(errorMessage),
+        ) ||
+        AUTH_ERROR_PATTERNS.microsoft.some((pattern) =>
+          pattern.test(errorMessage),
+        )
       );
     }
   }
@@ -53,7 +63,10 @@ export function isAuthenticationError(error: unknown): error is AuthenticationEr
   return false;
 }
 
-export function wrapAuthError(error: unknown, provider: "google" | "microsoft"): AuthenticationError {
+export function wrapAuthError(
+  error: unknown,
+  provider: "google" | "microsoft",
+): AuthenticationError {
   if (error instanceof APIError && error.status === 401) {
     return new AuthenticationError(
       `${provider === "google" ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,

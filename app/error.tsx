@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, LogInIcon } from "lucide-react";
@@ -18,11 +18,16 @@ export default function Error({
   const router = useRouter();
 
   useEffect(() => {
-    console.error('Route error:', error);
+    console.error("Route error:", error);
   }, [error]);
 
-  if (error instanceof APIError && error.message?.includes('has not been used in project')) {
-    const apiMatch = error.message.match(/https:\/\/console\.developers\.google\.com[^\s]+/);
+  if (
+    error instanceof APIError &&
+    error.message?.includes("has not been used in project")
+  ) {
+    const apiMatch = error.message.match(
+      /https:\/\/console\.developers\.google\.com[^\s]+/,
+    );
     const enableUrl = apiMatch ? apiMatch[0] : null;
 
     return (
@@ -40,7 +45,10 @@ export default function Error({
             </p>
             {enableUrl && (
               <div className="space-y-2">
-                <Button onClick={() => window.open(enableUrl, '_blank')} className="w-full">
+                <Button
+                  onClick={() => window.open(enableUrl, "_blank")}
+                  className="w-full"
+                >
                   Enable API
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
@@ -71,7 +79,7 @@ export default function Error({
             <p className="text-sm text-muted-foreground">
               Your session has expired. Please sign in again to continue.
             </p>
-            <Button onClick={() => router.push('/login')} className="w-full">
+            <Button onClick={() => router.push("/login")} className="w-full">
               <LogInIcon className="mr-2 h-4 w-4" />
               Go to Login
             </Button>
@@ -92,7 +100,7 @@ export default function Error({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {error.message || 'An unexpected error occurred'}
+            {error.message || "An unexpected error occurred"}
           </p>
           <Button onClick={reset} className="w-full">
             Try again

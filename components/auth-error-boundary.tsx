@@ -14,7 +14,11 @@ interface AuthErrorBoundaryProps {
   children?: React.ReactNode;
 }
 
-export function AuthErrorBoundary({ error, reset, children }: AuthErrorBoundaryProps) {
+export function AuthErrorBoundary({
+  error,
+  reset,
+  children,
+}: AuthErrorBoundaryProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -40,8 +44,9 @@ export function AuthErrorBoundary({ error, reset, children }: AuthErrorBoundaryP
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Your {error.provider === "google" ? "Google Workspace" : "Microsoft"} session has expired.
-            Please sign in again to continue.
+            Your{" "}
+            {error.provider === "google" ? "Google Workspace" : "Microsoft"}{" "}
+            session has expired. Please sign in again to continue.
           </p>
           <div className="flex gap-2">
             <Button onClick={() => router.push("/login")} className="flex-1">

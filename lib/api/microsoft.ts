@@ -251,7 +251,9 @@ export async function listSynchronizationJobs(
       `${GRAPH_BASE_URL}/servicePrincipals/${servicePrincipalId}/synchronization/jobs`,
       token,
     );
-    const result = await handleApiResponse<{ value: SynchronizationJob[] }>(res);
+    const result = await handleApiResponse<{ value: SynchronizationJob[] }>(
+      res,
+    );
     if (
       typeof result === "object" &&
       result !== null &&
@@ -436,7 +438,7 @@ export async function listAppRoleAssignments(
       result !== null &&
       "alreadyExists" in result
       ? []
-      : result.value ?? [];
+      : (result.value ?? []);
   } catch (error) {
     handleMicrosoftError(error);
   }

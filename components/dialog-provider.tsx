@@ -1,6 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 import { GoogleTokenModal } from "./google-token-modal";
 import { StepDetailsModal } from "./step-details-modal";
 import { StepOutputsDialog } from "./step-outputs-dialog";
@@ -26,8 +31,9 @@ const DialogContext = createContext<DialogContextType | undefined>(undefined);
 
 export function DialogProvider({ children }: { children: ReactNode }) {
   const [googleTokenModalOpen, setGoogleTokenModalOpen] = useState(false);
-  const [googleTokenModalOnComplete, setGoogleTokenModalOnComplete] =
-    useState<(() => void) | null>(null);
+  const [googleTokenModalOnComplete, setGoogleTokenModalOnComplete] = useState<
+    (() => void) | null
+  >(null);
 
   const [stepDetailsModalOpen, setStepDetailsModalOpen] = useState(false);
   const [stepDetailsModalData, setStepDetailsModalData] = useState<{

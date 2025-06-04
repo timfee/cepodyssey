@@ -8,14 +8,16 @@ export interface APIEnablementInfo {
 
 const API_ENABLEMENT_PATTERNS = [
   {
-    pattern: /Cloud Identity API has not been used in project (\d+) before or it is disabled/,
+    pattern:
+      /Cloud Identity API has not been used in project (\d+) before or it is disabled/,
     apiName: "Google Cloud Identity API",
     apiUrlTemplate:
       "https://console.developers.google.com/apis/api/cloudidentity.googleapis.com/overview?project={projectId}",
     docUrl: "https://cloud.google.com/identity/docs/setup",
   },
   {
-    pattern: /Admin SDK API has not been used in project (\d+) before or it is disabled/,
+    pattern:
+      /Admin SDK API has not been used in project (\d+) before or it is disabled/,
     apiName: "Google Admin SDK API",
     apiUrlTemplate:
       "https://console.developers.google.com/apis/api/admin.googleapis.com/overview?project={projectId}",
@@ -30,7 +32,9 @@ export function isAPIEnablementError(error: unknown): boolean {
   return API_ENABLEMENT_PATTERNS.some((p) => p.pattern.test(message));
 }
 
-export function getAPIEnablementInfo(error: APIError): APIEnablementInfo | null {
+export function getAPIEnablementInfo(
+  error: APIError,
+): APIEnablementInfo | null {
   const message = error.message || "";
 
   for (const config of API_ENABLEMENT_PATTERNS) {
@@ -52,7 +56,8 @@ export function createEnablementError(originalError: APIError): APIError {
   const info = getAPIEnablementInfo(originalError);
   if (!info) return originalError;
 
-  const enhancedMessage = `${info.apiName} is not enabled for your Google Cloud project.\n\n` +
+  const enhancedMessage =
+    `${info.apiName} is not enabled for your Google Cloud project.\n\n` +
     `To fix this:\n` +
     `1. Click here to enable the API: ${info.enableUrl}\n` +
     `2. Wait 2-3 minutes for the change to propagate\n` +

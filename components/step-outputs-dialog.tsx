@@ -32,10 +32,12 @@ export function StepOutputsDialog({
   if (!step) return null;
 
   // Get the outputs this step produces
-  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(([_key, value]) => {
-    const stepPrefix = step.id.toLowerCase().replace("-", "");
-    return value.toLowerCase().startsWith(stepPrefix);
-  });
+  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(
+    ([_key, value]) => {
+      const stepPrefix = step.id.toLowerCase().replace("-", "");
+      return value.toLowerCase().startsWith(stepPrefix);
+    },
+  );
 
   // Get the outputs this step requires from other steps
   const requiredOutputs: Array<{
@@ -70,7 +72,8 @@ export function StepOutputsDialog({
         <DialogHeader>
           <DialogTitle>{step.title} - Outputs &amp; Dependencies</DialogTitle>
           <DialogDescription>
-            View the outputs this step produces and the outputs it requires from other steps.
+            View the outputs this step produces and the outputs it requires from
+            other steps.
           </DialogDescription>
         </DialogHeader>
 

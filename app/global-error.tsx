@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, HomeIcon, RefreshCwIcon } from "lucide-react";
@@ -14,12 +14,12 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Global error:', error);
+    console.error("Global error:", error);
   }, [error]);
 
   if (isAuthenticationError(error)) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login?error=session_expired';
+    if (typeof window !== "undefined") {
+      window.location.href = "/login?error=session_expired";
     }
     return null;
   }
@@ -49,7 +49,10 @@ export default function GlobalError({
                   <RefreshCwIcon className="mr-2 h-4 w-4" />
                   Try again
                 </Button>
-                <Button variant="outline" onClick={() => window.location.href = '/'}>
+                <Button
+                  variant="outline"
+                  onClick={() => (window.location.href = "/")}
+                >
                   <HomeIcon className="mr-2 h-4 w-4" />
                   Go home
                 </Button>

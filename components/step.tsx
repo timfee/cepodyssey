@@ -336,8 +336,12 @@ export function StepItem({
                         <p className="font-medium">{runButtonDisabledReason}</p>
                         {!canRunGlobal && (
                           <div className="text-xs space-y-1">
-                            {!appConfig.domain && <p>• Domain not configured</p>}
-                            {!appConfig.tenantId && <p>• Tenant ID not configured</p>}
+                            {!appConfig.domain && (
+                              <p>• Domain not configured</p>
+                            )}
+                            {!appConfig.tenantId && (
+                              <p>• Tenant ID not configured</p>
+                            )}
                             {!session?.hasGoogleAuth && (
                               <p>• Google authentication required</p>
                             )}
@@ -346,16 +350,19 @@ export function StepItem({
                             )}
                           </div>
                         )}
-                        {!prerequisitesMet && getMissingPrerequisites().length > 0 && (
-                          <div className="text-xs space-y-1">
-                            <p className="font-medium">Missing prerequisites:</p>
-                            {getMissingPrerequisites().map((prereq) => (
-                              <p key={prereq.id}>
-                                • {prereq.title} ({prereq.status})
+                        {!prerequisitesMet &&
+                          getMissingPrerequisites().length > 0 && (
+                            <div className="text-xs space-y-1">
+                              <p className="font-medium">
+                                Missing prerequisites:
                               </p>
-                            ))}
-                          </div>
-                        )}
+                              {getMissingPrerequisites().map((prereq) => (
+                                <p key={prereq.id}>
+                                  • {prereq.title} ({prereq.status})
+                                </p>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </TooltipContent>
                   )}
