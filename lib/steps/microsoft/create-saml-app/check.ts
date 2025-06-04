@@ -1,8 +1,12 @@
 "use server";
 
+/**
+ * Check if the Azure SAML SSO application exists.
+ */
+
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { checkMicrosoftServicePrincipal } from "@/app/actions/check-actions";
+import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
 
 export async function checkCreateSamlApp(context: StepContext): Promise<StepCheckResult> {
   const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;

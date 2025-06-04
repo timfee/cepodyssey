@@ -269,6 +269,15 @@ lib/steps/
 │   └── utils/
 │       ├── auth.ts
 │       └── error-handling.ts
+├── microsoft/
+│   ├── create-provisioning-app/
+│   │   ├── index.ts
+│   │   ├── check.ts
+│   │   └── execute.ts
+│   └── utils/
+│       ├── auth.ts
+│       └── error-handling.ts
+└── registry.ts
 ```
 
 The registry in `lib/steps/registry.ts` exposes helper functions `checkStep` and `executeStep` which simply invoke the appropriate module functions.

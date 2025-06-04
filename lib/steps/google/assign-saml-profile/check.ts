@@ -1,13 +1,62 @@
 "use server";
-import type { StepCheckResult, StepContext } from "@/lib/types";
-import { checkGoogleSamlProfileDetails } from "@/app/actions/check-actions";
-import { OUTPUT_KEYS } from "@/lib/types";
 
-export async function checkAssignSamlProfile(context: StepContext): Promise<StepCheckResult> {
+import type { StepCheckResult, StepContext } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import * as google from "@/lib/api/google";
+import { getGoogleToken } from "../utils/auth";
+import { handleCheckError } from "../utils/error-handling";
+
+/**
+ * Confirm the SAML profile exists and is fully configured before assignment.
+ */
+export async function checkAssignSamlProfile(
+  context: StepContext,
+): Promise<StepCheckResult> {
   const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
   if (!profileName) {
     return { completed: false, message: "SAML profile name not found." };
   }
-  const result = await checkGoogleSamlProfileDetails(profileName, false, undefined);
-  return result.completed ? { completed: true, message: "SAML profile configured." } : { completed: false, message: "SAML profile not yet configured." };
+
+  try {
+    const token = await getGoogleToken();
+    let profile: google.InboundSamlSsoProfile | null = null;
+    if (profileName.startsWith("inboundSamlSsoProfiles/")) {
+      profile = await google.getSamlProfile(token, profileName);
+    } else {
+      const profiles = await google.listSamlProfiles(token);
+      profile = profiles.find((p) => p.displayName === profileName) ?? null;
+    }
+
+    if (!profile?.name) {
+      return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+    }
+
+    const outputs: Record<string, unknown> = {
+      [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
+      [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
+      idpEntityId: profile.idpConfig?.entityId,
+      ssoMode: profile.ssoMode,
+      resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
+    };
+    if (profile.spConfig?.entityId) {
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] = profile.spConfig.entityId;
+    }
+    if (profile.spConfig?.assertionConsumerServiceUri) {
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] = profile.spConfig.assertionConsumerServiceUri;
+    }
+
+    const idpCreds = await google.listIdpCredentials(token, profile.name);
+    const configured = !!(
+      profile.idpConfig?.entityId &&
+      profile.idpConfig?.singleSignOnServiceUri &&
+      idpCreds.length > 0
+    );
+
+    return configured
+      ? { completed: true, message: "SAML profile configured.", outputs }
+      : { completed: false, message: "SAML profile not yet configured.", outputs };
+  } catch (e) {
+    return handleCheckError(e, `Failed to check SAML Profile '${profileName}'.`);
+  }
 }

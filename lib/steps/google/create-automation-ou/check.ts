@@ -4,11 +4,15 @@ import { APIError } from "@/lib/api/utils";
 import * as google from "@/lib/api/google";
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../utils/error-handling";
 
+/**
+ * Confirm the 'Automation' Organizational Unit exists in Google Workspace.
+ */
 export async function checkAutomationOu(
-  _context: StepContext
+  _context: StepContext,
 ): Promise<StepCheckResult> {
   try {
     const token = await getGoogleToken();
@@ -21,7 +25,7 @@ export async function checkAutomationOu(
         outputs: {
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
-          resourceUrl: `https://admin.google.com/ac/orgunits?ouid=${orgUnit.orgUnitId}`,
+          resourceUrl: portalUrls.google.orgUnits.details(orgUnit.orgUnitPath),
         },
       };
     }

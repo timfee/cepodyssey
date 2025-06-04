@@ -1,8 +1,12 @@
 "use server";
 
+/**
+ * Ensure the Azure SAML app has the expected Identifier URI and Reply URL.
+ */
+
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { checkMicrosoftSamlAppSettingsApplied } from "@/app/actions/check-actions";
+import { checkMicrosoftSamlAppSettingsApplied } from "../utils/common-checks";
 
 export async function checkConfigureSamlApp(context: StepContext): Promise<StepCheckResult> {
   const appObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID] as string;

@@ -2,9 +2,14 @@
 
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { checkMicrosoftServicePrincipal } from "@/app/actions/check-actions";
+import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
 
-export async function checkProvisioningApp(context: StepContext): Promise<StepCheckResult> {
+/**
+ * Verify the provisioning enterprise application exists in Azure AD.
+ */
+export async function checkProvisioningApp(
+  context: StepContext,
+): Promise<StepCheckResult> {
   const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
   if (!appId) {
     return { completed: false, message: "Provisioning App ID not found." };

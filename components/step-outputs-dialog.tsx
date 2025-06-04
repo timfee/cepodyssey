@@ -17,7 +17,7 @@ import { selectStepOutputsModal, closeStepOutputsModal } from "@/lib/redux/slice
 
 export function StepOutputsDialog() {
   const dispatch = useAppDispatch();
-  const { isOpen, step, outputs, allStepsStatus } = useAppSelector(selectStepOutputsModal);
+  const { isOpen, step, outputs } = useAppSelector(selectStepOutputsModal);
 
   if (!step) return null;
 
