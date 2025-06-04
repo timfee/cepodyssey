@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "./use-redux";
+import { useErrorHandler } from "./use-error-handler";
 import {
   resetAuthState,
   setDomain,
@@ -13,6 +13,7 @@ export function useSessionSync() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { handleError } = useErrorHandler();
   const lastCheckRef = useRef<number>(Date.now());
   const appConfig = useAppSelector((state) => state.appConfig);
 
@@ -22,19 +23,13 @@ export function useSessionSync() {
         lastCheckRef.current = Date.now();
         const updated = await update();
         if (updated?.error === "RefreshTokenError") {
-          toast.error("Session expired. Please sign in again.", {
-            duration: 10000,
-            action: {
-              label: "Sign In",
-              onClick: () => router.push("/login"),
-            },
-          });
+          handleError(new Error("Session expired. Please sign in again."), { stepTitle: "Session" });
           dispatch(resetAuthState());
         }
       }
     }, 60000);
     return () => clearInterval(checkInterval);
-  }, [update, router, dispatch]);
+  }, [update, router, dispatch, handleError]);
 
   useEffect(() => {
     if (session && status === "authenticated") {

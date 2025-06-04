@@ -173,11 +173,12 @@ The dashboard now features enhanced step cards that display:
 
 ### Authentication Error Handling
 
-The application includes robust authentication error handling:
+Errors are displayed through a centralized error dialog managed by Redux:
 
 - Automatic detection of expired tokens
-- Clear user notifications with action buttons
-- Graceful fallback for API errors
+- Modal dialog with a sign-in action when authentication expires
+- API enablement errors show an "Enable API" button
+- Other errors include diagnostic details and can be dismissed
 - Session persistence across token refreshes
 
 ## Testing

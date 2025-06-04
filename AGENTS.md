@@ -52,7 +52,7 @@ that workflow.
 
 - Use `APIError` class for consistent API error representation
 - Server actions return standardized `ActionResult<T>` or `StepExecutionResult`
-- Client-side errors displayed via toast notifications (sonner)
+- Client-side errors displayed via a Redux-driven error dialog
 - Graceful degradation for missing authentication or configuration
 
 ### Data Flow Pattern

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/use-error-handler";
 
 export function ErrorToastProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { handleError } = useErrorHandler();
+
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Unhandled promise rejection:", event.reason);
@@ -16,10 +18,10 @@ export function ErrorToastProvider({
         event.reason?.message?.includes("API") &&
         event.reason?.message?.includes("not enabled")
       ) {
-        toast.error("Google Cloud API not enabled", {
-          description: "Check the console for details on which API to enable",
-          duration: 10000,
-        });
+        handleError(
+          new Error("Google Cloud API not enabled"),
+          { stepTitle: "Unhandled Rejection" },
+        );
       }
     };
 
@@ -30,7 +32,7 @@ export function ErrorToastProvider({
         handleUnhandledRejection,
       );
     };
-  }, []);
+  }, [handleError]);
 
   return <>{children}</>;
 }
