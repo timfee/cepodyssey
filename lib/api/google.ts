@@ -16,28 +16,6 @@ export type GoogleDomain = admin_directory_v1.Schema$Domains & {
 };
 export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
-export interface GoogleLongRunningOperation {
-  name?: string; // Name of the LRO itself, e.g., "operations/XYZ123"
-  metadata?: {
-    "@type"?: string;
-    [key: string]: unknown;
-  };
-  done: boolean; // This is critical
-  error?: {
-    code?: number;
-    message?: string;
-    status?: string;
-    details?: Array<{ "@type"?: string; [key: string]: unknown }>;
-  };
-  response?: {
-    "@type"?: string;
-    name?: string; // Name of the created resource, e.g., "inboundSamlSsoProfiles/ABC789"
-    customer?: string;
-    displayName?: string;
-    spConfig?: { entityId?: string; assertionConsumerServiceUri?: string };
-    [key: string]: unknown; // Allow other fields of InboundSamlSsoProfile
-  };
-}
 
 export interface InboundSamlSsoProfile {
   /** Output only. Resource name, e.g. inboundSamlSsoProfiles/{profileId} */
@@ -430,11 +408,8 @@ export async function createSamlProfile(
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
-    console.log(
-      `Calling POST ${cloudIdentityBaseUrl}/inboundSamlSsoProfiles for displayName: ${displayName}`
-    );
-    const initialHttpResponse = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`, // Your specified URL
+    const res = await fetchWithAuth(
+      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`,
       token,
       {
         method: "POST",
@@ -442,132 +417,22 @@ export async function createSamlProfile(
       }
     );
 
-    if (initialHttpResponse.status === 409) {
-      console.log(
-        `SAML Profile '${displayName}' creation returned 409 (already exists).`
-      );
-      // Consider parsing error body for more specific "already exists" if needed
-      // const errorBody = await initialHttpResponse.json().catch(() => ({}));
-      // if (errorBody?.error?.status === 'ALREADY_EXISTS' || errorBody?.error?.message?.toLowerCase().includes('already exists'))
+    const data = await handleApiResponse<{ done: boolean; response: InboundSamlSsoProfile }>(res);
+
+    if ("alreadyExists" in data) {
       return { alreadyExists: true };
-      // else throw new APIError...
     }
 
-    // This will parse JSON and throw an APIError if initialHttpResponse.ok is false.
-    // We expect the structure of a GoogleLongRunningOperation.
-    const operation =
-      await handleApiResponse<GoogleLongRunningOperation>(initialHttpResponse);
-    console.log(
-      "Direct response from POST /inboundSamlSsoProfiles:",
-      JSON.stringify(operation, null, 2)
-    );
-
-    // Since you've confirmed the response has "done: true" immediately:
-    if (operation.done) {
-      if (operation.error) {
-        console.error(
-          "SAML profile creation operation reported 'done' but with an error:",
-          operation.error
-        );
-        throw new APIError(
-          `SAML profile creation failed: ${operation.error.message}`,
-          operation.error.code || 500,
-          operation.error.status || "OPERATION_ERROR"
-        );
-      }
-
-      if (
-        operation.response &&
-        operation.response["@type"] ===
-          "type.googleapis.com/google.identity.cloudidentity.v1.InboundSamlSsoProfile"
-      ) {
-        const finalProfile =
-          operation.response as unknown as InboundSamlSsoProfile;
-        console.log(
-          "SAML Profile created successfully (operation was 'done: true' immediately):",
-          finalProfile
-        );
-
-        // IMPORTANT: Validate crucial fields on the 'finalProfile' object
-        if (
-          !finalProfile.name ||
-          !finalProfile.spConfig?.entityId ||
-          !finalProfile.spConfig?.assertionConsumerServiceUri
-        ) {
-          const missingFields = [];
-          if (!finalProfile.name)
-            missingFields.push("profile.name (resource name)");
-          if (!finalProfile.spConfig?.entityId)
-            missingFields.push("profile.spConfig.entityId");
-          if (!finalProfile.spConfig?.assertionConsumerServiceUri)
-            missingFields.push("profile.spConfig.assertionConsumerServiceUri");
-          console.error(
-            `Immediately completed SAML profile response is missing crucial fields: ${missingFields.join(", ")}`,
-            finalProfile
-          );
-          throw new APIError(
-            `Completed SAML profile response is missing essential details: ${missingFields.join(", ")}.`,
-            500,
-            "INCOMPLETE_PROFILE_DATA"
-          );
-        }
-        return finalProfile; // Successfully extracted and validated the profile
-      } else {
-        console.error(
-          "Operation is 'done: true', but 'response' field is missing, not of expected type, or malformed:",
-          operation.response
-        );
-        throw new APIError(
-          "Operation completed but returned an unexpected or malformed response payload.",
-          500,
-          "MALFORMED_COMPLETED_OPERATION_PAYLOAD"
-        );
-      }
-    } else {
-      // This block means operation.done was false.
-      // If the API *always* returns done:true as per your observation, this block indicates an unexpected API behavior.
-      // For a truly pending LRO, operation.name (the LRO's own name) would be needed for polling.
-      // If it's missing here, polling is impossible.
-      if (!operation.name || operation.name.trim() === "") {
-        console.error(
-          "Operation is not 'done' and is missing a valid LRO 'name' for polling:",
-          operation
-        );
-        throw new APIError(
-          "Pending operation response is missing a valid 'name' for polling. Cannot proceed.",
-          500,
-          "PENDING_LRO_MISSING_POLL_NAME"
-        );
-      }
-      // If you ever need to re-enable polling because the API *sometimes* returns a pending LRO:
-      // 1. The polling loop would go here.
-      // 2. It MUST use `operation.name` (the LRO's own name) for the polling URL,
-      //    NOT `operation.response.name` (which is the profile's name and only available after completion).
-      console.error(
-        "Operation returned as not 'done'. This was unexpected. Full LRO polling logic would be required here using operation.name: ",
-        operation.name
-      );
-      throw new APIError(
-        "Operation returned as not 'done', and full polling logic for this case is not currently enabled in the simplified version.",
-        500,
-        "UNEXPECTED_PENDING_LRO"
-      );
+    if (!data.done || !data.response) {
+      throw new APIError("Invalid response from createSamlProfile", 500);
     }
+
+    return data.response;
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "alreadyExists" in error
-    ) {
+    if (typeof error === "object" && error !== null && "alreadyExists" in error) {
       return { alreadyExists: true };
     }
-    if (!(error instanceof APIError)) {
-      console.error(
-        "Unhandled generic exception/error in createSamlProfile:",
-        error
-      );
-    }
-    return handleGoogleError(error); // Ensure this re-throws
+    handleGoogleError(error);
   }
 }
 /** Retrieve a specific SAML profile. */
