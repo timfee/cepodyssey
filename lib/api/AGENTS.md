@@ -254,3 +254,63 @@ https://admin.google.com/ac/sso
 # SCIM Provisioning Settings
 https://admin.google.com/ac/apps/unified#/settings/scim
 ```
+
+## URL Management
+
+### Environment-Based Configuration
+
+All API base URLs are now configurable through environment variables:
+
+```env
+# API Endpoints
+GOOGLE_API_BASE=https://admin.googleapis.com
+GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
+GRAPH_API_BASE=https://graph.microsoft.com/v1.0
+
+# Authentication Endpoints  
+GOOGLE_OAUTH_BASE=https://oauth2.googleapis.com
+MICROSOFT_LOGIN_BASE=https://login.microsoftonline.com
+
+# Portal URLs
+GOOGLE_ADMIN_CONSOLE_BASE=https://admin.google.com
+AZURE_PORTAL_BASE=https://portal.azure.com
+```
+
+### URL Construction Standards
+
+All URLs must be constructed using the centralized URL builder:
+
+```typescript
+import { googleDirectoryUrls, microsoftGraphUrls } from "./url-builder";
+
+// Good: Using URL builder
+const response = await fetchWithAuth(
+  googleDirectoryUrls.users.get(userEmail),
+  token
+);
+
+// Bad: Hardcoding URLs
+const response = await fetchWithAuth(
+  `${GOOGLE_API_BASE}/admin/directory/v1/users/${userEmail}`,
+  token
+);
+```
+
+### Encoding Best Practices
+
+1. **Path Parameters**: Always use `encodeURIComponent()`
+2. **Query Parameters**: Use the URL class for automatic encoding
+3. **Special Characters**: Let the URL builder handle encoding
+4. **Portal URLs**: Be aware of platform-specific encoding requirements
+
+Example:
+```typescript
+// Automatic encoding of path parameters
+users.get: (userKey: string) => 
+  `${base}/users/${encodeURIComponent(userKey)}`
+
+// Query parameters with URL class
+const url = new URL(base);
+url.searchParams.append("domain", domain);
+return url.toString();
+```

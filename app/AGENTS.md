@@ -98,3 +98,51 @@ async function getTokens(): Promise<{
 - Configuration flows from session → Redux → server actions
 - Error boundaries catch and display React errors appropriately
 - Manual steps like M-3 still use the same pattern: the server action only verifies completion while the admin performs OAuth in the Azure portal.
+
+## URL Construction in Server Actions
+
+### Using the URL Builder
+
+All server actions should import and use the centralized URL builder:
+
+```typescript
+import { googleDirectoryUrls, microsoftGraphUrls, portalUrls } from "@/lib/api/url-builder";
+
+// In execution actions
+const res = await fetchWithAuth(
+  googleDirectoryUrls.users.create(),
+  token,
+  { method: "POST", body: JSON.stringify(user) }
+);
+
+// Return portal URLs for resources
+return {
+  success: true,
+  message: "Resource created",
+  resourceUrl: portalUrls.google.users.details(result.primaryEmail),
+};
+```
+
+### Error Response Pattern
+
+Server actions now return structured error information in outputs:
+
+```typescript
+catch (error) {
+  if (isAuthenticationError(error)) {
+    return {
+      completed: false,
+      message: error.message,
+      outputs: {
+        errorCode: "AUTH_EXPIRED",
+        errorProvider: error.provider,
+        errorMessage: error.message,
+      },
+    };
+  }
+  // Handle other error types...
+}
+```
+
+This allows the UI to properly display and handle different error types without throwing exceptions to the client.
+
