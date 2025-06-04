@@ -306,10 +306,23 @@ The registry in `lib/steps/registry.ts` exposes helper functions `checkStep` and
 3. **Parallel Development** – multiple developers can work on different steps without conflicts
 
 # Testing
-Always run `pnpm test:build` before committing changes to ensure:
-- No ESLint errors
-- No TypeScript errors  
-- The build succeeds
 
-To test the development server:
-- Run `pnpm dev:test` to start the server and verify it's accessible
+Always run tests before committing changes:
+
+1. **Build-time checks**: `pnpm test:build`
+   - ESLint errors
+   - TypeScript errors
+   - Build success
+
+2. **Runtime checks**: `pnpm test:runtime`
+   - Dev server starts without errors
+   - No runtime TypeScript errors
+   - No React rendering errors
+
+3. **Full test suite**: `pnpm test:all`
+   - Runs both build and runtime checks
+
+Common runtime errors to watch for:
+ - "Cannot read properties of undefined" - missing null checks
+ - "Selector returned different result" - unmemoized selectors
+ - Component rendering errors (shown as ⨯ in output)
