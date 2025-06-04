@@ -8,9 +8,6 @@ export function handleCheckError(
   error: unknown,
   defaultMessage: string,
 ): StepCheckResult {
-  if (isAuthenticationError(error)) {
-    throw error;
-  }
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
   // Log to debug panel
