@@ -1,14 +1,12 @@
 "use server";
 
 import {
-  executeG1CreateAutomationOu,
-  executeG2CreateServiceAccount,
-  executeG3GrantAdminPrivileges,
   executeG4AddAndVerifyDomain,
   executeG5InitiateGoogleSamlProfile,
   executeG6UpdateGoogleSamlWithAzureIdp,
   executeG7AssignGoogleSamlToRootOu,
   executeG8ExcludeAutomationOuFromSso,
+  executeGS0EnableProvisioning,
   executeM1CreateProvisioningApp,
   executeM2ConfigureProvisioningAppProperties,
   executeM3AuthorizeProvisioningConnection,
@@ -21,12 +19,9 @@ import {
 } from "./execution-actions";
 
 import {
-  checkOrgUnitExists,
   checkDomainVerified,
   checkGoogleSamlProfileDetails,
   checkMicrosoftServicePrincipal,
-  checkServiceAccountExists,
-  checkServiceAccountIsAdmin,
   checkMicrosoftServicePrincipalEnabled,
   checkMicrosoftProvisioningJobDetails,
   checkMicrosoftAttributeMappingsApplied,
@@ -38,53 +33,13 @@ import type { StepContext, StepCheckResult, StepExecutionResult } from "@/lib/ty
 import { OUTPUT_KEYS } from "@/lib/types";
 
 const STEP_REGISTRY = {
-  "G-1": {
-    check: async (_context: StepContext) => checkOrgUnitExists("/Automation"),
-    execute: async (context: StepContext) => executeG1CreateAutomationOu(context),
-  },
-
-  "G-2": {
-    check: async (context: StepContext) => {
-      const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
-      if (!email) return { completed: false, message: "Service account not yet created." };
-      return checkServiceAccountExists(email);
-    },
-    execute: async (context: StepContext) => executeG2CreateServiceAccount(context),
-  },
-
-  "G-3": {
-    check: async (context: StepContext) => {
-      const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
-      if (!email) return { completed: false, message: "Service account email not found." };
-      return checkServiceAccountIsAdmin(email);
-    },
-    execute: async (context: StepContext) => executeG3GrantAdminPrivileges(context),
-  },
-
   "G-S0": {
     check: async (context: StepContext) => {
       return context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]
         ? { completed: true, message: "Secret Token is stored." }
         : { completed: false, message: "Secret Token needed." };
     },
-    execute: async (_context: StepContext) => ({
-      success: true,
-      message:
-        "To get the Google Secret Token for provisioning:\n\n" +
-        "1. Sign in to Google Admin Console (admin.google.com)\n" +
-        "2. Navigate to: Apps > Web and mobile apps\n" +
-        "3. Click 'Add app' > 'Add custom SAML app'\n" +
-        "4. Enter a temporary name (e.g., 'Azure AD Provisioning Setup')\n" +
-        "5. On 'Google Identity Provider details', click 'Continue'\n" +
-        "6. On 'Service provider details', click 'Continue'\n" +
-        "7. On 'Attribute mapping', click 'Continue'\n" +
-        "8. On the final page, look for 'Automatic user provisioning' section\n" +
-        "9. Click 'SET UP AUTOMATIC USER PROVISIONING'\n" +
-        "10. Copy the 'Authorization token' value - this is your Secret Token\n" +
-        "11. Save this token securely - you'll need it for step M-3\n\n" +
-        "Note: The app you create here is temporary. The actual SSO will be configured later.",
-      resourceUrl: "https://admin.google.com/ac/apps/unified",
-    }),
+    execute: async (context: StepContext) => executeGS0EnableProvisioning(context),
   },
 
   "G-4": {
@@ -127,10 +82,9 @@ const STEP_REGISTRY = {
   },
 
   "G-8": {
-    check: async (context: StepContext) => {
-      const automationOuId = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_ID] as string;
-      if (!automationOuId) return { completed: true, message: "No Automation OU to exclude." };
-      return { completed: false, message: "Check not implemented for OU exclusion." };
+    check: async (_context: StepContext) => {
+      // This is optional and hard to check automatically
+      return { completed: false, message: "Manual verification needed for OU SSO exclusion." };
     },
     execute: async (context: StepContext) => executeG8ExcludeAutomationOuFromSso(context),
   },
