@@ -7,10 +7,27 @@ import { executeCreateAutomationOu } from "./execute";
 export const g1CreateAutomationOu: StepDefinition = {
   id: "G-1",
   title: "Create 'Automation' Organizational Unit",
-  description: "Create an 'Automation' folder for the sync user",
+  description: "Create a dedicated folder for automation users and service accounts",
+  details:
+    "Creates an organizational unit at the root level of your Google Workspace directory. This OU will contain service accounts and other automation-related users, keeping them separate from regular users for security and organization.",
+
   category: "Google",
+  activity: "Foundation",
+  provider: "Google",
+
+  automatability: "automated",
   automatable: true,
+
   requires: [],
+  nextStep: {
+    id: "G-2",
+    description: "Create a dedicated provisioning user in the Automation OU",
+  },
+
+  actions: [
+    "OAuth 2.0 flow initiation",
+    "POST /admin/directory/v1/customer/{customerId}/orgunits",
+  ],
   adminUrls: {
     configure: portalUrls.google.orgUnits.list(),
     verify: (outputs) =>

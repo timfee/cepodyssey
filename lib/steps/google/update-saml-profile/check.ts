@@ -6,6 +6,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../utils/error-handling";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**
  * Confirm the Google SAML profile is configured with the expected IdP details.
@@ -21,7 +22,14 @@ export async function checkSamlProfileUpdate(
   ] as string;
 
   if (!profileName || !expectedIdpEntityId) {
-    return { completed: false, message: "Missing required configuration." };
+    return {
+      completed: false,
+      message: "Missing required configuration.",
+      outputs: {
+        inputs: getStepInputs("G-6"),
+        expectedOutputs: getStepOutputs("G-6"),
+      },
+    };
   }
 
   try {
@@ -39,6 +47,10 @@ export async function checkSamlProfileUpdate(
       return {
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
+        outputs: {
+          inputs: getStepInputs("G-6"),
+          expectedOutputs: getStepOutputs("G-6"),
+        },
       };
     }
 
@@ -70,6 +82,10 @@ export async function checkSamlProfileUpdate(
       return {
         completed: false,
         message: `SAML Profile '${profile.displayName}' found but is not fully configured with IdP details or not enabled.`,
+        outputs: {
+          inputs: getStepInputs("G-6"),
+          expectedOutputs: getStepOutputs("G-6"),
+        },
       };
     }
 
@@ -78,13 +94,27 @@ export async function checkSamlProfileUpdate(
       return {
         completed: false,
         message: `SAML Profile '${profile.displayName}' is configured with IdP '${currentIdp}', not the expected '${expectedIdpEntityId}'.`,
+        outputs: {
+          inputs: getStepInputs("G-6"),
+          expectedOutputs: getStepOutputs("G-6"),
+        },
       };
     }
 
     return {
       completed: true,
       message: `SAML Profile '${profile.displayName}' is correctly configured with IdP '${expectedIdpEntityId}'.`,
-      outputs,
+      outputs: {
+        ...outputs,
+        producedOutputs: getStepOutputs("G-6").map((o) => ({
+          ...o,
+          value: outputs[o.key as keyof typeof outputs],
+        })),
+        inputs: getStepInputs("G-6").map((inp) => ({
+          ...inp,
+          data: { ...inp.data, value: context.outputs[inp.data.key!] },
+        })),
+      },
     };
   } catch (e) {
     return handleCheckError(

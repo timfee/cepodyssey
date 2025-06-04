@@ -8,9 +8,19 @@ export const m1CreateProvisioningApp: StepDefinition = {
   id: "M-1",
   title: "Create Azure AD Enterprise App for Provisioning",
   description: "Add Google sync app from Microsoft's gallery",
+  details:
+    "Instantiates the Google Cloud/G Suite Connector by Microsoft gallery app. This creates an app registration and service principal used for provisioning users to Google Workspace.",
+
   category: "Microsoft",
+  activity: "Provisioning",
+  provider: "Microsoft",
+
+  automatability: "automated",
   automatable: true,
+
   requires: [],
+  nextStep: { id: "M-2", description: "Enable the service principal" },
+  actions: ["POST /applicationTemplates/{templateId}/instantiate"],
   adminUrls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];

@@ -6,6 +6,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../utils/error-handling";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**
  * Verify the SAML profile is configured; used as a proxy check for OU exclusion.
@@ -20,6 +21,10 @@ export async function checkExcludeAutomationOu(
     return {
       completed: false,
       message: "Manual verification needed for OU SSO exclusion.",
+      outputs: {
+        inputs: getStepInputs("G-8"),
+        expectedOutputs: getStepOutputs("G-8"),
+      },
     };
   }
   try {
@@ -35,6 +40,10 @@ export async function checkExcludeAutomationOu(
       return {
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
+        outputs: {
+          inputs: getStepInputs("G-8"),
+          expectedOutputs: getStepOutputs("G-8"),
+        },
       };
     }
     const outputs: Record<string, unknown> = {
@@ -51,8 +60,29 @@ export async function checkExcludeAutomationOu(
       idpCreds.length > 0
     );
     return configured
-      ? { completed: true, message: "SAML profile configured.", outputs }
-      : { completed: false, message: "SAML profile not yet configured." };
+      ? {
+          completed: true,
+          message: "SAML profile configured.",
+          outputs: {
+            ...outputs,
+            producedOutputs: getStepOutputs("G-8").map((o) => ({
+              ...o,
+              value: outputs[o.key as keyof typeof outputs],
+            })),
+            inputs: getStepInputs("G-8").map((inp) => ({
+              ...inp,
+              data: { ...inp.data, value: context.outputs[inp.data.key!] },
+            })),
+          },
+        }
+      : {
+          completed: false,
+          message: "SAML profile not yet configured.",
+          outputs: {
+            inputs: getStepInputs("G-8"),
+            expectedOutputs: getStepOutputs("G-8"),
+          },
+        };
   } catch (e) {
     return handleCheckError(
       e,

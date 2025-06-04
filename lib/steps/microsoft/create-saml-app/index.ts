@@ -8,9 +8,19 @@ export const m6CreateSamlApp: StepDefinition = {
   id: "M-6",
   title: "Create Azure AD Enterprise App for SAML SSO",
   description: "Add a second Google app for single sign-on",
-  category: "SSO",
+  details:
+    "Creates a second gallery application specifically for SAML-based single sign-on with Google Workspace. This generates a new application registration and service principal that will handle SSO requests.",
+
+  category: "Microsoft",
+  activity: "SSO",
+  provider: "Microsoft",
+
+  automatability: "automated",
   automatable: true,
-  requires: [],
+
+  requires: ["M-5"],
+  nextStep: { id: "M-7", description: "Configure SAML settings" },
+  actions: ["POST /applicationTemplates/{templateId}/instantiate"],
   adminUrls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];

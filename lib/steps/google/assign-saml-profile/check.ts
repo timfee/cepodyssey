@@ -6,6 +6,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../utils/error-handling";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**
  * Confirm the SAML profile exists and is fully configured before assignment.
@@ -17,7 +18,14 @@ export async function checkAssignSamlProfile(
     OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
   ] as string;
   if (!profileName) {
-    return { completed: false, message: "SAML profile name not found." };
+    return {
+      completed: false,
+      message: "SAML profile name not found.",
+      outputs: {
+        inputs: getStepInputs("G-7"),
+        expectedOutputs: getStepOutputs("G-7"),
+      },
+    };
   }
 
   try {
@@ -34,6 +42,10 @@ export async function checkAssignSamlProfile(
       return {
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
+        outputs: {
+          inputs: getStepInputs("G-7"),
+          expectedOutputs: getStepOutputs("G-7"),
+        },
       };
     }
 
@@ -60,8 +72,29 @@ export async function checkAssignSamlProfile(
     );
 
     return configured
-      ? { completed: true, message: "SAML profile configured.", outputs }
-      : { completed: false, message: "SAML profile not yet configured." };
+      ? {
+          completed: true,
+          message: "SAML profile configured.",
+          outputs: {
+            ...outputs,
+            producedOutputs: getStepOutputs("G-7").map((o) => ({
+              ...o,
+              value: outputs[o.key as keyof typeof outputs],
+            })),
+            inputs: getStepInputs("G-7").map((inp) => ({
+              ...inp,
+              data: { ...inp.data, value: context.outputs[inp.data.key!] },
+            })),
+          },
+        }
+      : {
+          completed: false,
+          message: "SAML profile not yet configured.",
+          outputs: {
+            inputs: getStepInputs("G-7"),
+            expectedOutputs: getStepOutputs("G-7"),
+          },
+        };
   } catch (e) {
     return handleCheckError(
       e,

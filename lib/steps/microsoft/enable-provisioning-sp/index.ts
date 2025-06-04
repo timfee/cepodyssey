@@ -8,9 +8,22 @@ export const m2EnableProvisioningSp: StepDefinition = {
   id: "M-2",
   title: "Enable Provisioning App Service Principal",
   description: "Enable the sync app",
+  details:
+    "Enables the service principal created by the gallery app so that it can accept credentials and configuration settings.",
+
   category: "Microsoft",
+  activity: "Provisioning",
+  provider: "Microsoft",
+
+  automatability: "automated",
   automatable: true,
+
   requires: ["M-1"],
+  nextStep: {
+    id: "M-3",
+    description: "Authorize provisioning using Google admin",
+  },
+  actions: ["PATCH /servicePrincipals/{id}"],
   adminUrls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];

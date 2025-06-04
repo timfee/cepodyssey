@@ -2,6 +2,7 @@
 
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 import { APIError } from "@/lib/api/utils";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
@@ -15,7 +16,14 @@ export async function checkProvisioningUser(
   context: StepContext,
 ): Promise<StepCheckResult> {
   if (!context.domain) {
-    return { completed: false, message: "Domain not configured." };
+    return {
+      completed: false,
+      message: "Domain not configured.",
+      outputs: {
+        inputs: getStepInputs("G-2"),
+        expectedOutputs: getStepOutputs("G-2"),
+      },
+    };
   }
 
   try {
@@ -30,6 +38,17 @@ export async function checkProvisioningUser(
         outputs: {
           [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: user.primaryEmail,
           [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: user.id,
+          producedOutputs: getStepOutputs("G-2").map((o) => ({
+            ...o,
+            value:
+              o.key === OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL
+                ? user.primaryEmail
+                : user.id,
+          })),
+          inputs: getStepInputs("G-2").map((inp) => ({
+            ...inp,
+            data: { ...inp.data, value: context.outputs[inp.data.key!] },
+          })),
         },
       };
     }
@@ -37,12 +56,20 @@ export async function checkProvisioningUser(
     return {
       completed: false,
       message: `Service account '${email}' not found.`,
+      outputs: {
+        inputs: getStepInputs("G-2"),
+        expectedOutputs: getStepOutputs("G-2"),
+      },
     };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
       return {
         completed: false,
         message: `Service account 'azuread-provisioning@${context.domain}' not found.`,
+        outputs: {
+          inputs: getStepInputs("G-2"),
+          expectedOutputs: getStepOutputs("G-2"),
+        },
       };
     }
     return handleCheckError(e, "Couldn't verify service account existence.");

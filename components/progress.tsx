@@ -25,26 +25,38 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
       const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || {
         status: "pending",
       };
-      return { ...definition, ...statusInfo };
+
+      let effectiveStatus = statusInfo.status;
+      if (definition.requires && definition.requires.length > 0) {
+        const requirementsMet = definition.requires.every((reqId) => {
+          const req = stepsStatusMap[reqId];
+          return req && req.status === "completed";
+        });
+        if (!requirementsMet && statusInfo.status === "pending") {
+          effectiveStatus = "blocked";
+        }
+      }
+
+      return { ...definition, ...statusInfo, status: effectiveStatus };
     });
   }, [stepsStatusMap]);
 
   const categories = [
     { id: "all", label: "All Steps", steps: managedSteps },
     {
-      id: "google",
-      label: "Google",
-      steps: managedSteps.filter((s) => s.category === "Google"),
-    },
-    {
-      id: "microsoft",
-      label: "Microsoft",
-      steps: managedSteps.filter((s) => s.category === "Microsoft"),
+      id: "provisioning",
+      label: "Provisioning",
+      steps: managedSteps.filter((s) => s.activity === "Provisioning"),
     },
     {
       id: "sso",
       label: "SSO",
-      steps: managedSteps.filter((s) => s.category === "SSO"),
+      steps: managedSteps.filter((s) => s.activity === "SSO"),
+    },
+    {
+      id: "foundation",
+      label: "Foundation",
+      steps: managedSteps.filter((s) => s.activity === "Foundation"),
     },
   ];
 

@@ -1,43 +1,40 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
+import { Card, CardFooter } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
-  CheckCircle2Icon,
-  CircleIcon,
-  AlertCircleIcon,
-  Loader2Icon,
-  PlayIcon,
-  RotateCcwIcon,
-  MoreVerticalIcon,
-  ExternalLinkIcon,
-  InfoIcon,
-  KeyIcon,
-  ChevronRightIcon,
+  CheckCircle2,
+  UserCheck,
+  Lock,
+  AlertTriangle,
+  Zap,
+  Eye,
+  ClipboardEdit,
+  ExternalLink,
+  RefreshCw,
+  Loader2,
+  Info,
+  type LucideIcon,
 } from "lucide-react";
-import type { ManagedStep } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
-import { allStepDefinitions } from "@/lib/steps";
-import { useAppDispatch } from "@/hooks/use-redux";
-import {
-  openStepDetailsModal,
-  openStepOutputsModal,
-} from "@/lib/redux/slices/modals";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import type { ManagedStep } from "@/lib/types";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { useStepCompletion } from "@/hooks/use-step-completion";
+import { useAppDispatch } from "@/hooks/use-redux";
+import { updateStep } from "@/lib/redux/slices/setup-steps";
 
 interface StepCardProps {
   step: ManagedStep;
@@ -46,6 +43,75 @@ interface StepCardProps {
   canRunGlobal: boolean;
 }
 
+const stateConfig: Record<
+  string,
+  { icon: LucideIcon; colorClass: string; label: string; tooltip: string }
+> = {
+  "completed-verified": {
+    icon: CheckCircle2,
+    colorClass: "text-success",
+    label: "Completed",
+    tooltip: "Completed and verified by the system.",
+  },
+  "completed-user": {
+    icon: UserCheck,
+    colorClass: "text-sky-500",
+    label: "Marked as Done",
+    tooltip: "You've marked this step as completed.",
+  },
+  available: {
+    icon: Info,
+    colorClass: "text-primary",
+    label: "Available",
+    tooltip: "This step is ready to be actioned.",
+  },
+  blocked: {
+    icon: Lock,
+    colorClass: "text-muted-foreground",
+    label: "Blocked",
+    tooltip: "Prerequisites must be completed first.",
+  },
+  error: {
+    icon: AlertTriangle,
+    colorClass: "text-destructive",
+    label: "Error",
+    tooltip: "An error occurred during the last attempt.",
+  },
+};
+
+const automatabilityConfig: Record<
+  string,
+  {
+    icon: LucideIcon;
+    baseColorClass?: string;
+    badgeClasses?: string;
+    label: string;
+    tooltip: string;
+  }
+> = {
+  automated: {
+    icon: Zap,
+    baseColorClass: "text-primary",
+    label: "Automated",
+    tooltip: "This step can be fully automated by the system.",
+  },
+  supervised: {
+    icon: Eye,
+    badgeClasses:
+      "bg-warning/20 text-warning-foreground px-1.5 py-0.5 rounded-sm",
+    baseColorClass: "text-warning-foreground",
+    label: "Supervised",
+    tooltip: "This step requires your review before or during execution.",
+  },
+  manual: {
+    icon: ClipboardEdit,
+    baseColorClass: "text-muted-foreground",
+    label: "Manual",
+    tooltip:
+      "This step requires manual action from you, possibly in another system.",
+  },
+};
+
 export function StepCard({
   step,
   outputs,
@@ -53,293 +119,163 @@ export function StepCard({
   canRunGlobal,
 }: StepCardProps) {
   const dispatch = useAppDispatch();
+  const [userDone, setUserDone] = useStepCompletion(
+    step.id,
+    step.completionType === "user-marked",
+  );
 
-  // Get category accent color - subtle opacity
-  const getCategoryAccent = () => {
-    switch (step.category) {
-      case "Google":
-        return "border-l-4 border-l-blue-500/50";
-      case "Microsoft":
-        return "border-l-4 border-l-purple-500/50";
-      case "SSO":
-        return "border-l-4 border-l-green-500/50";
-    }
-  };
+  const statusKey =
+    step.status === "completed" && step.completionType === "user-marked"
+      ? "completed-user"
+      : step.status === "completed"
+        ? "completed-verified"
+        : step.status;
+  const statusInfo = stateConfig[statusKey];
+  const autoInfo = automatabilityConfig[step.automatability ?? "manual"];
+  const StatusIcon = statusInfo.icon;
+  const AutoIcon = autoInfo.icon;
 
-  // Get status display properties with consistent colors
-  const getStatusDisplay = () => {
-    switch (step.status) {
-      case "completed":
-        return {
-          icon: <CheckCircle2Icon className="h-5 w-5" />,
-          color: "text-green-600 dark:text-green-500",
-          borderColor: "border-green-200 dark:border-green-800/50",
-          bgColor: "bg-green-50/50 dark:bg-green-950/20",
-        };
-      case "in_progress":
-        return {
-          icon: <Loader2Icon className="h-5 w-5 animate-spin" />,
-          color: "text-blue-600 dark:text-blue-500",
-          borderColor: "border-blue-200 dark:border-blue-800/50",
-          bgColor: "bg-blue-50/50 dark:bg-blue-950/20",
-        };
-      case "failed":
-        return {
-          icon: <AlertCircleIcon className="h-5 w-5" />,
-          color: "text-red-600 dark:text-red-500",
-          borderColor: "border-red-200 dark:border-red-800/50",
-          bgColor: "bg-red-50/50 dark:bg-red-950/20",
-        };
-      default:
-        return {
-          icon: <CircleIcon className="h-5 w-5" />,
-          color: "text-gray-400 dark:text-gray-600",
-          borderColor: "border-gray-200 dark:border-gray-800",
-          bgColor: "",
-        };
-    }
-  };
+  const canExecute = useMemo(() => {
+    if (!canRunGlobal) return false;
+    if (step.status === "in_progress" || step.status === "completed")
+      return false;
+    return true;
+  }, [canRunGlobal, step.status]);
 
-  const statusDisplay = getStatusDisplay();
-
-  const dependencies = (step.requires || []).map((reqId) => {
-    const reqStep = allStepDefinitions.find((s) => s.id === reqId);
-    const outputKey = Object.values(OUTPUT_KEYS).find((v) =>
-      v.toLowerCase().startsWith(reqId.toLowerCase().replace("-", "")),
-    );
-    const met = outputKey ? Boolean(outputs[outputKey]) : false;
-    return {
-      id: reqId,
-      title: reqStep ? reqStep.title : reqId,
-      met,
-    };
-  });
-
-  // Check if step can be executed
-  const prerequisitesMet =
-    !step.requires ||
-    step.requires.every((reqId) => {
-      const reqStep = allStepDefinitions.find((s) => s.id === reqId);
-      return (
-        reqStep &&
-        outputs[
-          Object.values(OUTPUT_KEYS).find((v) =>
-            v.toLowerCase().startsWith(reqId.toLowerCase().replace("-", "")),
-          ) || ""
-        ]
-      );
-    });
-
-  const canExecute =
-    canRunGlobal && prerequisitesMet && step.status !== "in_progress";
-
-  // Primary action button logic
-  const getPrimaryAction = () => {
-    if (!step.automatable && step.status !== "completed") {
-      return (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            dispatch(openStepDetailsModal({ step, outputs }));
-          }}
-        >
-          <KeyIcon className="mr-2 h-4 w-4" />
-          View instructions
-        </Button>
-      );
-    }
-
-    if (step.automatable && step.status !== "completed") {
-      return (
-        <Button
-          size="sm"
-          onClick={() => onExecute(step.id)}
-          disabled={!canExecute}
-          variant={step.status === "failed" ? "destructive" : "default"}
-        >
-          {step.status === "in_progress" ? (
-            <>
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-              Working...
-            </>
-          ) : step.status === "failed" ? (
-            <>
-              <RotateCcwIcon className="mr-2 h-4 w-4" />
-              Retry
-            </>
-          ) : (
-            <>
-              <PlayIcon className="mr-2 h-4 w-4" />
-              Execute
-            </>
-          )}
-        </Button>
-      );
-    }
-
-    if (step.status === "completed") {
-      return (
-        <Button size="sm" variant="ghost" className="text-green-600" disabled>
-          <CheckCircle2Icon className="mr-2 h-4 w-4" />
-          Done
-        </Button>
-      );
-    }
-
-    return null;
-  };
+  const requiredInputs = useMemo(() => getStepInputs(step.id), [step.id]);
+  const producedOutputs = useMemo(() => getStepOutputs(step.id), [step.id]);
 
   return (
-    <Card
-      className={cn(
-        getCategoryAccent(),
-        statusDisplay.borderColor,
-        "transition-all hover:shadow-md",
-        "bg-background",
-        "h-auto",
-      )}
-    >
-      <CardHeader className={cn(statusDisplay.bgColor, "pb-3")}>
-        <div className="space-y-2">
-          {/* Header with status and menu */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 flex-1">
-              <div className={statusDisplay.color}>{statusDisplay.icon}</div>
-              <div className="flex-1 space-y-1">
-                <CardTitle className="text-base leading-tight">
-                  {step.title}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {step.id}
-                  </Badge>
-                  {step.metadata?.preExisting && (
-                    <Badge variant="secondary" className="text-xs">
-                      Already exists
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Dropdown menu for all secondary actions */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVerticalIcon className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={() =>
-                    dispatch(openStepDetailsModal({ step, outputs }))
-                  }
-                >
-                  <InfoIcon className="mr-2 h-4 w-4" />
-                  Instructions
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    dispatch(
-                      openStepOutputsModal({
-                        step,
-                        outputs,
-                        allStepsStatus: {},
-                      }),
-                    )
-                  }
-                >
-                  <ChevronRightIcon className="mr-2 h-4 w-4" />
-                  Details
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {step.metadata?.resourceUrl && (
-                  <DropdownMenuItem asChild>
-                    <a
-                      href={step.metadata.resourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                      View
-                    </a>
-                  </DropdownMenuItem>
-                )}
-                {step.adminUrls?.configure && (
-                  <DropdownMenuItem asChild>
-                    <a
-                      href={
-                        typeof step.adminUrls.configure === "function"
-                          ? step.adminUrls.configure(outputs) || "#"
-                          : step.adminUrls.configure
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                      Configure
-                    </a>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Compact description */}
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {step.description}
-          </p>
+    <Card className="shadow-google-card hover:shadow-google-card-hover transition-all">
+      <div className="flex items-start p-4 gap-4">
+        <div className={cn("flex-shrink-0", statusInfo.colorClass)}>
+          {StatusIcon && <StatusIcon className="h-5 w-5" />}
         </div>
-      </CardHeader>
-
-      <CardContent className="pt-3 pb-3 space-y-3">
-        {/* Primary action button */}
-        <div className="flex justify-end">{getPrimaryAction()}</div>
-
-        {/* Error display */}
-        {step.status === "failed" && step.error && (
-          <Alert variant="destructive" className="py-2">
-            <AlertCircleIcon className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              {step.error}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {dependencies.length > 0 && (
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-auto p-1 text-xs">
-                  <InfoIcon className="h-3 w-3 mr-1" />
-                  {dependencies.filter((d) => d.met).length}/{dependencies.length}{" "}
-                  dependencies met
-                </Button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">Dependencies</h4>
-                  {dependencies.map((dep) => (
-                    <div
-                      key={dep.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span>{dep.title}</span>
-                      <Badge
-                        variant={dep.met ? "default" : "destructive"}
-                        className="text-xs"
-                      >
-                        {dep.met ? "Met" : "Missing"}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm">{step.title}</h3>
+            <span className="text-xs text-muted-foreground">{step.id}</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="ml-1">
+                    <AutoIcon
+                      className={cn(
+                        "h-4 w-4",
+                        autoInfo.baseColorClass ?? "text-muted-foreground",
+                      )}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{autoInfo.label}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          <p className="text-sm text-muted-foreground">{step.description}</p>
+        </div>
+        <div className="flex gap-2">
+          {step.status === "failed" && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onExecute(step.id)}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" /> Retry
+            </Button>
+          )}
+          {step.status !== "completed" && step.automatability !== "manual" && (
+            <Button
+              size="sm"
+              onClick={() => onExecute(step.id)}
+              disabled={!canExecute}
+            >
+              {step.status === "in_progress" ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4 mr-2" />
+              )}
+              {step.status === "in_progress" ? "Working" : "Execute"}
+            </Button>
+          )}
+          {step.automatability === "manual" && (
+            <Button
+              size="sm"
+              variant={userDone ? "secondary" : "outline"}
+              onClick={() => {
+                const newVal = !userDone;
+                setUserDone(newVal);
+                dispatch(
+                  updateStep({
+                    id: step.id,
+                    status: newVal ? "completed" : "pending",
+                    completionType: newVal ? "user-marked" : undefined,
+                  }),
+                );
+              }}
+            >
+              {userDone ? (
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+              ) : (
+                <ClipboardEdit className="h-4 w-4 mr-1" />
+              )}
+              {userDone ? "Mark Undone" : "Mark Done"}
+            </Button>
+          )}
+        </div>
+      </div>
+      <Accordion type="single" collapsible>
+        <AccordionItem value="details">
+          <AccordionTrigger className="px-4">Details</AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground">
+            {step.details}
+          </AccordionContent>
+        </AccordionItem>
+        {requiredInputs.length > 0 && (
+          <AccordionItem value="inputs">
+            <AccordionTrigger className="px-4">
+              Required Inputs
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <ul className="text-sm list-disc pl-5 space-y-1">
+                {requiredInputs.map((inp) => (
+                  <li key={inp.data.key || inp.data.stepId}>
+                    {inp.data.description}
+                  </li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
         )}
-      </CardContent>
+        {producedOutputs.length > 0 && (
+          <AccordionItem value="outputs">
+            <AccordionTrigger className="px-4">Outputs</AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <ul className="text-sm list-disc pl-5 space-y-1">
+                {producedOutputs.map((out) => (
+                  <li key={out.key}>{out.description}</li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+      </Accordion>
+      {step.adminUrls?.configure && (
+        <CardFooter className="px-4 py-2">
+          <Button variant="link" asChild className="text-xs p-0">
+            <a
+              href={
+                typeof step.adminUrls.configure === "function"
+                  ? step.adminUrls.configure(outputs) || "#"
+                  : step.adminUrls.configure
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-3 w-3 mr-1" /> Configure
+            </a>
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
