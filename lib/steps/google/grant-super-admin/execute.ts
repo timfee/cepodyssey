@@ -15,6 +15,7 @@ export async function executeGrantSuperAdmin(
   try {
     const token = await getGoogleToken();
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
+    const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;
     if (!email) {
       return {
         success: false,
@@ -22,6 +23,12 @@ export async function executeGrantSuperAdmin(
           message: "Provisioning user email missing.",
           code: "MISSING_DEPENDENCY",
         },
+      };
+    }
+    if (!customerId) {
+      return {
+        success: false,
+        error: { message: "Customer ID not found in previous step." },
       };
     }
     const user = await google.getUser(token, email);
@@ -42,7 +49,7 @@ export async function executeGrantSuperAdmin(
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
-    await google.assignAdminRole(token, email, "3");
+    await google.assignAdminRole(token, email, "3", customerId);
     return {
       success: true,
       message: `Super Admin role assigned to '${email}'.`,

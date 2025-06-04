@@ -181,6 +181,14 @@ Errors are displayed through a centralized error dialog managed by Redux:
 - Other errors include diagnostic details and can be dismissed
 - Session persistence across token refreshes
 
+### Error Handling
+
+All errors are surfaced through a single global modal. Dispatch `setError` with a message and optional details to the Redux store and the modal will appear. Avoid using toast notifications for errors.
+
+### Google API Integration
+
+The Google `customerId` is fetched during the domain verification step and stored in `outputs['G-4'].customerId`. Subsequent Google API calls should use this value instead of the placeholder `my_customer`.
+
 ## Testing
 
 Run `pnpm lint` to check code formatting and `pnpm build` to create a production build.

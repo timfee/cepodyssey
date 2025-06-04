@@ -5,7 +5,6 @@ import {
   Loader2Icon,
   PlayIcon,
   LogInIcon,
-  ExternalLinkIcon,
 } from "lucide-react";
 import type { Session } from "next-auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
@@ -16,8 +15,7 @@ import { useStore } from "react-redux";
 import { toast } from "sonner";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { showError, ErrorActionType } from "@/lib/redux/slices/errors";
-import { APIError } from "@/lib/api/utils";
+import { setError } from "@/lib/redux/slices/errors";
 import {
   loadProgress,
   saveProgress,
@@ -158,22 +156,9 @@ export function AutomationDashboard({
     async (stepId: string) => {
       if (!canRunAutomation) {
         dispatch(
-          showError({
-            error: {
-              title: "Setup Required",
-              message:
-                "Please sign in to both Google and Microsoft to continue.",
-              code: "SETUP_REQUIRED",
-              actions: [
-                {
-                  type: ErrorActionType.SIGN_IN,
-                  label: "Go to Login",
-                  variant: "default",
-                  icon: "LogInIcon",
-                },
-              ],
-            },
-            dismissible: true,
+          setError({
+            message:
+              "Please sign in to both Google and Microsoft to continue.",
           }),
         );
         return;
@@ -182,13 +167,8 @@ export function AutomationDashboard({
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
         dispatch(
-          showError({
-            error: {
-              title: "Step Not Found",
-              message: `Step ${stepId} not found in definitions.`,
-              code: "STEP_NOT_FOUND",
-            },
-            dismissible: true,
+          setError({
+            message: `Step ${stepId} not found in definitions.`,
           }),
         );
         return;
@@ -252,35 +232,12 @@ export function AutomationDashboard({
           );
 
           if (result.outputs?.errorCode === "AUTH_EXPIRED") {
-            dispatch(
-              showError({
-                error: {
-                  title: "Authentication Required",
-                  message: errorMessage,
-                  code: "AUTH_EXPIRED",
-                  provider: result.outputs.errorProvider as "google" | "microsoft",
-                  actions: [
-                    {
-                      type: ErrorActionType.SIGN_IN,
-                      label: "Sign In",
-                      variant: "default",
-                      icon: "LogInIcon",
-                    },
-                  ],
-                },
-                dismissible: false,
-              }),
-            );
+            dispatch(setError({ message: errorMessage }));
           } else {
             dispatch(
-              showError({
-                error: {
-                  title: `${definition.title} Failed`,
-                  message: errorMessage,
-                  code: result.error?.code || "EXECUTION_ERROR",
-                  details: { stepId, ...result.outputs },
-                },
-                dismissible: true,
+              setError({
+                message: `${definition.title} Failed: ${errorMessage}`,
+                details: { stepId, ...result.outputs },
               }),
             );
           }
@@ -300,35 +257,12 @@ export function AutomationDashboard({
         );
 
         if (isAuthenticationError(err)) {
-          dispatch(
-            showError({
-              error: {
-                title: "Authentication Required",
-                message: err.message,
-                code: "AUTH_EXPIRED",
-                provider: err.provider,
-                actions: [
-                  {
-                    type: ErrorActionType.SIGN_IN,
-                    label: "Sign In",
-                    variant: "default",
-                    icon: "LogInIcon",
-                  },
-                ],
-              },
-              dismissible: false,
-            }),
-          );
+          dispatch(setError({ message: err.message }));
         } else {
           dispatch(
-            showError({
-              error: {
-                title: "Execution Failed",
-                message: `Failed to execute ${definition.title}: ${message}`,
-                code: "EXECUTION_ERROR",
-                details: { stepId, error: message },
-              },
-              dismissible: true,
+            setError({
+              message: `Failed to execute ${definition.title}: ${message}`,
+              details: { stepId },
             }),
           );
         }
@@ -356,26 +290,10 @@ export function AutomationDashboard({
 
         if (checkResult.outputs?.errorCode === "AUTH_EXPIRED") {
           dispatch(
-            showError({
-              error: {
-                title: "Authentication Required",
-                message:
-                  checkResult.message ||
-                  "Your session has expired. Please sign in again.",
-                code: "AUTH_EXPIRED",
-                provider: checkResult.outputs.errorProvider as
-                  | "google"
-                  | "microsoft",
-                actions: [
-                  {
-                    type: ErrorActionType.SIGN_IN,
-                    label: "Sign In",
-                    variant: "default",
-                    icon: "LogInIcon",
-                  },
-                ],
-              },
-              dismissible: false,
+            setError({
+              message:
+                checkResult.message ||
+                "Your session has expired. Please sign in again.",
             }),
           );
 
@@ -406,42 +324,16 @@ export function AutomationDashboard({
           );
 
           if (checkResult.outputs.errorCode === "API_NOT_ENABLED") {
-            const enableUrlMatch = errorMessage?.match(
-              /https:\/\/console\.developers\.google\.com[^\s]+/,
-            );
-            const enableUrl = enableUrlMatch ? enableUrlMatch[0] : null;
-
             dispatch(
-              showError({
-                error: {
-                  title: "Enable this Google API",
-                  message: "Enable the required API to continue.",
-                  code: "API_NOT_ENABLED",
-                  details: { apiUrl: enableUrl },
-                  actions: enableUrl
-                    ? [
-                        {
-                          type: ErrorActionType.ENABLE_API,
-                          label: "Enable API",
-                          variant: "default",
-                          icon: "ExternalLinkIcon",
-                          payload: { url: enableUrl },
-                        },
-                      ]
-                    : [],
-                },
-                dismissible: true,
+              setError({
+                message: errorMessage,
+                details: { apiUrl: errorMessage.match(/https:\/\/[^\s]+/)?[0]: undefined },
               }),
             );
           } else {
             dispatch(
-              showError({
-                error: {
-                  title: "Check Failed",
-                  message: errorMessage,
-                  code: checkResult.outputs.errorCode as string,
-                },
-                dismissible: true,
+              setError({
+                message: `Check Failed: ${errorMessage}`,
               }),
             );
           }
@@ -474,16 +366,11 @@ export function AutomationDashboard({
         );
 
         dispatch(
-          showError({
-            error: {
-              title: "Check Failed",
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred",
-              code: "CHECK_ERROR",
-            },
-            dismissible: true,
+          setError({
+            message:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred",
           }),
         );
       }

@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Providers } from "./providers";
-import { ErrorToastProvider } from "@/components/error-toast-provider";
 import { ModalManager } from "@/components/modal-manager";
 import { DebugPanel } from "@/components/debug-panel";
 
@@ -55,12 +54,10 @@ export default function RootLayout({
           </AlertDescription>
         </Alert>
         <Providers>
-          <ErrorToastProvider>
-            {children}
-            <ModalManager />
-            <DebugPanel />
-            <Toaster richColors />
-          </ErrorToastProvider>
+          {children}
+          <ModalManager />
+          <DebugPanel />
+          <Toaster richColors />
         </Providers>
       </body>
     </html>

@@ -11,14 +11,18 @@ import { handleExecutionError } from "../utils/error-handling";
  * Create the 'Automation' Organizational Unit in Google Workspace.
  */
 export async function executeCreateAutomationOu(
-  _context: StepContext,
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
     const ouName = "Automation";
     const parentPath = "/";
+    const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;
+    if (!customerId) {
+      return { success: false, error: { message: "Customer ID not found" } };
+    }
 
-    const result = await google.createOrgUnit(token, ouName, parentPath);
+    const result = await google.createOrgUnit(token, ouName, parentPath, customerId);
 
     if (typeof result === "object" && "alreadyExists" in result) {
       const existing = await google.getOrgUnit(token, `${parentPath}${ouName}`);
