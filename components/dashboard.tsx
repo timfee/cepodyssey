@@ -277,6 +277,21 @@ export function AutomationDashboard({
           dispatch(addOutputs(checkResult.outputs));
         }
 
+        if (checkResult.completed) {
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "completed",
+              message: checkResult.message || "Pre-existing resource found",
+              metadata: {
+                preExisting: true,
+                checkedAt: new Date().toISOString(),
+                ...(checkResult.outputs || {}),
+              },
+            }),
+          );
+        }
+
         // Handle auth errors from the check result
         if (
           !checkResult.completed &&
@@ -351,20 +366,6 @@ export function AutomationDashboard({
           return;
         }
 
-        if (checkResult.completed) {
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "completed",
-              message: checkResult.message || "Pre-existing resource found",
-              metadata: {
-                preExisting: true,
-                checkedAt: new Date().toISOString(),
-                ...(checkResult.outputs || {}),
-              },
-            }),
-          );
-        }
       } catch (error: unknown) {
         // This catch block should rarely be hit now since we handle errors in executeStepCheck
         console.error(`Unexpected error in executeCheck for ${stepId}:`, error);
