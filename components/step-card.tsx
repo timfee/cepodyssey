@@ -37,6 +37,7 @@ import {
   openStepOutputsModal,
 } from "@/lib/redux/slices/modals";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface StepCardProps {
   step: ManagedStep;
@@ -53,43 +54,47 @@ export function StepCard({
 }: StepCardProps) {
   const dispatch = useAppDispatch();
 
-  // Get category accent color
+  // Get category accent color - subtle opacity
   const getCategoryAccent = () => {
     switch (step.category) {
       case "Google":
-        return "border-l-4 border-l-blue-500";
+        return "border-l-4 border-l-blue-500/50";
       case "Microsoft":
-        return "border-l-4 border-l-purple-500";
+        return "border-l-4 border-l-purple-500/50";
       case "SSO":
-        return "border-l-4 border-l-green-500";
+        return "border-l-4 border-l-green-500/50";
     }
   };
 
-  // Get status display properties
+  // Get status display properties with consistent colors
   const getStatusDisplay = () => {
     switch (step.status) {
       case "completed":
         return {
           icon: <CheckCircle2Icon className="h-5 w-5" />,
-          color: "text-green-600",
-          bgColor: "bg-green-50 dark:bg-green-950/30",
+          color: "text-green-600 dark:text-green-500",
+          borderColor: "border-green-200 dark:border-green-800/50",
+          bgColor: "bg-green-50/50 dark:bg-green-950/20",
         };
       case "in_progress":
         return {
           icon: <Loader2Icon className="h-5 w-5 animate-spin" />,
-          color: "text-blue-600",
-          bgColor: "bg-blue-50 dark:bg-blue-950/30",
+          color: "text-blue-600 dark:text-blue-500",
+          borderColor: "border-blue-200 dark:border-blue-800/50",
+          bgColor: "bg-blue-50/50 dark:bg-blue-950/20",
         };
       case "failed":
         return {
           icon: <AlertCircleIcon className="h-5 w-5" />,
-          color: "text-red-600",
-          bgColor: "bg-red-50 dark:bg-red-950/30",
+          color: "text-red-600 dark:text-red-500",
+          borderColor: "border-red-200 dark:border-red-800/50",
+          bgColor: "bg-red-50/50 dark:bg-red-950/20",
         };
       default:
         return {
           icon: <CircleIcon className="h-5 w-5" />,
-          color: "text-gray-400",
+          color: "text-gray-400 dark:text-gray-600",
+          borderColor: "border-gray-200 dark:border-gray-800",
           bgColor: "",
         };
     }
@@ -186,8 +191,16 @@ export function StepCard({
   };
 
   return (
-    <Card className={`${getCategoryAccent()} transition-all hover:shadow-md`}>
-      <CardHeader className={`${statusDisplay.bgColor} pb-3`}>
+    <Card
+      className={cn(
+        getCategoryAccent(),
+        statusDisplay.borderColor,
+        "transition-all hover:shadow-md",
+        "bg-background",
+        "h-auto",
+      )}
+    >
+      <CardHeader className={cn(statusDisplay.bgColor, "pb-3")}>
         <div className="space-y-2">
           {/* Header with status and menu */}
           <div className="flex items-start justify-between">
@@ -287,6 +300,7 @@ export function StepCard({
         {/* Error display */}
         {step.status === "failed" && step.error && (
           <Alert variant="destructive" className="py-2">
+            <AlertCircleIcon className="h-4 w-4" />
             <AlertDescription className="text-xs">
               {step.error}
             </AlertDescription>
@@ -294,34 +308,36 @@ export function StepCard({
         )}
 
         {dependencies.length > 0 && (
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-auto p-1 text-xs">
-                <InfoIcon className="h-3 w-3 mr-1" />
-                {dependencies.filter((d) => d.met).length}/{dependencies.length}{" "}
-                dependencies met
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Dependencies</h4>
-                {dependencies.map((dep) => (
-                  <div
-                    key={dep.id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span>{dep.title}</span>
-                    <Badge
-                      variant={dep.met ? "default" : "destructive"}
-                      className="text-xs"
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-auto p-1 text-xs">
+                  <InfoIcon className="h-3 w-3 mr-1" />
+                  {dependencies.filter((d) => d.met).length}/{dependencies.length}{" "}
+                  dependencies met
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Dependencies</h4>
+                  {dependencies.map((dep) => (
+                    <div
+                      key={dep.id}
+                      className="flex items-center justify-between text-sm"
                     >
-                      {dep.met ? "Met" : "Missing"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </HoverCardContent>
-          </HoverCard>
+                      <span>{dep.title}</span>
+                      <Badge
+                        variant={dep.met ? "default" : "destructive"}
+                        className="text-xs"
+                      >
+                        {dep.met ? "Met" : "Missing"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         )}
       </CardContent>
     </Card>

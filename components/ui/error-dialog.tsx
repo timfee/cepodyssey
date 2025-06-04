@@ -72,42 +72,49 @@ export function ErrorDialog({
     }
   };
 
-  const dismissible = error.actions && error.actions.length > 0;
+  const hasActions = error.actions && error.actions.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={dismissible ? onOpenChange : undefined}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]" showCloseButton={true}>
         <DialogHeader>
           <DialogTitle>{error.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p>{error.message}</p>
-          {error.actions?.length ? (
-            <div className="flex gap-2">
-              {error.actions.map((action) => (
+          <div className="flex gap-2 justify-end">
+            {hasActions ? (
+              error.actions!.map((action) => (
                 <Button
                   key={action.label}
-                  onClick={action.onClick}
-                  variant={action.variant}
+                  onClick={() => {
+                    action.onClick();
+                    onOpenChange(false);
+                  }}
+                  variant={action.variant || "default"}
                 >
                   {action.icon}
                   {action.label}
                 </Button>
-              ))}
-            </div>
-          ) : null}
+              ))
+            ) : (
+              <Button onClick={() => onOpenChange(false)} variant="outline">
+                Dismiss
+              </Button>
+            )}
+          </div>
           {error.diagnostics ? (
             <Collapsible open={showDiag} onOpenChange={setShowDiag}>
               <CollapsibleTrigger>
-                <Button variant="outline">
-                  {showDiag ? "Hide Diagnostics" : "Show Diagnostics"}
+                <Button variant="ghost" size="sm" className="w-full">
+                  {showDiag ? "Hide" : "Show"} Diagnostics
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 max-h-60 overflow-auto text-sm">
-                <pre className="whitespace-pre-wrap">
+              <CollapsibleContent className="mt-2 max-h-60 overflow-auto text-xs">
+                <pre className="whitespace-pre-wrap bg-muted p-2 rounded">
                   {JSON.stringify(error.diagnostics, null, 2)}
                 </pre>
-                <Button variant="outline" className="mt-2" onClick={handleCopy}>
+                <Button variant="outline" size="sm" className="mt-2" onClick={handleCopy}>
                   Copy
                 </Button>
               </CollapsibleContent>
