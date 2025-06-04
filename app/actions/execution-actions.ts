@@ -375,44 +375,6 @@ export async function executeG5InitiateGoogleSamlProfile(
 }
 
 /**
- * G-S0: Enable provisioning on the existing SAML profile and guide token retrieval
- */
-export async function executeGS0EnableProvisioning(
-  context: StepContext,
-): Promise<StepExecutionResult> {
-  try {
-    const profileFullName = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-    ] as string;
-
-    if (!profileFullName) {
-      return {
-        success: false,
-        error: {
-          message:
-            "SAML profile not found. Complete G-5 (Initiate Google SAML Profile) first.",
-          code: "MISSING_DEPENDENCY",
-        },
-      };
-    }
-
-    return {
-      success: true,
-      message:
-        "To enable provisioning on your existing SAML profile:\n\n" +
-        "1. Click below to open your 'Azure AD SSO' profile\n" +
-        "2. Click 'SET UP AUTOMATIC USER PROVISIONING'\n" +
-        "3. Copy the 'Authorization token'\n" +
-        "4. Return here and click 'Enter Token'\n\n" +
-        "This uses the same SAML profile from step G-5 - no temporary app needed!",
-      resourceUrl: portalUrls.google.sso.samlProfile(profileFullName),
-    };
-  } catch (e) {
-    return handleExecutionError(e, "G-S0");
-  }
-}
-
-/**
  * G-6: Update the Google SAML profile with Azure IdP metadata.
  */
 export async function executeG6UpdateGoogleSamlWithAzureIdp(

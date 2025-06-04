@@ -141,7 +141,7 @@ All modals use Redux for state management:
 
 ```typescript
 // Import modal actions
-import { openGoogleTokenModal, closeGoogleTokenModal } from "@/lib/redux/slices/modals";
+import { openStepDetailsModal } from "@/lib/redux/slices/modals";
 
 // Open modal with data
 dispatch(openStepDetailsModal({
@@ -157,7 +157,6 @@ export function StepDetailsModal() {
 ```
 
 **Modal Types:**
-- `GoogleTokenModal`: For entering provisioning token
 - `StepDetailsModal`: For viewing step instructions and links
 - `StepOutputsDialog`: For viewing inputs/outputs dependencies
 

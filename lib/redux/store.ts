@@ -11,11 +11,8 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      // Allow Date objects and functions in state metadata
-      serializableCheck: {
-        ignoredActions: ["modals/openGoogleTokenModal"],
-        ignoredPaths: ["modals.googleToken.onCompleteCallback"],
-      },
+      // Allow Date objects in state metadata
+      serializableCheck: false,
     }),
 });
 

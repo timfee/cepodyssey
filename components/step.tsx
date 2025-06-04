@@ -5,7 +5,6 @@ import {
   CheckCircle2Icon,
   CircleIcon,
   CheckIcon,
-  KeyIcon,
   ExternalLinkIcon,
   InfoIcon,
   Loader2Icon,
@@ -37,10 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  openGoogleTokenModal,
-  openStepOutputsModal,
-} from "@/lib/redux/slices/modals";
+import { openStepOutputsModal } from "@/lib/redux/slices/modals";
 
 interface StepItemProps {
   step: ManagedStep;
@@ -222,47 +218,7 @@ export function StepItem({
                 Manual Action Required
               </h5>
 
-              {/* Special handling for G-S0 */}
-              {step.id === "G-S0" && (
-                <>
-                  <p className="text-xs text-blue-800 dark:text-blue-200">
-                    Retrieve the provisioning token from Google Admin Console
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        dispatch(openGoogleTokenModal({}));
-                      }}
-                      variant="default"
-                    >
-                      <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-                      Enter Token
-                    </Button>
-                    {step.adminUrls?.configure && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a
-                          href={
-                            typeof step.adminUrls.configure === "function"
-                              ? (step.adminUrls.configure(outputs) ?? "#")
-                              : step.adminUrls.configure
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" />
-                          Open Google Admin
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                  {/* GoogleTokenModal is rendered via DialogProvider */}
-                </>
-              )}
-
-              {/* Default handling for other manual steps */}
-              {step.id !== "G-S0" && (
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                   {step.adminUrls?.configure && (
                     <Button variant="outline" size="sm" asChild>
                       <a
@@ -290,7 +246,6 @@ export function StepItem({
                     </Button>
                   )}
                 </div>
-              )}
             </div>
           )}
 

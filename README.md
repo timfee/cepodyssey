@@ -27,12 +27,12 @@ and replicates the manual workflow in discrete steps:
 2. **Configure Microsoft Entra ID provisioning**
    - Add the _Google Cloud/G Suite Connector by Microsoft_ gallery app as
      `Google Cloud (Provisioning)`.
-
-- Authorize the app in the Azure portal using the `azuread-provisioning`
-  account (the assistant provides guidance for this manual OAuth step) and
-  adjust the attribute mappings for users and groups.
-- Optionally assign specific users or groups and then enable automatic
-  provisioning.
+   - Authorize the app in the Azure portal using OAuth consent with the 
+     `azuread-provisioning` account (step M-3 provides guidance for this 
+     manual authorization process).
+   - Adjust the attribute mappings for users and groups.
+   - Optionally assign specific users or groups and then enable automatic
+     provisioning.
 
 3. **Set up single sign-on**
    - Create a SAML profile in the Admin Console named `Entra ID`.

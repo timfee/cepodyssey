@@ -9,10 +9,10 @@ export const m3AuthorizeProvisioning: StepDefinition = {
   id: "M-3",
   title: "Authorize Azure AD Provisioning to Google Workspace",
   description:
-    "Manual step to authorize Azure AD to provision via OAuth. In the Azure portal, open the provisioning app, click 'Authorize', sign in with the Google provisioning user created in G-2, then test the connection.",
+    "Manual step to authorize Azure AD to provision via OAuth. In the Azure portal, open the provisioning app, navigate to Provisioning settings, click 'Authorize', and sign in with the Google provisioning user created in G-2. After successful authorization, test the connection to ensure it works.",
   category: "Microsoft",
   automatable: false,
-  requires: ["M-2", "G-2"],
+  requires: ["M-2", "G-3"], // Requires G-3 to ensure the provisioning user has admin rights
   adminUrls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];

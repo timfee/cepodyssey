@@ -1,11 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { ManagedStep } from "@/lib/types";
 
-interface GoogleTokenModalState {
-  isOpen: boolean;
-  onCompleteCallback?: () => void;
-}
-
 interface StepDetailsModalState {
   isOpen: boolean;
   step: ManagedStep | null;
@@ -20,16 +15,11 @@ interface StepOutputsModalState {
 }
 
 interface ModalsState {
-  googleToken: GoogleTokenModalState;
   stepDetails: StepDetailsModalState;
   stepOutputs: StepOutputsModalState;
 }
 
 const initialState: ModalsState = {
-  googleToken: {
-    isOpen: false,
-    onCompleteCallback: undefined,
-  },
   stepDetails: {
     isOpen: false,
     step: null,
@@ -47,20 +37,6 @@ export const modalsSlice = createSlice({
   name: "modals",
   initialState,
   reducers: {
-    // Google Token Modal
-    openGoogleTokenModal(
-      state,
-      action: PayloadAction<{ onComplete?: () => void }>
-    ) {
-      state.googleToken.isOpen = true;
-      // Store callback as a serializable identifier if needed
-      // For now, we'll handle callbacks differently
-    },
-    closeGoogleTokenModal(state) {
-      state.googleToken.isOpen = false;
-      state.googleToken.onCompleteCallback = undefined;
-    },
-
     // Step Details Modal
     openStepDetailsModal(
       state,
@@ -102,7 +78,6 @@ export const modalsSlice = createSlice({
 
     // Close all modals (useful for cleanup)
     closeAllModals(state) {
-      state.googleToken.isOpen = false;
       state.stepDetails.isOpen = false;
       state.stepOutputs.isOpen = false;
     },
@@ -110,8 +85,6 @@ export const modalsSlice = createSlice({
 });
 
 export const {
-  openGoogleTokenModal,
-  closeGoogleTokenModal,
   openStepDetailsModal,
   closeStepDetailsModal,
   openStepOutputsModal,
@@ -122,8 +95,6 @@ export const {
 export default modalsSlice.reducer;
 
 // Selectors
-export const selectGoogleTokenModal = (state: { modals: ModalsState }) =>
-  state.modals.googleToken;
 export const selectStepDetailsModal = (state: { modals: ModalsState }) =>
   state.modals.stepDetails;
 export const selectStepOutputsModal = (state: { modals: ModalsState }) =>
