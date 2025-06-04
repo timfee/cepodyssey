@@ -6,7 +6,7 @@ import {
 } from "./api-enablement-error";
 import { wrapAuthError } from "./auth-interceptor";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
-import { googleDirectoryUrls, googleIdentityUrls } from "./url-builder";
+import { googleDirectoryUrls, googleIdentityUrls, API_BASES } from "./url-builder";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -55,6 +55,28 @@ export interface IdpCredential {
 }
 
 const GWS_CUSTOMER_ID = "my_customer";
+
+export async function getLoggedInUser(token: string): Promise<DirectoryUser> {
+  try {
+    const profileRes = await fetchWithAuth(
+      `${API_BASES.googleOAuth}/userinfo`,
+      token,
+    );
+    const profile = await profileRes.json();
+    const email = profile.email;
+    const userRes = await fetchWithAuth(
+      googleDirectoryUrls.users.get(email),
+      token,
+    );
+    const data = await handleApiResponse<DirectoryUser>(userRes);
+    if (data && typeof data === 'object' && 'alreadyExists' in data) {
+      throw new APIError('User lookup failed', 404);
+    }
+    return data;
+  } catch (error) {
+    handleGoogleError(error);
+  }
+}
 
 function handleGoogleError(error: unknown): never {
   if (
@@ -125,10 +147,11 @@ export async function createOrgUnit(
   token: string,
   name: string,
   parentOrgUnitPath = "/",
+  customerId = GWS_CUSTOMER_ID,
 ): Promise<GoogleOrgUnit | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
+      googleDirectoryUrls.orgUnits.create(customerId),
       token,
       {
         method: "POST",
@@ -138,7 +161,7 @@ export async function createOrgUnit(
     console.log("Sending request to createOrgUnit:", {
       name,
       parentOrgUnitPath,
-      url: googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
+      url: googleDirectoryUrls.orgUnits.create(customerId),
     });
 
     return handleApiResponse<GoogleOrgUnit>(res);
@@ -153,7 +176,7 @@ export async function createOrgUnit(
       const rootOu = orgUnits.find((ou) => ou.orgUnitPath === "/");
       if (rootOu?.orgUnitId) {
         const retryRes = await fetchWithAuth(
-          googleDirectoryUrls.orgUnits.create(GWS_CUSTOMER_ID),
+          googleDirectoryUrls.orgUnits.create(customerId),
           token,
           {
             method: "POST",
@@ -333,10 +356,11 @@ export async function assignAdminRole(
   token: string,
   userEmail: string,
   roleId: string,
+  customerId = GWS_CUSTOMER_ID,
 ): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
-      googleDirectoryUrls.roles.assignments.create(GWS_CUSTOMER_ID),
+      googleDirectoryUrls.roles.assignments.create(customerId),
       token,
       {
         method: "POST",

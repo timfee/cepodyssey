@@ -56,7 +56,7 @@ export const googleDirectoryUrls = {
       return url.toString();
     },
     get: (userKey: string) =>
-      `${googleDirectoryUrls.base()}/users/${encodeURIComponent(userKey)}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath`,
+      `${googleDirectoryUrls.base()}/users/${encodeURIComponent(userKey)}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath,customerId`,
     create: () => `${googleDirectoryUrls.base()}/users`,
   },
 
