@@ -3,7 +3,7 @@
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
 
 /**
  * Provide instructions and link for assigning users to the SAML app in Azure.

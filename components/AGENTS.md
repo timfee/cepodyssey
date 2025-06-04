@@ -162,7 +162,6 @@ export function StepDetailsModal() {
 **Modal Types:**
 
 - `StepDetailsModal`: For viewing step instructions and links
-- `StepOutputsDialog`: For viewing inputs/outputs dependencies
 
 **Modal Manager Pattern:**
 

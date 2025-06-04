@@ -6,7 +6,7 @@ import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 import { APIError } from "@/lib/api/utils";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
-import { handleCheckError } from "../utils/error-handling";
+import { handleCheckError } from "../../utils/error-handling";
 
 /**
  * Verify the provisioning user exists in Google Workspace.

@@ -7,6 +7,7 @@ import {
   LogInIcon,
 } from "lucide-react";
 import type { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 import { useSessionSync } from "@/hooks/use-session-sync";
 import { useStepExecution } from "@/hooks/use-step-execution";
 import { useRouter } from "next/navigation";
@@ -357,7 +358,9 @@ export function AutomationDashboard({
 
   if (
     status === "authenticated" &&
-    (!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) &&
+    ((!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) ||
+      (session?.error as unknown as string) === 'MissingTokens' ||
+      session?.error === 'RefreshTokenError') &&
     (appConfig.domain || appConfig.tenantId)
   ) {
     return (
@@ -366,19 +369,19 @@ export function AutomationDashboard({
           <Alert variant="destructive">
             <AlertTriangleIcon className="h-5 w-5" />
             <AlertTitle>Authentication Required</AlertTitle>
-            <AlertDescription>
-              Your session has expired. Please sign in again to continue
-              automation.
-            </AlertDescription>
-          </Alert>
-          <Button
-            onClick={() => router.push("/login")}
-            className="mt-4 w-full"
-            size="lg"
-          >
-            <LogInIcon className="mr-2 h-5 w-5" />
-            Sign in
-          </Button>
+          <AlertDescription>
+            Your session is invalid. Please sign out completely and sign in
+            again with both Google and Microsoft.
+          </AlertDescription>
+        </Alert>
+        <Button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="mt-4 w-full"
+          size="lg"
+        >
+          <LogInIcon className="mr-2 h-5 w-5" />
+          Sign Out and Start Over
+        </Button>
         </div>
       </div>
     );

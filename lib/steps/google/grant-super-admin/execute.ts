@@ -4,7 +4,8 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Grant the Super Admin role to the provisioning user.
@@ -14,6 +15,10 @@ export async function executeGrantSuperAdmin(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
+    const validation = validateRequiredOutputs(context, [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
     const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;
     if (!email) {

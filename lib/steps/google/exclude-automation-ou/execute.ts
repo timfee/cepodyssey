@@ -5,7 +5,8 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
-import { handleExecutionError } from "../utils/error-handling";
+import { handleExecutionError } from "../../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Disable SSO for the Automation OU if it exists.
@@ -15,18 +16,15 @@ export async function executeExcludeAutomationOu(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
+    const validation = validateRequiredOutputs(context, [
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    ]);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
     const profileFullName = context.outputs[
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
-    if (!profileFullName) {
-      return {
-        success: false,
-        error: {
-          message: "Missing SAML profile name.",
-          code: "MISSING_DEPENDENCY",
-        },
-      };
-    }
     const automationOu = await google.getOrgUnit(token, "/Automation");
     if (!automationOu?.orgUnitId) {
       return {

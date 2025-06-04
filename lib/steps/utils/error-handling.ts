@@ -11,7 +11,6 @@ export function handleCheckError(
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
-  // Log to debug panel
   store.dispatch(
     addAppError({
       timestamp: new Date().toISOString(),
@@ -57,32 +56,19 @@ export async function handleExecutionError(
   if (isAuthenticationError(error)) {
     return {
       success: false,
-      error: {
-        message: error.message,
-        code: "AUTH_EXPIRED",
-      },
-      outputs: {
-        errorCode: "AUTH_EXPIRED",
-        errorProvider: error.provider,
-      },
+      error: { message: error.message, code: "AUTH_EXPIRED" },
+      outputs: { errorCode: "AUTH_EXPIRED", errorProvider: error.provider },
     };
   }
 
   if (error instanceof APIError) {
-    return {
-      success: false,
-      error: { message: error.message, code: error.code },
-    };
+    return { success: false, error: { message: error.message, code: error.code } };
   }
 
   const managed = ErrorManager.handle(error, { stepId });
-
   return {
     success: false,
-    error: {
-      message: managed.message,
-      code: managed.code || "UNKNOWN_ERROR",
-    },
+    error: { message: managed.message, code: managed.code || "UNKNOWN_ERROR" },
     outputs: {
       errorCode: managed.code || "UNKNOWN_ERROR",
       errorProvider: managed.provider,

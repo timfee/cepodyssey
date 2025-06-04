@@ -4,7 +4,7 @@ import * as microsoft from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
-import { handleCheckError } from "./error-handling";
+import { handleCheckError } from "../../utils/error-handling";
 import { getMicrosoftToken } from "./auth";
 
 /**

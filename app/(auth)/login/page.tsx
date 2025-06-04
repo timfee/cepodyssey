@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cleanupInvalidSession } from "../auth";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
 /**
@@ -67,6 +68,11 @@ function LoginPage() {
           "You need Microsoft Global Admin access to continue";
       if (error === "SignInInformationMissing")
         errorMessage = "Something went wrong. Please try signing in again.";
+      if (error === "TokenNotFound") {
+        cleanupInvalidSession();
+        errorMessage =
+          "Your previous session was invalid. Please sign in again to both services.";
+      }
       toast.error(errorMessage, {
         id: `login-error-${error}`,
         duration: 10000,

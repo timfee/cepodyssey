@@ -26,6 +26,21 @@ async function validateSession(): Promise<{ valid: boolean; error?: StepCheckRes
     };
   }
 
+  if ((session.error as unknown as string) === 'MissingTokens' || session.error === 'RefreshTokenError') {
+    return {
+      valid: false,
+      error: {
+        completed: false,
+        message: "Your session is invalid. Please sign out and sign in again with both Google and Microsoft.",
+        outputs: {
+          errorCode: "INVALID_SESSION",
+          errorProvider: "both",
+          requiresFullReauth: true,
+        },
+      },
+    };
+  }
+
   if (!session.googleToken || !session.hasGoogleAuth) {
     return {
       valid: false,

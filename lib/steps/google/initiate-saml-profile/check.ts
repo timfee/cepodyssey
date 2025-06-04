@@ -5,7 +5,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
-import { handleCheckError } from "../utils/error-handling";
+import { handleCheckError } from "../../utils/error-handling";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
 
 /**
