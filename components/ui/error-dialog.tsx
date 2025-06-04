@@ -46,7 +46,7 @@ export interface ErrorDialogProps {
     };
     actions?: Array<{
       label: string;
-      onClick: () => void;
+      onClick?: () => void;
       variant?: "default" | "outline" | "destructive";
       icon?: React.ReactNode;
     }>;
@@ -84,19 +84,28 @@ export function ErrorDialog({
           <p>{error.message}</p>
           <div className="flex gap-2 justify-end">
             {hasActions ? (
-              error.actions!.map((action, index) => (
-                <Button
-                  key={`${action.label}-${index}`}
-                  onClick={() => {
-                    action.onClick();
-                    onOpenChange(false);
-                  }}
-                  variant={action.variant || "default"}
-                >
-                  {action.icon}
-                  {action.label}
-                </Button>
-              ))
+              error.actions!.map((action, index) => {
+                console.log("Rendering action button:", action);
+                console.log("onClick type:", typeof action.onClick);
+                return (
+                  <Button
+                    key={`${action.label}-${index}`}
+                    onClick={() => {
+                      console.log("Button clicked, action:", action);
+                      if (typeof action.onClick === "function") {
+                        action.onClick();
+                      } else {
+                        console.error("onClick is not a function:", action);
+                      }
+                      onOpenChange(false);
+                    }}
+                    variant={action.variant || "default"}
+                  >
+                    {action.icon}
+                    {action.label}
+                  </Button>
+                );
+              })
             ) : (
               <Button onClick={() => onOpenChange(false)} variant="outline">
                 Dismiss

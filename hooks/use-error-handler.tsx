@@ -2,12 +2,10 @@ import { useAppDispatch } from "./use-redux";
 import { showError } from "@/lib/redux/slices/errors";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
-import { useRouter } from "next/navigation";
 import { LogInIcon, ExternalLinkIcon } from "lucide-react";
 
 export function useErrorHandler() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
 
   const handleError = (
     error: unknown,
@@ -24,7 +22,6 @@ export function useErrorHandler() {
             actions: [
               {
                 label: "Sign In",
-                onClick: () => router.push("/login"),
                 variant: "default",
                 icon: <LogInIcon className="mr-2 h-4 w-4" />,
               },
@@ -53,7 +50,6 @@ export function useErrorHandler() {
               ? [
                   {
                     label: "Enable API",
-                    onClick: () => window.open(enableUrl, "_blank"),
                     variant: "default",
                     icon: <ExternalLinkIcon className="mr-2 h-4 w-4" />,
                   },

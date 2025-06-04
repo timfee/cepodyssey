@@ -1,7 +1,7 @@
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import { store } from "@/lib/redux/store";
-import { addAppError } from "@/lib/redux/slices/debug-panel";
+import { addAppError, addApiLog } from "@/lib/redux/slices/debug-panel";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
 export function handleCheckError(
@@ -22,6 +22,17 @@ export function handleCheckError(
   );
 
   if (isAuthenticationError(error)) {
+    // Log authentication errors before throwing so they appear in the debug panel
+    store.dispatch(
+      addApiLog({
+        id: `auth-error-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        method: "AUTH_ERROR",
+        url: error.provider || "unknown",
+        error: `Authentication Error: ${error.message}`,
+        provider: error.provider === "google" ? "google" : "microsoft",
+      }),
+    );
     throw error; // Propagate auth errors to be handled by the UI
   }
 
