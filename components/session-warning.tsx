@@ -18,8 +18,8 @@ export function SessionWarning() {
     <Alert className="mb-4">
       <InfoIcon className="h-4 w-4" />
       <AlertDescription>
-        Your session tokens will refresh automatically, but for security,
-        you may need to re-authenticate periodically. Save your progress regularly.
+        Your session tokens will refresh automatically, but for security, you
+        may need to re-authenticate periodically. Save your progress regularly.
       </AlertDescription>
     </Alert>
   );

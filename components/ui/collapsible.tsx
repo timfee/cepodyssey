@@ -1,18 +1,25 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 interface CollapsibleContextValue {
   open: boolean;
   setOpen?: (open: boolean) => void;
 }
 
-const CollapsibleContext = React.createContext<CollapsibleContextValue>({ open: false });
+const CollapsibleContext = React.createContext<CollapsibleContextValue>({
+  open: false,
+});
 
 interface CollapsibleProps extends React.HTMLAttributes<HTMLDivElement> {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-export function Collapsible({ open, onOpenChange, className, ...props }: CollapsibleProps) {
+export function Collapsible({
+  open,
+  onOpenChange,
+  className,
+  ...props
+}: CollapsibleProps) {
   return (
     <CollapsibleContext.Provider value={{ open, setOpen: onOpenChange }}>
       <div className={cn(className)} {...props} />
@@ -20,7 +27,11 @@ export function Collapsible({ open, onOpenChange, className, ...props }: Collaps
   );
 }
 
-export function CollapsibleTrigger({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function CollapsibleTrigger({
+  className,
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const ctx = React.useContext(CollapsibleContext);
   return (
     <button
@@ -33,7 +44,11 @@ export function CollapsibleTrigger({ className, children, ...props }: React.Butt
   );
 }
 
-export function CollapsibleContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function CollapsibleContent({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   const ctx = React.useContext(CollapsibleContext);
   if (!ctx.open) return null;
   return (

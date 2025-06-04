@@ -41,7 +41,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
 
       // Check for existing auth errors
       const authErrorPresent = Object.values(stepsStatus).some(
-        (s) => s.metadata?.errorCode === "AUTH_EXPIRED"
+        (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
       );
       if (authErrorPresent) {
         console.log("Skipping auto-check due to existing auth errors");

@@ -8,8 +8,8 @@ The automation mirrors the official Google documentation for federating Google
 Cloud with Microsoft Entra ID. The early steps create an **Automation**
 organizational unit and a provisioning user in Google Workspace, then guide the
 administrator through a manual OAuth consent in Azure AD. Later steps configure
-automatic provisioning and SAML-based single sign-on via the *Google Cloud/G
-Suite Connector by Microsoft* gallery app. See the README for a short summary of
+automatic provisioning and SAML-based single sign-on via the _Google Cloud/G
+Suite Connector by Microsoft_ gallery app. See the README for a short summary of
 that workflow.
 
 ## Core Architecture Principles

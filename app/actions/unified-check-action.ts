@@ -6,7 +6,7 @@ import { checkStep } from "./step-registry";
 
 export async function executeStepCheck(
   stepId: string,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepCheckResult> {
   try {
     return await checkStep(stepId, context);

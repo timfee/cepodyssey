@@ -25,13 +25,15 @@ and replicates the manual workflow in discrete steps:
      with `Users`, `Groups`, and `Organization Units` permissions.
    - Register and verify all domains used for user and group email addresses.
 2. **Configure Microsoft Entra ID provisioning**
-   - Add the *Google Cloud/G Suite Connector by Microsoft* gallery app as
+   - Add the _Google Cloud/G Suite Connector by Microsoft_ gallery app as
      `Google Cloud (Provisioning)`.
-  - Authorize the app in the Azure portal using the `azuread-provisioning`
-    account (the assistant provides guidance for this manual OAuth step) and
-    adjust the attribute mappings for users and groups.
-   - Optionally assign specific users or groups and then enable automatic
-     provisioning.
+
+- Authorize the app in the Azure portal using the `azuread-provisioning`
+  account (the assistant provides guidance for this manual OAuth step) and
+  adjust the attribute mappings for users and groups.
+- Optionally assign specific users or groups and then enable automatic
+  provisioning.
+
 3. **Set up single sign-on**
    - Create a SAML profile in the Admin Console named `Entra ID`.
    - Add a second enterprise application called `Google Cloud` and configure its
@@ -106,12 +108,14 @@ Once both providers are configured you can sign in with accounts that have admin
 Before using this tool, ensure these APIs are enabled in your Google Cloud project:
 
 1. **Admin SDK API** - Required for Google Workspace directory operations
+
    - Enable at: https://console.cloud.google.com/apis/library/admin.googleapis.com
 
 2. **Cloud Identity API** - Required for SAML SSO configuration
    - Enable at: https://console.cloud.google.com/apis/library/cloudidentity.googleapis.com
 
 To find your project ID:
+
 1. Go to https://console.cloud.google.com
 2. Select your project from the dropdown
 3. The project ID is shown in the project info card
@@ -126,4 +130,3 @@ To find your project ID:
 ## Testing
 
 Run `pnpm lint` to check code formatting and `pnpm build` to create a production build.
-
