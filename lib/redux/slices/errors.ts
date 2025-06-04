@@ -1,15 +1,70 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
-import type { ErrorDialogProps } from "@/components/ui/error-dialog";
+
+// Define all possible error action types
+export enum ErrorActionType {
+  SIGN_IN = "SIGN_IN",
+  OPEN_URL = "OPEN_URL",
+  ENABLE_API = "ENABLE_API",
+  RETRY_STEP = "RETRY_STEP",
+  DISMISS = "DISMISS",
+}
+
+// Define icon names as string literals
+export type ErrorIconName =
+  | "LogInIcon"
+  | "ExternalLinkIcon"
+  | "RefreshCwIcon"
+  | "AlertCircleIcon";
+
+// Error action descriptor (serializable)
+export interface ErrorAction {
+  type: ErrorActionType;
+  label: string;
+  variant?: "default" | "outline" | "destructive";
+  icon?: ErrorIconName;
+  payload?: Record<string, unknown>; // For URLs, step IDs, etc.
+}
+
+export interface ErrorInfo {
+  title: string;
+  message: string;
+  code?: string;
+  provider?: "google" | "microsoft" | "both";
+  details?: Record<string, unknown>;
+  actions?: ErrorAction[];
+  diagnostics?: {
+    timestamp: string;
+    stepId?: string;
+    stepTitle?: string;
+    sessionInfo?: {
+      hasGoogleAuth: boolean;
+      hasMicrosoftAuth: boolean;
+      domain?: string;
+      tenantId?: string;
+    };
+    apiResponse?: {
+      status?: number;
+      statusText?: string;
+      headers?: Record<string, string>;
+      body?: unknown;
+    };
+    stackTrace?: string;
+    environment?: {
+      nodeEnv: string;
+      logLevel: string;
+    };
+  };
+}
 
 interface ErrorHistoryEntry {
-  error: ErrorDialogProps["error"];
+  error: ErrorInfo;
   timestamp: string;
   dismissed: boolean;
 }
 
 interface ErrorState {
-  activeError: ErrorDialogProps["error"] | null;
+  activeError: ErrorInfo | null;
   errorHistory: ErrorHistoryEntry[];
   isDismissible: boolean;
 }
@@ -27,7 +82,7 @@ export const errorsSlice = createSlice({
     showError(
       state,
       action: PayloadAction<{
-        error: ErrorDialogProps["error"];
+        error: ErrorInfo;
         dismissible?: boolean;
       }>,
     ) {
@@ -50,28 +105,13 @@ export const errorsSlice = createSlice({
     clearErrorHistory(state) {
       state.errorHistory = [];
     },
-    addDiagnostics(
-      state,
-      action: PayloadAction<Partial<ErrorDialogProps["error"]["diagnostics"]>>,
-    ) {
-      if (state.activeError) {
-        state.activeError.diagnostics = {
-          ...(state.activeError.diagnostics ?? {
-            timestamp: new Date().toISOString(),
-          }),
-          ...action.payload,
-        } as ErrorDialogProps["error"]["diagnostics"];
-      }
-    },
   },
 });
 
-export const { showError, dismissError, clearErrorHistory, addDiagnostics } =
-  errorsSlice.actions;
+export const { showError, dismissError, clearErrorHistory } = errorsSlice.actions;
 
-export const selectActiveError = (
-  state: RootState,
-): ErrorDialogProps["error"] | null => state.errors.activeError;
+export const selectActiveError = (state: RootState): ErrorInfo | null =>
+  state.errors.activeError;
 export const selectIsDismissible = (state: RootState): boolean =>
   state.errors.isDismissible;
 

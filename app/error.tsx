@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangleIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/hooks/use-redux";
+import { showError, ErrorActionType } from "@/lib/redux/slices/errors";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
-import { useAppDispatch } from "@/hooks/use-redux";
-import { showError } from "@/lib/redux/slices/errors";
 
 export default function Error({
   error,
@@ -17,7 +13,6 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const router = useRouter();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -33,13 +28,14 @@ export default function Error({
             provider: error.provider,
             actions: [
               {
+                type: ErrorActionType.SIGN_IN,
                 label: "Sign In",
-                onClick: () => router.push("/login"),
                 variant: "default",
+                icon: "LogInIcon",
               },
             ],
           },
-          dismissible: false, // Can't dismiss, must sign in
+          dismissible: false,
         }),
       );
     } else if (
@@ -55,61 +51,55 @@ export default function Error({
         showError({
           error: {
             title: "Enable this Google API",
-            message:
-              "A required Google Cloud API is not enabled for your project.",
+            message: "A required Google Cloud API is not enabled for your project.",
             code: "API_NOT_ENABLED",
             details: { enableUrl },
             actions: enableUrl
               ? [
                   {
+                    type: ErrorActionType.ENABLE_API,
                     label: "Enable API",
-                    onClick: () => window.open(enableUrl, "_blank"),
                     variant: "default",
+                    icon: "ExternalLinkIcon",
+                    payload: { url: enableUrl },
                   },
                   {
+                    type: ErrorActionType.RETRY_STEP,
                     label: "Retry",
-                    onClick: reset,
                     variant: "outline",
+                    icon: "RefreshCwIcon",
+                    payload: { callback: reset },
                   },
                 ]
-              : [
-                  {
-                    label: "Retry",
-                    onClick: reset,
-                    variant: "default",
-                  },
-                ],
+              : [],
+          },
+          dismissible: true,
+        }),
+      );
+    } else {
+      // For unhandled errors, show a basic error UI
+      dispatch(
+        showError({
+          error: {
+            title: "Something went wrong",
+            message: error.message || "An unexpected error occurred",
+            code: "UNHANDLED_ERROR",
+            actions: [
+              {
+                type: ErrorActionType.RETRY_STEP,
+                label: "Try again",
+                variant: "default",
+                icon: "RefreshCwIcon",
+                payload: { callback: reset },
+              },
+            ],
           },
           dismissible: true,
         }),
       );
     }
-  }, [error, router, dispatch, reset]);
+  }, [error, dispatch, reset]);
 
-  // Show a fallback UI for non-handled errors
-  if (!isAuthenticationError(error) && !(error instanceof APIError)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangleIcon className="h-5 w-5 text-red-500" />
-              Something went wrong
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {error.message || "An unexpected error occurred"}
-            </p>
-            <Button onClick={reset} className="w-full">
-              Try again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // For handled errors, return null as the error dialog will show
+  // Return null since error dialog will show
   return null;
 }
