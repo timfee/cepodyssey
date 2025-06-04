@@ -74,6 +74,26 @@ function LoginPage() {
     }
   }, [searchParams]);
 
+  // Handle auth errors from redirects
+  useEffect(() => {
+    const authAttempt = searchParams.get("authAttempt");
+    const error = searchParams.get("error");
+
+    if (authAttempt && !error && sessionStatus === "authenticated") {
+      if (authAttempt === "google" && !session?.hasGoogleAuth) {
+        toast.error("Google authentication failed. Please try again.", {
+          id: "google-auth-failed",
+          duration: 10000,
+        });
+      } else if (authAttempt === "microsoft" && !session?.hasMicrosoftAuth) {
+        toast.error("Microsoft authentication failed. Please try again.", {
+          id: "microsoft-auth-failed",
+          duration: 10000,
+        });
+      }
+    }
+  }, [searchParams, session, sessionStatus]);
+
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDomain(e.target.value);
     setIsTenantDiscovered(false);
