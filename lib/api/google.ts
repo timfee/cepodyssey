@@ -13,9 +13,31 @@ export type GoogleDomain = admin_directory_v1.Schema$Domains & {
 };
 export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
+export interface GoogleLongRunningOperation {
+  name: string;
+  metadata?: {
+    "@type"?: string;
+    [key: string]: unknown;
+  };
+  done: boolean;
+  error?: {
+    code?: number;
+    message?: string;
+    status?: string;
+    details?: Array<{ "@type"?: string; [key: string]: unknown }>;
+  };
+  response?: {
+    "@type"?: string;
+    [key: string]: unknown;
+  };
+}
+
 export interface InboundSamlSsoProfile {
+  /** Output only. Resource name, e.g. inboundSamlSsoProfiles/{profileId} */
   name?: string;
+  /** Output only. Customer resource */
   customer?: string;
+  /** Display name when creating the profile */
   displayName?: string;
   idpConfig?: {
     entityId?: string;
@@ -23,11 +45,12 @@ export interface InboundSamlSsoProfile {
     logoutRedirectUri?: string;
     changePasswordUri?: string;
   };
+  /** Output only. SP configuration returned after creation */
   spConfig?: {
     entityId?: string;
     assertionConsumerServiceUri?: string;
   };
-  ssoMode?: string;
+  ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
 }
 
 export interface SsoAssignment {
@@ -405,7 +428,55 @@ export async function createSamlProfile(
         body: JSON.stringify({ displayName }),
       },
     );
-    return handleApiResponse<InboundSamlSsoProfile>(res);
+
+    if (res.status === 409) {
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: { message?: string; status?: string };
+      };
+      const errMsg = body.error?.message?.toLowerCase() ?? "";
+      if (errMsg.includes("already exists") || body.error?.status === "ALREADY_EXISTS") {
+        return { alreadyExists: true };
+      }
+      throw new APIError(body.error?.message || "Conflict", res.status, body.error?.status);
+    }
+
+    const operation = (await handleApiResponse<GoogleLongRunningOperation>(res)) as GoogleLongRunningOperation;
+    if (!operation.name) {
+      throw new APIError("Invalid operation response: missing name", 500);
+    }
+
+    const MAX_POLLS = 12;
+    const POLL_INTERVAL_MS = 2500;
+
+    for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      }
+      const pollRes = await fetchWithAuth(
+        `${cloudIdentityBaseUrl}/${operation.name}`,
+        token,
+      );
+      const status = (await handleApiResponse<GoogleLongRunningOperation>(pollRes)) as GoogleLongRunningOperation;
+      if (status.done) {
+        if (status.error) {
+          throw new APIError(
+            `SAML profile creation failed: ${status.error.message}`,
+            status.error.code ?? 500,
+            status.error.status,
+          );
+        }
+        if (
+          status.response &&
+          status.response["@type"] ===
+            "type.googleapis.com/google.identity.cloudidentity.v1.InboundSamlSsoProfile"
+        ) {
+          return status.response as unknown as InboundSamlSsoProfile;
+        }
+        throw new APIError("Operation completed with unexpected response", 500);
+      }
+    }
+
+    throw new APIError("SAML profile creation timed out", 500, "TIMEOUT");
   } catch (error) {
     handleGoogleError(error);
   }
