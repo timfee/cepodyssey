@@ -1,6 +1,10 @@
 {
   "name": "cepodyssey",
-  "version": "0.1.0",
+  "author": {
+    "name": "Tim Feeley",
+    "email": "timfee@google.com"
+  },
+  "version": "0.8",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
