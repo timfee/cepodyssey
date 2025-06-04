@@ -13,10 +13,13 @@ import {
   RotateCcwIcon,
 } from "lucide-react";
 import React from "react";
+import { useSession } from "next-auth/react";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { updateStep } from "@/lib/redux/slices/setup-steps";
 import type { ManagedStep, StepStatusInfo } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { allStepDefinitions } from "@/lib/steps";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +58,9 @@ export function StepItem({
   const dispatch = useAppDispatch();
   const allStepsStatus = useAppSelector((state) => state.setupSteps.steps);
   const outputs = useAppSelector((state) => state.appConfig.outputs);
-  const { openGoogleTokenModal } = useDialogs();
+  const appConfig = useAppSelector((state) => state.appConfig);
+  const { data: session } = useSession();
+  const { openGoogleTokenModal, openStepOutputsModal } = useDialogs();
 
   const prerequisitesMet = React.useMemo(() => {
     // If already completed, prerequisites are implicitly met
@@ -147,6 +152,28 @@ export function StepItem({
       (step.status === "completed" && step.metadata?.preExisting === true) ||
       step.metadata?.errorCode === "AUTH_EXPIRED");
 
+  const stepHasOutputs = () => {
+    const stepPrefix = step.id.toLowerCase().replace("-", "");
+    return Object.values(OUTPUT_KEYS).some((value) =>
+      value.toLowerCase().startsWith(stepPrefix),
+    );
+  };
+
+  const getMissingPrerequisites = () => {
+    if (!step.requires || prerequisitesMet) return [];
+
+    return step.requires
+      .filter((reqId) => allStepsStatus[reqId]?.status !== "completed")
+      .map((reqId) => {
+        const reqStep = allStepDefinitions.find((s) => s.id === reqId);
+        return {
+          id: reqId,
+          title: reqStep?.title || reqId,
+          status: allStepsStatus[reqId]?.status || "pending",
+        };
+      });
+  };
+
   return (
     <li className="flex gap-x-3">
       <div
@@ -173,6 +200,12 @@ export function StepItem({
             >
               {step.status.replace("_", " ")}
             </Badge>
+            {step.status === "completed" && stepHasOutputs() && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CheckCircle2Icon className="h-3 w-3" />
+                <span>Outputs available</span>
+              </div>
+            )}
           </div>
           {step.description && (
             <CardDescription className="text-xs mt-1 leading-relaxed">
@@ -298,8 +331,32 @@ export function StepItem({
                     </span>
                   </TooltipTrigger>
                   {isStepEffectivelyDisabled && runButtonDisabledReason && (
-                    <TooltipContent>
-                      <p>{runButtonDisabledReason}</p>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-2">
+                        <p className="font-medium">{runButtonDisabledReason}</p>
+                        {!canRunGlobal && (
+                          <div className="text-xs space-y-1">
+                            {!appConfig.domain && <p>• Domain not configured</p>}
+                            {!appConfig.tenantId && <p>• Tenant ID not configured</p>}
+                            {!session?.hasGoogleAuth && (
+                              <p>• Google authentication required</p>
+                            )}
+                            {!session?.hasMicrosoftAuth && (
+                              <p>• Microsoft authentication required</p>
+                            )}
+                          </div>
+                        )}
+                        {!prerequisitesMet && getMissingPrerequisites().length > 0 && (
+                          <div className="text-xs space-y-1">
+                            <p className="font-medium">Missing prerequisites:</p>
+                            {getMissingPrerequisites().map((prereq) => (
+                              <p key={prereq.id}>
+                                • {prereq.title} ({prereq.status})
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -334,6 +391,20 @@ export function StepItem({
                 </p>
               )}
             </div>
+          )}
+
+          {(step.status === "completed" || stepHasOutputs()) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                openStepOutputsModal(step, outputs, allStepsStatus)
+              }
+              className="gap-1"
+            >
+              <InfoIcon className="h-3 w-3" />
+              View Outputs &amp; Dependencies
+            </Button>
           )}
 
           {step.status === "failed" &&
