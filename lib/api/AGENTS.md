@@ -41,7 +41,7 @@ https://www.googleapis.com/auth/admin.directory.rolemanagement
 
 - Customer ID is typically "my_customer" for the authenticated admin's domain
 - SAML profile names follow format: `inboundSamlSsoProfiles/{profileId}`
-- No public API exists for enabling automated user provisioning (manual step required)
+- Automated user provisioning setup with Azure AD's gallery app involves an OAuth consent flow initiated from Azure, using a dedicated Google admin user. This tool guides that manual authorization step (M-3) rather than directly handling a Google-side provisioning token for it.
 
 ## Microsoft Graph API
 
@@ -87,6 +87,9 @@ interface SynchronizationJob {
 
 ```typescript
 [
+  // This OAuth token is obtained by Azure AD after an administrator completes
+  // the consent flow from the enterprise app's provisioning settings using the
+  // dedicated Google provisioning user (e.g., azuread-provisioning@<your-domain>).
   { key: "SecretToken", value: "<Google_OAuth_Token>" },
   {
     key: "BaseAddress",
@@ -148,7 +151,7 @@ OUTPUT_KEYS = {
 1. **Google → Azure**:
 
    - SP Entity ID and ACS URL from Google SAML profile
-   - Secret Token for provisioning (manual step)
+   - Authorization for provisioning: achieved via manual OAuth consent in the Azure Portal using the dedicated Google admin user (step M-3)
 
 2. **Azure → Google**:
    - IdP metadata (Entity ID, SSO URL, Certificate)

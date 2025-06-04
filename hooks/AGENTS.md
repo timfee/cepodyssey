@@ -52,7 +52,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
     hasChecked.current = true;
 
     // Only safe, read-only checks
-    const autoCheckSteps = ["G-1", "G-4", "G-5", "M-1", "M-6"];
+    const autoCheckSteps = ["G-1", "G-2", "G-3", "G-4", "G-5", "M-1", "M-6"];
 
     const checkPromises = autoCheckSteps
       .filter((stepId) => {
