@@ -47,7 +47,7 @@ export interface StepExecutionResult {
 
 /**
  * Provides context (current config and outputs from previous steps)
- * from the frontend to the check/execute lambdas in lib/steps.ts,
+ * from the frontend to the check/execute lambdas in lib/steps/,
  * which then pass it to server actions.
  */
 export interface StepContext {
