@@ -34,11 +34,11 @@ import type * as MicrosoftGraph from "microsoft-graph";
  */
 async function handleExecutionError(
   error: unknown,
-  stepId?: string
+  stepId?: string,
 ): Promise<StepExecutionResult> {
   console.error(
     `Execution Action Failed (Step ${stepId || "Unknown"}):`,
-    error
+    error,
   );
   if (isAuthenticationError(error)) {
     return {
@@ -80,19 +80,19 @@ async function getTokens(): Promise<{
     throw new APIError(
       "Google authentication token is missing.",
       401,
-      "GOOGLE_AUTH_REQUIRED"
+      "GOOGLE_AUTH_REQUIRED",
     );
   if (!session?.microsoftToken)
     throw new APIError(
       "Microsoft authentication token is missing.",
       401,
-      "MS_AUTH_REQUIRED"
+      "MS_AUTH_REQUIRED",
     );
   if (!session?.microsoftTenantId)
     throw new APIError(
       "Microsoft tenant ID is missing from session.",
       401,
-      "MS_TENANT_ID_REQUIRED"
+      "MS_TENANT_ID_REQUIRED",
     );
   return {
     googleToken: session.googleToken,
@@ -104,10 +104,168 @@ async function getTokens(): Promise<{
 // Google Execution Actions
 
 /**
+ * G-1: Create the 'Automation' Organizational Unit.
+ */
+export async function executeG1CreateAutomationOu(
+  _context: StepContext,
+): Promise<StepExecutionResult> {
+  try {
+    const { googleToken } = await getTokens();
+    const ouName = "Automation";
+    const parentPath = "/";
+    const result = await google.createOrgUnit(googleToken, ouName, parentPath);
+    if (typeof result === "object" && "alreadyExists" in result) {
+      const existing = await google.getOrgUnit(
+        googleToken,
+        `${parentPath}${ouName}`,
+      );
+      if (existing?.orgUnitId && existing.orgUnitPath) {
+        return {
+          success: true,
+          message: `Organizational Unit '${ouName}' already exists.`,
+          outputs: {
+            [OUTPUT_KEYS.AUTOMATION_OU_ID]: existing.orgUnitId,
+            [OUTPUT_KEYS.AUTOMATION_OU_PATH]: existing.orgUnitPath,
+          },
+          resourceUrl: `https://admin.google.com/ac/orgunits/details?ouPath=${existing.orgUnitPath}`,
+        };
+      }
+      return {
+        success: true,
+        message: `Organizational Unit '${ouName}' already exists.`,
+      };
+    }
+    if (!result.orgUnitId || !result.orgUnitPath) {
+      return { success: false, error: { message: "Failed to create OU." } };
+    }
+    return {
+      success: true,
+      message: `Organizational Unit '${ouName}' created successfully.`,
+      outputs: {
+        [OUTPUT_KEYS.AUTOMATION_OU_ID]: result.orgUnitId,
+        [OUTPUT_KEYS.AUTOMATION_OU_PATH]: result.orgUnitPath,
+      },
+      resourceUrl: `https://admin.google.com/ac/orgunits/details?ouPath=${result.orgUnitPath}`,
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-1");
+  }
+}
+
+/**
+ * G-2: Create provisioning user within Automation OU.
+ */
+export async function executeG2CreateProvisioningUser(
+  context: StepContext,
+): Promise<StepExecutionResult> {
+  try {
+    const { googleToken } = await getTokens();
+    const domain = context.domain;
+    const ouPath = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string;
+    if (!domain)
+      return {
+        success: false,
+        error: { message: "Domain not available in context." },
+      };
+    if (!ouPath)
+      return {
+        success: false,
+        error: { message: "Automation OU path not found." },
+      };
+    const email = `azuread-provisioning@${domain}`;
+    const tempPassword = `P@${Date.now()}w0rd`;
+    const user: google.DirectoryUser = {
+      primaryEmail: email,
+      name: { givenName: "Microsoft Entra ID", familyName: "Provisioning" },
+      password: tempPassword,
+      orgUnitPath: ouPath,
+      changePasswordAtNextLogin: false,
+    };
+    const result = await google.createUser(googleToken, user);
+    if (typeof result === "object" && "alreadyExists" in result) {
+      const existing = await google.getUser(googleToken, email);
+      if (existing?.primaryEmail && existing.id) {
+        return {
+          success: true,
+          message: `User '${email}' already exists.`,
+          outputs: {
+            [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: existing.primaryEmail,
+            [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: existing.id,
+          },
+          resourceUrl: `https://admin.google.com/ac/users/${existing.primaryEmail}`,
+        };
+      }
+      return { success: true, message: `User '${email}' already exists.` };
+    }
+    if (!result.id || !result.primaryEmail) {
+      return {
+        success: false,
+        error: { message: "Failed to create provisioning user." },
+      };
+    }
+    return {
+      success: true,
+      message: `User '${email}' created in OU '${ouPath}'.`,
+      outputs: {
+        [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: result.primaryEmail,
+        [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: result.id,
+      },
+      resourceUrl: `https://admin.google.com/ac/users/${result.primaryEmail}`,
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-2");
+  }
+}
+
+/**
+ * G-3: Grant Super Admin role to provisioning user.
+ */
+export async function executeG3GrantAdminToProvisioningUser(
+  context: StepContext,
+): Promise<StepExecutionResult> {
+  try {
+    const { googleToken } = await getTokens();
+    const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
+    if (!email)
+      return {
+        success: false,
+        error: { message: "Provisioning user email missing." },
+      };
+    const user = await google.getUser(googleToken, email);
+    if (user?.isAdmin) {
+      return {
+        success: true,
+        message: `User '${email}' is already an admin.`,
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+        resourceUrl: `https://admin.google.com/ac/users/${email}`,
+      };
+    }
+    const roles = await google.listRoleAssignments(googleToken, email);
+    if (roles.some((r) => r.roleId === "3")) {
+      return {
+        success: true,
+        message: `User '${email}' already has Super Admin role.`,
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+        resourceUrl: `https://admin.google.com/ac/users/${email}`,
+      };
+    }
+    await google.assignAdminRole(googleToken, email, "3");
+    return {
+      success: true,
+      message: `Super Admin role assigned to '${email}'.`,
+      outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+      resourceUrl: `https://admin.google.com/ac/users/${email}`,
+    };
+  } catch (e) {
+    return handleExecutionError(e, "G-3");
+  }
+}
+
+/**
  * G-4: Add the primary domain to Google Workspace and notify for verification.
  */
 export async function executeG4AddAndVerifyDomain(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
@@ -138,20 +296,20 @@ export async function executeG4AddAndVerifyDomain(
  * G-5: Create the initial Google SAML profile.
  */
 export async function executeG5InitiateGoogleSamlProfile(
-  _context: StepContext
+  _context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
     const profileDisplayName = "Azure AD SSO";
     const result = await google.createSamlProfile(
       googleToken,
-      profileDisplayName
+      profileDisplayName,
     );
 
     if (typeof result === "object" && "alreadyExists" in result) {
       const profiles = await google.listSamlProfiles(googleToken);
       const existingProfile = profiles.find(
-        (p) => p.displayName === profileDisplayName
+        (p) => p.displayName === profileDisplayName,
       );
       if (
         !existingProfile?.name ||
@@ -223,7 +381,7 @@ export async function executeG5InitiateGoogleSamlProfile(
  * G-S0: Enable provisioning on the existing SAML profile and guide token retrieval
  */
 export async function executeGS0EnableProvisioning(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const profileFullName = context.outputs[
@@ -265,7 +423,7 @@ export async function executeGS0EnableProvisioning(
  * G-6: Update the Google SAML profile with Azure IdP metadata.
  */
 export async function executeG6UpdateGoogleSamlWithAzureIdp(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
@@ -314,7 +472,7 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
  * G-7: Assign the Google SAML profile to the root OU.
  */
 export async function executeG7AssignGoogleSamlToRootOu(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
@@ -352,7 +510,7 @@ export async function executeG7AssignGoogleSamlToRootOu(
  * G-8: Exclude the Automation OU from SSO requirements.
  */
 export async function executeG8ExcludeAutomationOuFromSso(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { googleToken } = await getTokens();
@@ -401,7 +559,7 @@ export async function executeG8ExcludeAutomationOuFromSso(
  * M-1: Create the provisioning Enterprise application in Azure.
  */
 export async function executeM1CreateProvisioningApp(
-  _context: StepContext
+  _context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -411,18 +569,18 @@ export async function executeM1CreateProvisioningApp(
     const result = await microsoft.createEnterpriseApp(
       microsoftToken,
       GWS_PROVISIONING_TEMPLATE_ID,
-      appName
+      appName,
     );
     if (typeof result === "object" && "alreadyExists" in result) {
       const existingApps = await microsoft.listApplications(
         microsoftToken,
-        `displayName eq '${appName}'`
+        `displayName eq '${appName}'`,
       );
       const existingApp = existingApps[0];
       if (existingApp?.appId) {
         const sp = await microsoft.getServicePrincipalByAppId(
           microsoftToken,
-          existingApp.appId
+          existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
@@ -462,7 +620,7 @@ export async function executeM1CreateProvisioningApp(
  * M-2: Configure properties for the provisioning application.
  */
 export async function executeM2ConfigureProvisioningAppProperties(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -503,120 +661,33 @@ export async function executeM2ConfigureProvisioningAppProperties(
  * M-3: Authorize the provisioning connection between Azure and Google.
  */
 export async function executeM3AuthorizeProvisioningConnection(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
-  try {
-    const { microsoftToken } = await getTokens();
-    const validation = validateRequiredOutputs(context.outputs, [
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
-      OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN,
-      OUTPUT_KEYS.PROVISIONING_APP_ID,
-    ]);
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: {
-          message: `Missing required outputs: ${validation.missing.join(", ")}. Ensure G-S0 (Get Google Secret Token) and M-2 completed successfully.`,
-          code: "MISSING_DEPENDENCY",
-        },
-      };
-    }
-    const spObjectId = context.outputs[
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-    ] as string;
-    const googleSecretToken = context.outputs[
-      OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN
-    ] as string;
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+  const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as
+    | string
+    | undefined;
+  const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
+    | string
+    | undefined;
+  const resourceUrl =
+    spId && appId
+      ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spId}`
+      : "https://portal.azure.com";
 
-    if (googleSecretToken.length < 50 || googleSecretToken.includes(" ")) {
-      return {
-        success: false,
-        error: {
-          message:
-            "The Google provisioning token appears to be invalid. Please ensure you copied the entire token without any spaces.",
-          code: "INVALID_TOKEN_FORMAT",
-        },
-      };
-    }
-
-    let jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
-      | string
-      | undefined;
-    if (!jobId) {
-      const jobResult = await microsoft.createProvisioningJob(
-        microsoftToken,
-        spObjectId
-      );
-      if (typeof jobResult === "object" && "alreadyExists" in jobResult) {
-        const jobs = await microsoft.listSynchronizationJobs(
-          microsoftToken,
-          spObjectId
-        );
-        const googleAppsJob = jobs.find((j) => j.templateId === "GoogleApps");
-        if (!googleAppsJob?.id)
-          return {
-            success: false,
-            error: {
-              message:
-                "Azure reported a provisioning job already exists but its ID could not be retrieved. Delete any existing job in the Azure portal or clear this tool's state, then rerun step M-3.",
-              code: "PROV_JOB_ID_NOT_FOUND",
-            },
-          };
-        jobId = googleAppsJob.id;
-      } else {
-        if (!jobResult.id)
-          return {
-            success: false,
-            error: {
-              message:
-                "Provisioning job was created but Azure did not return a job ID. Delete the provisioning job in Azure and retry step M-3.",
-              code: "PROV_JOB_ID_MISSING",
-            },
-          };
-        jobId = jobResult.id;
-      }
-    }
-
-    await microsoft.updateProvisioningCredentials(microsoftToken, spObjectId, [
-      { key: "SecretToken", value: googleSecretToken },
-      {
-        key: "BaseAddress",
-        value: "https://www.googleapis.com/admin/directory/v1.12/scim",
-      },
-    ]);
-
-    const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
-    return {
-      success: true,
-      message:
-        "Provisioning job created/found and connection authorized. The connection will be tested when you start the provisioning job. If the test fails, verify the token was copied correctly.",
-      outputs: {
-        [OUTPUT_KEYS.PROVISIONING_JOB_ID]: jobId,
-        [OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED]: true,
-      },
-      resourceUrl,
-    };
-  } catch (e) {
-    if (e instanceof APIError && e.message?.includes("InvalidCredentials")) {
-      return {
-        success: false,
-        error: {
-          message:
-            "The Google provisioning token is invalid or expired. Please get a new token from Google Admin Console (step G-S0) and try again.",
-          code: "INVALID_CREDENTIALS",
-        },
-      };
-    }
-    return handleExecutionError(e, "M-3");
-  }
+  return {
+    success: true,
+    message:
+      "ACTION REQUIRED: In the Azure portal, open the provisioning app, click 'Authorize', and sign in with the Google provisioning user created in G-2. After testing the connection, mark this step complete.",
+    outputs: { [OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED]: true },
+    resourceUrl,
+  };
 }
 
 /**
  * M-4: Configure attribute mappings used for provisioning.
  */
 export async function executeM4ConfigureProvisioningAttributeMappings(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -726,7 +797,7 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
       microsoftToken,
       spObjectId,
       jobId,
-      schemaPayload
+      schemaPayload,
     );
     const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}/objectId/${spObjectId}`;
     return {
@@ -745,7 +816,7 @@ export async function executeM4ConfigureProvisioningAttributeMappings(
  * M-5: Start the provisioning job in Azure.
  */
 export async function executeM5StartProvisioningJob(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -786,7 +857,7 @@ export async function executeM5StartProvisioningJob(
  * M-6: Create the Azure SAML SSO application.
  */
 export async function executeM6CreateSamlSsoApp(
-  _context: StepContext
+  _context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -796,18 +867,18 @@ export async function executeM6CreateSamlSsoApp(
     const result = await microsoft.createEnterpriseApp(
       microsoftToken,
       GWS_SAML_TEMPLATE_ID,
-      appName
+      appName,
     );
     if (typeof result === "object" && "alreadyExists" in result) {
       const existingApps = await microsoft.listApplications(
         microsoftToken,
-        `displayName eq '${appName}'`
+        `displayName eq '${appName}'`,
       );
       const existingApp = existingApps[0];
       if (existingApp?.appId) {
         const sp = await microsoft.getServicePrincipalByAppId(
           microsoftToken,
-          existingApp.appId
+          existingApp.appId,
         );
         if (existingApp.id && sp?.id) {
           const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/appId/${existingApp.appId}/objectId/${sp.id}`;
@@ -847,7 +918,7 @@ export async function executeM6CreateSamlSsoApp(
  * M-7: Apply Entity ID and Reply URL settings on the Azure SAML app.
  */
 export async function executeM7ConfigureAzureSamlAppSettings(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
@@ -897,7 +968,7 @@ export async function executeM7ConfigureAzureSamlAppSettings(
     await microsoft.updateApplication(
       microsoftToken,
       appObjectId,
-      appPatchPayload
+      appPatchPayload,
     );
     return {
       success: true,
@@ -915,7 +986,7 @@ export async function executeM7ConfigureAzureSamlAppSettings(
  * M-8: Retrieve IdP metadata from Azure for use in Google.
  */
 export async function executeM8RetrieveAzureIdpMetadata(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const { tenantId } = await getTokens();
@@ -959,7 +1030,7 @@ export async function executeM8RetrieveAzureIdpMetadata(
  * M-9: Guide the admin to assign users to the Azure SSO application.
  */
 export async function executeM9AssignUsersToAzureSsoApp(
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
     const validation = validateRequiredOutputs(context.outputs, [

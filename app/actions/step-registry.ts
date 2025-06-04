@@ -1,12 +1,14 @@
 "use server";
 
 import {
+  executeG1CreateAutomationOu,
+  executeG2CreateProvisioningUser,
+  executeG3GrantAdminToProvisioningUser,
   executeG4AddAndVerifyDomain,
   executeG5InitiateGoogleSamlProfile,
   executeG6UpdateGoogleSamlWithAzureIdp,
   executeG7AssignGoogleSamlToRootOu,
   executeG8ExcludeAutomationOuFromSso,
-  executeGS0EnableProvisioning,
   executeM1CreateProvisioningApp,
   executeM2ConfigureProvisioningAppProperties,
   executeM3AuthorizeProvisioningConnection,
@@ -19,6 +21,9 @@ import {
 } from "./execution-actions";
 
 import {
+  checkG1AutomationOuExists,
+  checkG2ProvisioningUserExists,
+  checkG3ProvisioningUserIsAdmin,
   checkDomainVerified,
   checkGoogleSamlProfileDetails,
   checkMicrosoftServicePrincipal,
@@ -29,70 +34,111 @@ import {
   checkMicrosoftAppAssignments,
 } from "./check-actions";
 
-import type { StepContext, StepCheckResult, StepExecutionResult } from "@/lib/types";
+import type {
+  StepContext,
+  StepCheckResult,
+  StepExecutionResult,
+} from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 
 const STEP_REGISTRY = {
-  "G-S0": {
+  "G-1": {
+    check: async (_context: StepContext) => checkG1AutomationOuExists(),
+    execute: async (context: StepContext) =>
+      executeG1CreateAutomationOu(context),
+  },
+  "G-2": {
     check: async (context: StepContext) => {
-      return context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]
-        ? { completed: true, message: "Secret Token is stored." }
-        : { completed: false, message: "Secret Token needed." };
+      if (!context.domain)
+        return { completed: false, message: "Domain not configured." };
+      return checkG2ProvisioningUserExists(context.domain);
     },
-    execute: async (context: StepContext) => executeGS0EnableProvisioning(context),
+    execute: async (context: StepContext) =>
+      executeG2CreateProvisioningUser(context),
+  },
+  "G-3": {
+    check: async (context: StepContext) => {
+      const email = context.outputs[
+        OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL
+      ] as string;
+      if (!email)
+        return { completed: false, message: "Provisioning user not found." };
+      return checkG3ProvisioningUserIsAdmin(email);
+    },
+    execute: async (context: StepContext) =>
+      executeG3GrantAdminToProvisioningUser(context),
   },
 
   "G-4": {
     check: async (context: StepContext) => {
-      if (!context.domain) return { completed: false, message: "Domain not configured." };
+      if (!context.domain)
+        return { completed: false, message: "Domain not configured." };
       return checkDomainVerified(context.domain);
     },
-    execute: async (context: StepContext) => executeG4AddAndVerifyDomain(context),
+    execute: async (context: StepContext) =>
+      executeG4AddAndVerifyDomain(context),
   },
 
   "G-5": {
     check: async (_context: StepContext) =>
       checkGoogleSamlProfileDetails("Azure AD SSO", true, undefined),
-    execute: async (context: StepContext) => executeG5InitiateGoogleSamlProfile(context),
+    execute: async (context: StepContext) =>
+      executeG5InitiateGoogleSamlProfile(context),
   },
 
   "G-6": {
     check: async (context: StepContext) => {
-      const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+      const profileName = context.outputs[
+        OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+      ] as string;
       const idpEntityId = context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID] as string;
       if (!profileName || !idpEntityId) {
         return { completed: false, message: "Missing required configuration." };
       }
       return checkGoogleSamlProfileDetails(profileName, false, idpEntityId);
     },
-    execute: async (context: StepContext) => executeG6UpdateGoogleSamlWithAzureIdp(context),
+    execute: async (context: StepContext) =>
+      executeG6UpdateGoogleSamlWithAzureIdp(context),
   },
 
   "G-7": {
     check: async (context: StepContext) => {
-      const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
-      if (!profileName) return { completed: false, message: "SAML profile name not found." };
-      const result = await checkGoogleSamlProfileDetails(profileName, false, undefined);
+      const profileName = context.outputs[
+        OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+      ] as string;
+      if (!profileName)
+        return { completed: false, message: "SAML profile name not found." };
+      const result = await checkGoogleSamlProfileDetails(
+        profileName,
+        false,
+        undefined,
+      );
       if (result.completed) {
         return { completed: true, message: "SAML profile configured." };
       }
       return { completed: false, message: "SAML profile not yet configured." };
     },
-    execute: async (context: StepContext) => executeG7AssignGoogleSamlToRootOu(context),
+    execute: async (context: StepContext) =>
+      executeG7AssignGoogleSamlToRootOu(context),
   },
 
   "G-8": {
     check: async (_context: StepContext) => {
       // This is optional and hard to check automatically
-      return { completed: false, message: "Manual verification needed for OU SSO exclusion." };
+      return {
+        completed: false,
+        message: "Manual verification needed for OU SSO exclusion.",
+      };
     },
-    execute: async (context: StepContext) => executeG8ExcludeAutomationOuFromSso(context),
+    execute: async (context: StepContext) =>
+      executeG8ExcludeAutomationOuFromSso(context),
   },
 
   "M-1": {
     check: async (context: StepContext) => {
       const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
-      if (!appId) return { completed: false, message: "Provisioning App ID not found." };
+      if (!appId)
+        return { completed: false, message: "Provisioning App ID not found." };
       const result = await checkMicrosoftServicePrincipal(appId);
       if (result.completed && result.outputs) {
         return {
@@ -100,65 +146,99 @@ const STEP_REGISTRY = {
           outputs: {
             [OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]: result.outputs.spId,
             [OUTPUT_KEYS.PROVISIONING_APP_ID]: result.outputs.retrievedAppId,
-            [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]: result.outputs.appObjectId,
-          }
+            [OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID]:
+              result.outputs.appObjectId,
+          },
         };
       }
       return result;
     },
-    execute: async (context: StepContext) => executeM1CreateProvisioningApp(context),
+    execute: async (context: StepContext) =>
+      executeM1CreateProvisioningApp(context),
   },
 
   "M-2": {
     check: async (context: StepContext) => {
-      const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
-      if (!spId) return { completed: false, message: "Service Principal ID not found." };
+      const spId = context.outputs[
+        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+      ] as string;
+      if (!spId)
+        return { completed: false, message: "Service Principal ID not found." };
       return checkMicrosoftServicePrincipalEnabled(spId);
     },
-    execute: async (context: StepContext) => executeM2ConfigureProvisioningAppProperties(context),
+    execute: async (context: StepContext) =>
+      executeM2ConfigureProvisioningAppProperties(context),
   },
 
   "M-3": {
     check: async (context: StepContext) => {
-      if (!context.outputs[OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN]) {
-        return { completed: false, message: "Google Secret Token not provided." };
+      const spId = context.outputs[
+        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+      ] as string;
+      const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as
+        | string
+        | undefined;
+      if (!spId)
+        return { completed: false, message: "Service Principal ID not found." };
+      if (jobId) {
+        const result = await checkMicrosoftProvisioningJobDetails(spId, jobId);
+        if (result.completed) return result;
       }
-      const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
-      const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-      if (!spId) return { completed: false, message: "Service Principal ID not found." };
-      return checkMicrosoftProvisioningJobDetails(spId, jobId);
+      if (context.outputs[OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED]) {
+        return {
+          completed: true,
+          message: "Provisioning connection marked authorized.",
+        };
+      }
+      return {
+        completed: false,
+        message: "Provisioning connection not yet authorized.",
+      };
     },
-    execute: async (context: StepContext) => executeM3AuthorizeProvisioningConnection(context),
+    execute: async (context: StepContext) =>
+      executeM3AuthorizeProvisioningConnection(context),
   },
 
   "M-4": {
     check: async (context: StepContext) => {
-      const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
+      const spId = context.outputs[
+        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+      ] as string;
       const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-      if (!spId || !jobId) return { completed: false, message: "Missing configuration." };
+      if (!spId || !jobId)
+        return { completed: false, message: "Missing configuration." };
       return checkMicrosoftAttributeMappingsApplied(spId, jobId);
     },
-    execute: async (context: StepContext) => executeM4ConfigureProvisioningAttributeMappings(context),
+    execute: async (context: StepContext) =>
+      executeM4ConfigureProvisioningAttributeMappings(context),
   },
 
   "M-5": {
     check: async (context: StepContext) => {
-      const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
+      const spId = context.outputs[
+        OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+      ] as string;
       const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-      if (!spId || !jobId) return { completed: false, message: "Missing configuration." };
+      if (!spId || !jobId)
+        return { completed: false, message: "Missing configuration." };
       const result = await checkMicrosoftProvisioningJobDetails(spId, jobId);
-      if (result.completed && result.outputs?.provisioningJobState === "Active") {
+      if (
+        result.completed &&
+        result.outputs?.provisioningJobState === "Active"
+      ) {
         return { completed: true, message: "Provisioning job is active." };
       }
       return { completed: false, message: "Provisioning job is not active." };
     },
-    execute: async (context: StepContext) => executeM5StartProvisioningJob(context),
+    execute: async (context: StepContext) =>
+      executeM5StartProvisioningJob(context),
   },
 
   "M-6": {
     check: async (context: StepContext) => {
       const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-      if (!appId) return { completed: false, message: "SAML SSO App ID not found." };
+      if (!appId)
+        return { completed: false, message: "SAML SSO App ID not found." };
       const result = await checkMicrosoftServicePrincipal(appId);
       if (result.completed && result.outputs) {
         return {
@@ -167,7 +247,7 @@ const STEP_REGISTRY = {
             [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]: result.outputs.spId,
             [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.outputs.retrievedAppId,
             [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.outputs.appObjectId,
-          }
+          },
         };
       }
       return result;
@@ -177,15 +257,24 @@ const STEP_REGISTRY = {
 
   "M-7": {
     check: async (context: StepContext) => {
-      const appObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID] as string;
-      const spEntityId = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] as string;
+      const appObjectId = context.outputs[
+        OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID
+      ] as string;
+      const spEntityId = context.outputs[
+        OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
+      ] as string;
       const acsUrl = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] as string;
       if (!appObjectId || !spEntityId || !acsUrl) {
         return { completed: false, message: "Missing required configuration." };
       }
-      return checkMicrosoftSamlAppSettingsApplied(appObjectId, spEntityId, acsUrl);
+      return checkMicrosoftSamlAppSettingsApplied(
+        appObjectId,
+        spEntityId,
+        acsUrl,
+      );
     },
-    execute: async (context: StepContext) => executeM7ConfigureAzureSamlAppSettings(context),
+    execute: async (context: StepContext) =>
+      executeM7ConfigureAzureSamlAppSettings(context),
   },
 
   "M-8": {
@@ -196,16 +285,19 @@ const STEP_REGISTRY = {
         ? { completed: true, message: "Azure AD IdP metadata retrieved." }
         : { completed: false, message: "Azure AD IdP metadata not retrieved." };
     },
-    execute: async (context: StepContext) => executeM8RetrieveAzureIdpMetadata(context),
+    execute: async (context: StepContext) =>
+      executeM8RetrieveAzureIdpMetadata(context),
   },
 
   "M-9": {
     check: async (context: StepContext) => {
       const spId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string;
-      if (!spId) return { completed: false, message: "SAML SSO SP ID not found." };
+      if (!spId)
+        return { completed: false, message: "SAML SSO SP ID not found." };
       return checkMicrosoftAppAssignments(spId);
     },
-    execute: async (context: StepContext) => executeM9AssignUsersToAzureSsoApp(context),
+    execute: async (context: StepContext) =>
+      executeM9AssignUsersToAzureSsoApp(context),
   },
 
   "M-10": {
@@ -215,13 +307,17 @@ const STEP_REGISTRY = {
     }),
     execute: async (_context: StepContext) => ({
       success: true,
-      message: "Test SSO: \n1. Open a new Incognito/Private browser window. \n2. Navigate to a Google service...",
+      message:
+        "Test SSO: \n1. Open a new Incognito/Private browser window. \n2. Navigate to a Google service...",
       resourceUrl: "https://myapps.microsoft.com",
     }),
   },
 } as const;
 
-export async function checkStep(stepId: string, context: StepContext): Promise<StepCheckResult> {
+export async function checkStep(
+  stepId: string,
+  context: StepContext,
+): Promise<StepCheckResult> {
   const step = STEP_REGISTRY[stepId as keyof typeof STEP_REGISTRY];
   if (!step?.check) {
     return { completed: false, message: "No check available for this step." };
@@ -229,10 +325,16 @@ export async function checkStep(stepId: string, context: StepContext): Promise<S
   return step.check(context);
 }
 
-export async function executeStep(stepId: string, context: StepContext): Promise<StepExecutionResult> {
+export async function executeStep(
+  stepId: string,
+  context: StepContext,
+): Promise<StepExecutionResult> {
   const step = STEP_REGISTRY[stepId as keyof typeof STEP_REGISTRY];
   if (!step?.execute) {
-    return { success: false, error: { message: "No execution available for this step." } };
+    return {
+      success: false,
+      error: { message: "No execution available for this step." },
+    };
   }
   return step.execute(context);
 }
