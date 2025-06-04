@@ -30,7 +30,8 @@ export class ApiLogger {
     let requestBody: unknown = undefined;
     if (init?.body) {
       try {
-        requestBody = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        requestBody =
+          typeof init.body === "string" ? JSON.parse(init.body) : init.body;
       } catch {
         requestBody = init.body;
       }
@@ -96,13 +97,17 @@ export class ApiLogger {
     );
   }
 
-  private static detectProvider(
-    url: string,
-  ): "google" | "microsoft" | "other" {
-    if (url.includes("googleapis.com") || url.includes("cloudidentity.googleapis.com")) {
+  private static detectProvider(url: string): "google" | "microsoft" | "other" {
+    if (
+      url.includes("googleapis.com") ||
+      url.includes("cloudidentity.googleapis.com")
+    ) {
       return "google";
     }
-    if (url.includes("graph.microsoft.com") || url.includes("login.microsoftonline.com")) {
+    if (
+      url.includes("graph.microsoft.com") ||
+      url.includes("login.microsoftonline.com")
+    ) {
       return "microsoft";
     }
     return "other";

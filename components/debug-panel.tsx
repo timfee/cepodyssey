@@ -116,10 +116,18 @@ export function DebugPanel() {
           </Tabs>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" onClick={() => dispatch(clearLogs())}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => dispatch(clearLogs())}
+          >
             <TrashIcon className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => dispatch(toggleDebugPanel())}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => dispatch(toggleDebugPanel())}
+          >
             <XIcon className="h-4 w-4" />
           </Button>
         </div>
@@ -151,7 +159,12 @@ export function DebugPanel() {
                           {log.method}
                         </Badge>
                         {log.responseStatus && (
-                          <span className={cn("text-sm font-mono", getStatusColor(log.responseStatus))}>
+                          <span
+                            className={cn(
+                              "text-sm font-mono",
+                              getStatusColor(log.responseStatus),
+                            )}
+                          >
                             {log.responseStatus}
                           </span>
                         )}
@@ -163,7 +176,9 @@ export function DebugPanel() {
                         <span className="text-sm truncate max-w-[400px]">
                           {log.url}
                         </span>
-                        {log.error && <AlertCircleIcon className="h-4 w-4 text-red-500" />}
+                        {log.error && (
+                          <AlertCircleIcon className="h-4 w-4 text-red-500" />
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">
@@ -188,7 +203,9 @@ export function DebugPanel() {
                     )}
                     {log.requestBody !== undefined && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-1">Request Body</h4>
+                        <h4 className="text-sm font-semibold mb-1">
+                          Request Body
+                        </h4>
                         <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
                           {JSON.stringify(log.requestBody, null, 2)}
                         </pre>
@@ -196,7 +213,9 @@ export function DebugPanel() {
                     )}
                     {log.responseBody !== undefined && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-1">Response Body</h4>
+                        <h4 className="text-sm font-semibold mb-1">
+                          Response Body
+                        </h4>
                         <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-h-[200px] overflow-y-auto">
                           {JSON.stringify(log.responseBody, null, 2)}
                         </pre>
@@ -204,13 +223,19 @@ export function DebugPanel() {
                     )}
                     {log.error && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-1 text-red-600">Error</h4>
+                        <h4 className="text-sm font-semibold mb-1 text-red-600">
+                          Error
+                        </h4>
                         <pre className="text-xs bg-red-50 dark:bg-red-950/20 p-2 rounded">
                           {log.error}
                         </pre>
                       </div>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => copyLog(log)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyLog(log)}
+                    >
                       <CopyIcon className="h-3 w-3 mr-1" />
                       Copy Log
                     </Button>

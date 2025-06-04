@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write .",
+    "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md}'",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
