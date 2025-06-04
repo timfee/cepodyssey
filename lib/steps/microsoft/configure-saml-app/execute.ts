@@ -70,7 +70,10 @@ export async function executeConfigureSamlApp(
       message:
         "Azure AD SAML app (Identifier URIs, Reply URL) configured. Verify 'User Attributes & Claims' (NameID should be UPN) manually in Azure Portal.",
       outputs: { [OUTPUT_KEYS.FLAG_M7_SAML_APP_SETTINGS_CONFIGURED]: true },
-      resourceUrl: portalUrls.azure.enterpriseApp.singleSignOn(spObjectId, appId),
+      resourceUrl: portalUrls.azure.enterpriseApp.singleSignOn(
+        spObjectId,
+        appId,
+      ),
     };
   } catch (e) {
     return handleExecutionError(e, "M-7");

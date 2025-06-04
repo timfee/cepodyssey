@@ -47,6 +47,9 @@ export async function checkSamlProfile(
       outputs,
     };
   } catch (e) {
-    return handleCheckError(e, `Failed to check SAML Profile '${profileDisplayName}'.`);
+    return handleCheckError(
+      e,
+      `Failed to check SAML Profile '${profileDisplayName}'.`,
+    );
   }
 }

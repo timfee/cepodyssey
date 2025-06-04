@@ -25,10 +25,11 @@ and replicates the manual workflow in discrete steps:
      with `Users`, `Groups`, and `Organization Units` permissions.
    - Register and verify all domains used for user and group email addresses.
 2. **Configure Microsoft Entra ID provisioning**
+
    - Add the _Google Cloud/G Suite Connector by Microsoft_ gallery app as
      `Google Cloud (Provisioning)`.
-   - Authorize the app in the Azure portal using OAuth consent with the 
-     `azuread-provisioning` account (step M-3 provides guidance for this 
+   - Authorize the app in the Azure portal using OAuth consent with the
+     `azuread-provisioning` account (step M-3 provides guidance for this
      manual authorization process).
    - Adjust the attribute mappings for users and groups.
    - Optionally assign specific users or groups and then enable automatic
@@ -152,6 +153,7 @@ To find your project ID:
 ### URL Configuration
 
 This application uses a centralized URL builder system (`lib/api/url-builder.ts`) that:
+
 - Handles all URL encoding automatically
 - Uses environment variables for base URLs
 - Provides type-safe URL construction
@@ -162,6 +164,7 @@ All external URLs are constructed through this system, ensuring consistency and 
 ### Enhanced UI Features
 
 The dashboard now features enhanced step cards that display:
+
 - **Input Requirements**: Shows which outputs from other steps are required
 - **Output Generation**: Displays what data this step will produce
 - **Real-time Status**: Visual indicators for pending, in-progress, completed, and failed states
@@ -171,6 +174,7 @@ The dashboard now features enhanced step cards that display:
 ### Authentication Error Handling
 
 The application includes robust authentication error handling:
+
 - Automatic detection of expired tokens
 - Clear user notifications with action buttons
 - Graceful fallback for API errors

@@ -9,7 +9,9 @@ import { Logger } from "@/lib/utils/logger";
  * @param executeCheck - Callback executed for each step needing a check
  * @returns void
  */
-export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>): void {
+export function useAutoCheck(
+  executeCheck: (stepId: string) => Promise<void>,
+): void {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
   const hasChecked = useRef(false);
@@ -45,7 +47,10 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>): v
         (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
       );
       if (authErrorPresent) {
-        Logger.info("[Hook]", "Skipping auto-check due to existing auth errors");
+        Logger.info(
+          "[Hook]",
+          "Skipping auto-check due to existing auth errors",
+        );
         return;
       }
 
@@ -54,14 +59,20 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>): v
       try {
         // Check if session has required tokens
         if (!session.googleToken || !session.microsoftToken) {
-          Logger.warn("[Hook]", "Session missing required tokens, skipping auto-check");
+          Logger.warn(
+            "[Hook]",
+            "Session missing required tokens, skipping auto-check",
+          );
           setIsValidating(false);
           return;
         }
 
         // Check for refresh token error
         if (session.error === "RefreshTokenError") {
-          Logger.warn("[Hook]", "Session has refresh token error, skipping auto-check");
+          Logger.warn(
+            "[Hook]",
+            "Session has refresh token error, skipping auto-check",
+          );
           setIsValidating(false);
           return;
         }

@@ -267,7 +267,7 @@ GOOGLE_API_BASE=https://admin.googleapis.com
 GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
 GRAPH_API_BASE=https://graph.microsoft.com/v1.0
 
-# Authentication Endpoints  
+# Authentication Endpoints
 GOOGLE_OAUTH_BASE=https://oauth2.googleapis.com
 MICROSOFT_LOGIN_BASE=https://login.microsoftonline.com
 
@@ -286,13 +286,13 @@ import { googleDirectoryUrls, microsoftGraphUrls } from "./url-builder";
 // Good: Using URL builder
 const response = await fetchWithAuth(
   googleDirectoryUrls.users.get(userEmail),
-  token
+  token,
 );
 
 // Bad: Hardcoding URLs
 const response = await fetchWithAuth(
   `${GOOGLE_API_BASE}/admin/directory/v1/users/${userEmail}`,
-  token
+  token,
 );
 ```
 
@@ -304,9 +304,10 @@ const response = await fetchWithAuth(
 4. **Portal URLs**: Be aware of platform-specific encoding requirements
 
 Example:
+
 ```typescript
 // Automatic encoding of path parameters
-users.get: (userKey: string) => 
+users.get: (userKey: string) =>
   `${base}/users/${encodeURIComponent(userKey)}`
 
 // Query parameters with URL class

@@ -105,14 +105,17 @@ async function getTokens(): Promise<{
 All server actions should import and use the centralized URL builder:
 
 ```typescript
-import { googleDirectoryUrls, microsoftGraphUrls, portalUrls } from "@/lib/api/url-builder";
+import {
+  googleDirectoryUrls,
+  microsoftGraphUrls,
+  portalUrls,
+} from "@/lib/api/url-builder";
 
 // In execution actions
-const res = await fetchWithAuth(
-  googleDirectoryUrls.users.create(),
-  token,
-  { method: "POST", body: JSON.stringify(user) }
-);
+const res = await fetchWithAuth(googleDirectoryUrls.users.create(), token, {
+  method: "POST",
+  body: JSON.stringify(user),
+});
 
 // Return portal URLs for resources
 return {
@@ -144,4 +147,3 @@ catch (error) {
 ```
 
 This allows the UI to properly display and handle different error types without throwing exceptions to the client.
-

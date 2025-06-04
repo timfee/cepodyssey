@@ -93,7 +93,12 @@ export class Logger {
     console.warn(`[${category}]`, message, ...args);
   }
 
-  static error(category: string, message: string, error?: unknown, ...args: unknown[]): void {
+  static error(
+    category: string,
+    message: string,
+    error?: unknown,
+    ...args: unknown[]
+  ): void {
     if (!this.shouldLog(LogLevel.ERROR)) return;
     const entry: LogEntry = {
       level: LogLevel.ERROR,

@@ -4,7 +4,7 @@ import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
 export function handleCheckError(
   error: unknown,
-  defaultMessage: string
+  defaultMessage: string,
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
@@ -37,7 +37,7 @@ export function handleCheckError(
 
 export async function handleExecutionError(
   error: unknown,
-  stepId: string
+  stepId: string,
 ): Promise<StepExecutionResult> {
   console.error(`Execution Action Failed (Step ${stepId}):`, error);
 

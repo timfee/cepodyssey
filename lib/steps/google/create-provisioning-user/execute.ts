@@ -18,7 +18,7 @@ export async function executeCreateProvisioningUser(
     const validation = validateRequiredOutputs(
       context,
       [OUTPUT_KEYS.AUTOMATION_OU_PATH],
-      "G-1 (Create Automation OU)"
+      "G-1 (Create Automation OU)",
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -58,7 +58,10 @@ export async function executeCreateProvisioningUser(
     if (!result.id || !result.primaryEmail) {
       return {
         success: false,
-        error: { message: "Failed to create provisioning user.", code: "API_ERROR" },
+        error: {
+          message: "Failed to create provisioning user.",
+          code: "API_ERROR",
+        },
       };
     }
 

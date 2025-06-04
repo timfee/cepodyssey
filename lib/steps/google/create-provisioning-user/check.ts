@@ -34,7 +34,10 @@ export async function checkProvisioningUser(
       };
     }
 
-    return { completed: false, message: `Service account '${email}' not found.` };
+    return {
+      completed: false,
+      message: `Service account '${email}' not found.`,
+    };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
       return {

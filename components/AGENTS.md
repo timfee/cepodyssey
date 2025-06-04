@@ -9,6 +9,7 @@ All components follow React 18 patterns with clear separation of concerns and st
 ### shadcn/ui Components (`ui/`)
 
 Required components for the enhanced UI:
+
 - Core: `button`, `card`, `badge`, `alert`, `dialog`, `input`, `label`
 - Data Display: `table`, `separator`, `collapsible`
 - Feedback: `toast` (via sonner), `tooltip`
@@ -78,7 +79,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 
 // Good: Using centralized URL builder
 const profileUrl = portalUrls.google.sso.samlProfile(
-  outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string
+  outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string,
 );
 
 // Bad: Hardcoding URLs
@@ -144,10 +145,12 @@ All modals use Redux for state management:
 import { openStepDetailsModal } from "@/lib/redux/slices/modals";
 
 // Open modal with data
-dispatch(openStepDetailsModal({
-  step: managedStep,
-  outputs: currentOutputs,
-}));
+dispatch(
+  openStepDetailsModal({
+    step: managedStep,
+    outputs: currentOutputs,
+  }),
+);
 
 // Modal components are self-contained
 export function StepDetailsModal() {
@@ -157,6 +160,7 @@ export function StepDetailsModal() {
 ```
 
 **Modal Types:**
+
 - `StepDetailsModal`: For viewing step instructions and links
 - `StepOutputsDialog`: For viewing inputs/outputs dependencies
 
@@ -173,6 +177,7 @@ The `ModalManager` component renders all modals based on Redux state:
 ```
 
 This ensures:
+
 - Modals are rendered at the root level
 - No z-index conflicts
 - Consistent modal behavior

@@ -238,7 +238,7 @@ export function StepCard({
                 openStepDetailsModal({
                   step,
                   outputs,
-                })
+                }),
               )
             }
           >
@@ -254,7 +254,7 @@ export function StepCard({
                   step,
                   outputs,
                   allStepsStatus: {},
-                })
+                }),
               )
             }
           >

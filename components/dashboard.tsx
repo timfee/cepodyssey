@@ -24,7 +24,10 @@ import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
 import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
-import { executeStepAction, executeStepCheck } from "@/app/actions/step-actions";
+import {
+  executeStepAction,
+  executeStepCheck,
+} from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import type {
   AppConfigState as AppConfigTypeFromTypes,

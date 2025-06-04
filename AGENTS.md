@@ -149,6 +149,7 @@ store: {
 ### Modal Management
 
 The application uses Redux to manage modal dialogs:
+
 - Centralized state for all modal visibility
 - Type-safe modal data passing
 - Consistent open/close patterns
@@ -157,13 +158,23 @@ The application uses Redux to manage modal dialogs:
 ```typescript
 store: {
   modals: {
-    stepDetails: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown> };
-    stepOutputs: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown>; allStepsStatus: Record<string, { status: string }> };
+    stepDetails: {
+      isOpen: boolean;
+      step: ManagedStep | null;
+      outputs: Record<string, unknown>;
+    }
+    stepOutputs: {
+      isOpen: boolean;
+      step: ManagedStep | null;
+      outputs: Record<string, unknown>;
+      allStepsStatus: Record<string, { status: string }>;
+    }
   }
 }
 ```
 
 **Available Modals:**
+
 - **StepDetailsModal**: Shows detailed step information, instructions, and admin console links
 - **StepOutputsDialog**: Displays step inputs/outputs dependencies and data flow
 
@@ -200,7 +211,11 @@ This OAuth-based approach is more secure than manual token copying and follows G
 All URLs in the application are constructed through a centralized system:
 
 ```typescript
-import { portalUrls, googleDirectoryUrls, microsoftGraphUrls } from "@/lib/api/url-builder";
+import {
+  portalUrls,
+  googleDirectoryUrls,
+  microsoftGraphUrls,
+} from "@/lib/api/url-builder";
 
 // Portal URLs for UI navigation
 const adminUrl = portalUrls.google.sso.samlProfile(profileFullName);
@@ -210,6 +225,7 @@ const apiUrl = googleDirectoryUrls.users.get(userEmail);
 ```
 
 **Key Benefits:**
+
 - No hardcoded URLs in components or API clients
 - Automatic URL encoding using native URL and encodeURIComponent
 - Environment-specific configuration through env variables
@@ -218,6 +234,7 @@ const apiUrl = googleDirectoryUrls.users.get(userEmail);
 ### Environment Variables
 
 All base URLs are configurable through environment variables:
+
 - API endpoints (`GOOGLE_API_BASE`, `GRAPH_API_BASE`, etc.)
 - Portal/Console URLs (`GOOGLE_ADMIN_CONSOLE_BASE`, `AZURE_PORTAL_BASE`)
 - Authentication endpoints (`GOOGLE_OAUTH_BASE`, `MICROSOFT_LOGIN_BASE`)
@@ -249,6 +266,7 @@ if (isAuthenticationError(error)) {
 ### API Enablement Errors
 
 Google Cloud API enablement errors are specially handled:
+
 - Enhanced error messages with enable URLs
 - Toast notifications with action buttons
 - Direct links to enable APIs in Google Cloud Console
@@ -287,7 +305,6 @@ The registry in `lib/steps/registry.ts` exposes helper functions `checkStep` and
 1. **Easier Navigation** – everything for a step lives together
 2. **Simplified Imports** – server actions just call into the registry
 3. **Parallel Development** – multiple developers can work on different steps without conflicts
-
 
 # Testing
 

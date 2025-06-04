@@ -12,13 +12,17 @@ export async function executeAssignUsers(
   context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
-    const ssoSpObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string | undefined;
-    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string | undefined;
+    const ssoSpObjectId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as
+      | string
+      | undefined;
+    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as
+      | string
+      | undefined;
     if (!ssoSpObjectId || !appId) {
       return {
         success: false,
         error: {
-          message: `Missing required outputs: ${!ssoSpObjectId ? OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID : ''}${!ssoSpObjectId && !appId ? ', ' : ''}${!appId ? OUTPUT_KEYS.SAML_SSO_APP_ID : ''}. Ensure M-6 (Create SAML SSO App) completed successfully.`,
+          message: `Missing required outputs: ${!ssoSpObjectId ? OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID : ""}${!ssoSpObjectId && !appId ? ", " : ""}${!appId ? OUTPUT_KEYS.SAML_SSO_APP_ID : ""}. Ensure M-6 (Create SAML SSO App) completed successfully.`,
           code: "MISSING_DEPENDENCY",
         },
       };
@@ -27,7 +31,10 @@ export async function executeAssignUsers(
       success: true,
       message:
         "Guidance: Assign users/groups to the 'Google Workspace SAML SSO' app in Azure AD via its 'Users and groups' section to grant them SSO access.",
-      resourceUrl: portalUrls.azure.enterpriseApp.usersAndGroups(ssoSpObjectId, appId),
+      resourceUrl: portalUrls.azure.enterpriseApp.usersAndGroups(
+        ssoSpObjectId,
+        appId,
+      ),
     };
   } catch (e) {
     return handleExecutionError(e, "M-9");

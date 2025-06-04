@@ -26,7 +26,10 @@ export const errorsSlice = createSlice({
   reducers: {
     showError(
       state,
-      action: PayloadAction<{ error: ErrorDialogProps["error"]; dismissible?: boolean }>,
+      action: PayloadAction<{
+        error: ErrorDialogProps["error"];
+        dismissible?: boolean;
+      }>,
     ) {
       state.activeError = action.payload.error;
       state.isDismissible = action.payload.dismissible ?? true;
@@ -53,7 +56,9 @@ export const errorsSlice = createSlice({
     ) {
       if (state.activeError) {
         state.activeError.diagnostics = {
-          ...(state.activeError.diagnostics ?? { timestamp: new Date().toISOString() }),
+          ...(state.activeError.diagnostics ?? {
+            timestamp: new Date().toISOString(),
+          }),
           ...action.payload,
         } as ErrorDialogProps["error"]["diagnostics"];
       }
@@ -61,9 +66,13 @@ export const errorsSlice = createSlice({
   },
 });
 
-export const { showError, dismissError, clearErrorHistory, addDiagnostics } = errorsSlice.actions;
+export const { showError, dismissError, clearErrorHistory, addDiagnostics } =
+  errorsSlice.actions;
 
-export const selectActiveError = (state: RootState): ErrorDialogProps["error"] | null => state.errors.activeError;
-export const selectIsDismissible = (state: RootState): boolean => state.errors.isDismissible;
+export const selectActiveError = (
+  state: RootState,
+): ErrorDialogProps["error"] | null => state.errors.activeError;
+export const selectIsDismissible = (state: RootState): boolean =>
+  state.errors.isDismissible;
 
 export default errorsSlice.reducer;

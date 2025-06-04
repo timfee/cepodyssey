@@ -15,8 +15,12 @@ export async function executeEnableProvisioningSp(
 ): Promise<StepExecutionResult> {
   try {
     const { microsoftToken } = await getTokens();
-    const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string | undefined;
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string | undefined;
+    const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as
+      | string
+      | undefined;
+    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as
+      | string
+      | undefined;
     if (!spId || !appId) {
       const missing = [] as string[];
       if (!spId) missing.push(OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID);

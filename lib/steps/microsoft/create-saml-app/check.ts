@@ -8,7 +8,9 @@ import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
 
-export async function checkCreateSamlApp(context: StepContext): Promise<StepCheckResult> {
+export async function checkCreateSamlApp(
+  context: StepContext,
+): Promise<StepCheckResult> {
   const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
   if (!appId) {
     return { completed: false, message: "SAML SSO App ID not found." };

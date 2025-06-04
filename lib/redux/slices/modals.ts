@@ -43,7 +43,7 @@ export const modalsSlice = createSlice({
       action: PayloadAction<{
         step: ManagedStep;
         outputs: Record<string, unknown>;
-      }>
+      }>,
     ) {
       state.stepDetails.isOpen = true;
       state.stepDetails.step = action.payload.step;
@@ -62,7 +62,7 @@ export const modalsSlice = createSlice({
         step: ManagedStep;
         outputs: Record<string, unknown>;
         allStepsStatus: Record<string, { status: string }>;
-      }>
+      }>,
     ) {
       state.stepOutputs.isOpen = true;
       state.stepOutputs.step = action.payload.step;

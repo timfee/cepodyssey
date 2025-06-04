@@ -13,9 +13,14 @@ import { handleCheckError } from "../utils/error-handling";
 export async function checkExcludeAutomationOu(
   context: StepContext,
 ): Promise<StepCheckResult> {
-  const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+  const profileName = context.outputs[
+    OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+  ] as string;
   if (!profileName) {
-    return { completed: false, message: "Manual verification needed for OU SSO exclusion." };
+    return {
+      completed: false,
+      message: "Manual verification needed for OU SSO exclusion.",
+    };
   }
   try {
     const token = await getGoogleToken();
@@ -27,7 +32,10 @@ export async function checkExcludeAutomationOu(
       profile = profiles.find((p) => p.displayName === profileName) ?? null;
     }
     if (!profile?.name) {
-      return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+      return {
+        completed: false,
+        message: `SAML Profile '${profileName}' not found.`,
+      };
     }
     const outputs: Record<string, unknown> = {
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
@@ -46,6 +54,9 @@ export async function checkExcludeAutomationOu(
       ? { completed: true, message: "SAML profile configured.", outputs }
       : { completed: false, message: "SAML profile not yet configured." };
   } catch (e) {
-    return handleCheckError(e, `Failed to check SAML Profile '${profileName}'.`);
+    return handleCheckError(
+      e,
+      `Failed to check SAML Profile '${profileName}'.`,
+    );
   }
 }

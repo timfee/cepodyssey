@@ -13,7 +13,10 @@ import { CheckCircle2Icon, XCircleIcon, AlertCircleIcon } from "lucide-react";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { allStepDefinitions } from "@/lib/steps";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
-import { selectStepOutputsModal, closeStepOutputsModal } from "@/lib/redux/slices/modals";
+import {
+  selectStepOutputsModal,
+  closeStepOutputsModal,
+} from "@/lib/redux/slices/modals";
 
 export function StepOutputsDialog() {
   const dispatch = useAppDispatch();
@@ -26,10 +29,12 @@ export function StepOutputsDialog() {
   };
 
   // Get the outputs this step produces
-  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(([_key, value]) => {
-    const stepPrefix = step.id.toLowerCase().replace("-", "");
-    return value.toLowerCase().startsWith(stepPrefix);
-  });
+  const producedOutputs = Object.entries(OUTPUT_KEYS).filter(
+    ([_key, value]) => {
+      const stepPrefix = step.id.toLowerCase().replace("-", "");
+      return value.toLowerCase().startsWith(stepPrefix);
+    },
+  );
 
   // Get the outputs this step requires from other steps
   const requiredOutputs: Array<{
@@ -64,7 +69,8 @@ export function StepOutputsDialog() {
         <DialogHeader>
           <DialogTitle>{step.title} - Outputs &amp; Dependencies</DialogTitle>
           <DialogDescription>
-            View the outputs this step produces and the outputs it requires from other steps.
+            View the outputs this step produces and the outputs it requires from
+            other steps.
           </DialogDescription>
         </DialogHeader>
 

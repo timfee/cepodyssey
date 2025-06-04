@@ -1,9 +1,13 @@
 import { allStepDefinitions } from "./index";
-import type { StepCheckResult, StepContext, StepExecutionResult } from "@/lib/types";
+import type {
+  StepCheckResult,
+  StepContext,
+  StepExecutionResult,
+} from "@/lib/types";
 
 export async function checkStep(
   stepId: string,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepCheckResult> {
   const step = allStepDefinitions.find((s) => s.id === stepId);
   if (!step) {
@@ -17,19 +21,25 @@ export async function checkStep(
 
 export async function executeStep(
   stepId: string,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   const step = allStepDefinitions.find((s) => s.id === stepId);
   if (!step) {
     return {
       success: false,
-      error: { message: `Step ${stepId} not found`, code: "RESOURCE_NOT_FOUND" },
+      error: {
+        message: `Step ${stepId} not found`,
+        code: "RESOURCE_NOT_FOUND",
+      },
     };
   }
   if (!step.execute) {
     return {
       success: false,
-      error: { message: "No execution available for this step.", code: "UNKNOWN_ERROR" },
+      error: {
+        message: "No execution available for this step.",
+        code: "UNKNOWN_ERROR",
+      },
     };
   }
   return step.execute(context);

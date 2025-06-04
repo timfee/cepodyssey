@@ -13,7 +13,9 @@ import { handleCheckError } from "../utils/error-handling";
 export async function checkAssignSamlProfile(
   context: StepContext,
 ): Promise<StepCheckResult> {
-  const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
+  const profileName = context.outputs[
+    OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+  ] as string;
   if (!profileName) {
     return { completed: false, message: "SAML profile name not found." };
   }
@@ -29,7 +31,10 @@ export async function checkAssignSamlProfile(
     }
 
     if (!profile?.name) {
-      return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+      return {
+        completed: false,
+        message: `SAML Profile '${profileName}' not found.`,
+      };
     }
 
     const outputs: Record<string, unknown> = {
@@ -43,7 +48,8 @@ export async function checkAssignSamlProfile(
       outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] = profile.spConfig.entityId;
     }
     if (profile.spConfig?.assertionConsumerServiceUri) {
-      outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] = profile.spConfig.assertionConsumerServiceUri;
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] =
+        profile.spConfig.assertionConsumerServiceUri;
     }
 
     const idpCreds = await google.listIdpCredentials(token, profile.name);
@@ -57,6 +63,9 @@ export async function checkAssignSamlProfile(
       ? { completed: true, message: "SAML profile configured.", outputs }
       : { completed: false, message: "SAML profile not yet configured." };
   } catch (e) {
-    return handleCheckError(e, `Failed to check SAML Profile '${profileName}'.`);
+    return handleCheckError(
+      e,
+      `Failed to check SAML Profile '${profileName}'.`,
+    );
   }
 }

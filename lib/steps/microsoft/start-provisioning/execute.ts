@@ -22,13 +22,15 @@ export async function executeStartProvisioning(
         OUTPUT_KEYS.PROVISIONING_JOB_ID,
         OUTPUT_KEYS.PROVISIONING_APP_ID,
       ],
-      "M-4 (Configure Provisioning Attribute Mappings)"
+      "M-4 (Configure Provisioning Attribute Mappings)",
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
     const { microsoftToken } = await getTokens();
-    const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
+    const spId = context.outputs[
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+    ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 

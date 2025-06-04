@@ -2,7 +2,10 @@ import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
-export function handleCheckError(error: unknown, defaultMessage: string): StepCheckResult {
+export function handleCheckError(
+  error: unknown,
+  defaultMessage: string,
+): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
   if (isAuthenticationError(error)) {
@@ -32,7 +35,10 @@ export function handleCheckError(error: unknown, defaultMessage: string): StepCh
   };
 }
 
-export async function handleExecutionError(error: unknown, stepId: string): Promise<StepExecutionResult> {
+export async function handleExecutionError(
+  error: unknown,
+  stepId: string,
+): Promise<StepExecutionResult> {
   console.error(`Execution Action Failed (Step ${stepId}):`, error);
 
   if (isAuthenticationError(error)) {
@@ -50,7 +56,10 @@ export async function handleExecutionError(error: unknown, stepId: string): Prom
   }
 
   if (error instanceof APIError) {
-    return { success: false, error: { message: error.message, code: error.code } };
+    return {
+      success: false,
+      error: { message: error.message, code: error.code },
+    };
   }
 
   const message =

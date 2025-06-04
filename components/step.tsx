@@ -219,33 +219,33 @@ export function StepItem({
               </h5>
 
               <div className="flex items-center gap-2 flex-wrap">
-                  {step.adminUrls?.configure && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={
-                          typeof step.adminUrls.configure === "function"
-                            ? (step.adminUrls.configure(outputs) ?? "#")
-                            : step.adminUrls.configure
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" />
-                        Open Console
-                      </a>
-                    </Button>
-                  )}
-                  {step.status !== "completed" && (
-                    <Button
-                      size="sm"
-                      onClick={handleMarkAsComplete}
-                      variant="secondary"
+                {step.adminUrls?.configure && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={
+                        typeof step.adminUrls.configure === "function"
+                          ? (step.adminUrls.configure(outputs) ?? "#")
+                          : step.adminUrls.configure
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      <CheckIcon className="mr-1.5 h-3.5 w-3.5" />
-                      Mark Complete
-                    </Button>
-                  )}
-                </div>
+                      <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" />
+                      Open Console
+                    </a>
+                  </Button>
+                )}
+                {step.status !== "completed" && (
+                  <Button
+                    size="sm"
+                    onClick={handleMarkAsComplete}
+                    variant="secondary"
+                  >
+                    <CheckIcon className="mr-1.5 h-3.5 w-3.5" />
+                    Mark Complete
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
@@ -369,7 +369,7 @@ export function StepItem({
                     step,
                     outputs,
                     allStepsStatus,
-                  })
+                  }),
                 )
               }
               className="gap-1"

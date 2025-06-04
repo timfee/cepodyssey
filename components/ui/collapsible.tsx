@@ -1,59 +1,33 @@
-import { cn } from "@/lib/utils";
-import * as React from "react";
+"use client";
 
-interface CollapsibleContextValue {
-  open: boolean;
-  setOpen?: (open: boolean) => void;
-}
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 
-const CollapsibleContext = React.createContext<CollapsibleContextValue>({
-  open: false,
-});
-
-interface CollapsibleProps extends React.HTMLAttributes<HTMLDivElement> {
-  open: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-export function Collapsible({
-  open,
-  onOpenChange,
-  className,
+function Collapsible({
   ...props
-}: CollapsibleProps) {
-  return (
-    <CollapsibleContext.Provider value={{ open, setOpen: onOpenChange }}>
-      <div className={cn(className)} {...props} />
-    </CollapsibleContext.Provider>
-  );
+}: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
+  return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
 }
 
-export function CollapsibleTrigger({
-  className,
-  children,
+function CollapsibleTrigger({
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const ctx = React.useContext(CollapsibleContext);
+}: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
   return (
-    <button
-      className={cn(className)}
-      onClick={() => ctx.setOpen?.(!ctx.open)}
+    <CollapsiblePrimitive.CollapsibleTrigger
+      data-slot="collapsible-trigger"
       {...props}
-    >
-      {children}
-    </button>
+    />
   );
 }
 
-export function CollapsibleContent({
-  className,
-  children,
+function CollapsibleContent({
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  const ctx = React.useContext(CollapsibleContext);
-  if (!ctx.open) return null;
+}: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleContent>) {
   return (
-    <div className={cn(className)} {...props}>
-      {children}
-    </div>
+    <CollapsiblePrimitive.CollapsibleContent
+      data-slot="collapsible-content"
+      {...props}
+    />
   );
 }
+
+export { Collapsible, CollapsibleContent, CollapsibleTrigger };

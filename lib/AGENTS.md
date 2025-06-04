@@ -287,7 +287,7 @@ samlProfile: (profileFullName: string) => {
   const profileId = profileFullName.split("/").pop();
   const encodedProfileRef = `inboundSamlSsoProfiles${encodeURIComponent("/" + profileId)}`;
   return `${PORTAL_BASES.googleAdmin}/ac/security/sso/sso-profiles/${encodedProfileRef}`;
-}
+};
 ```
 
 #### Azure Portal Parameter Inconsistency
@@ -296,10 +296,12 @@ Azure Portal uses different parameter names across blades:
 
 ```typescript
 // Overview and UsersAndGroups use servicePrincipalId
-overview: (spId, appId) => `.../Overview/servicePrincipalId/${spId}/appId/${appId}`
+overview: (spId, appId) =>
+  `.../Overview/servicePrincipalId/${spId}/appId/${appId}`;
 
 // ProvisioningManagement and SingleSignOn use objectId
-provisioning: (spId, appId) => `.../ProvisioningManagement/appId/${appId}/objectId/${spId}`
+provisioning: (spId, appId) =>
+  `.../ProvisioningManagement/appId/${appId}/objectId/${spId}`;
 ```
 
 ## Enhanced Error Handling

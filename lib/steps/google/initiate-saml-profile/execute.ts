@@ -43,13 +43,19 @@ export async function executeInitiateSamlProfile(
         outputs: {
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: existingProfile.displayName,
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: existingProfile.name,
-          [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: existingProfile.spConfig.entityId,
-          [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]: existingProfile.spConfig.assertionConsumerServiceUri,
+          [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]:
+            existingProfile.spConfig.entityId,
+          [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
+            existingProfile.spConfig.assertionConsumerServiceUri,
         },
       };
     }
 
-    if (!result.name || !result.spConfig?.entityId || !result.spConfig?.assertionConsumerServiceUri) {
+    if (
+      !result.name ||
+      !result.spConfig?.entityId ||
+      !result.spConfig?.assertionConsumerServiceUri
+    ) {
       return {
         success: false,
         error: {
@@ -68,7 +74,8 @@ export async function executeInitiateSamlProfile(
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: result.displayName,
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: result.name,
         [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: result.spConfig.entityId,
-        [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]: result.spConfig.assertionConsumerServiceUri,
+        [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
+          result.spConfig.assertionConsumerServiceUri,
       },
     };
   } catch (e) {

@@ -11,13 +11,18 @@ import { getMicrosoftToken } from "./auth";
  * Ensure the Azure service principal for the given app client ID exists.
  * Returns basic identifiers if found.
  */
-export async function checkMicrosoftServicePrincipal(appClientId: string): Promise<StepCheckResult> {
+export async function checkMicrosoftServicePrincipal(
+  appClientId: string,
+): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
     const sp = await microsoft.getServicePrincipalByAppId(token, appClientId);
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
-      const apps = await microsoft.listApplications(token, `appId eq '${appClientId}'`);
+      const apps = await microsoft.listApplications(
+        token,
+        `appId eq '${appClientId}'`,
+      );
       if (apps[0]?.id) {
         appObjectId = apps[0].id;
       }
@@ -33,9 +38,15 @@ export async function checkMicrosoftServicePrincipal(appClientId: string): Promi
         },
       };
     }
-    return { completed: false, message: `Service Principal for App Client ID '${appClientId}' not found.` };
+    return {
+      completed: false,
+      message: `Service Principal for App Client ID '${appClientId}' not found.`,
+    };
   } catch (e) {
-    return handleCheckError(e, `Failed to check for Service Principal with App Client ID '${appClientId}'.`);
+    return handleCheckError(
+      e,
+      `Failed to check for Service Principal with App Client ID '${appClientId}'.`,
+    );
   }
 }
 
@@ -76,10 +87,15 @@ export async function checkMicrosoftProvisioningJobDetails(
     const token = await getMicrosoftToken();
     let jobToInspect: microsoft.SynchronizationJob | null = null;
     if (jobId) {
-      jobToInspect = await microsoft.getProvisioningJob(token, spObjectId, jobId);
+      jobToInspect = await microsoft.getProvisioningJob(
+        token,
+        spObjectId,
+        jobId,
+      );
     } else {
       const jobs = await microsoft.listSynchronizationJobs(token, spObjectId);
-      jobToInspect = jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
+      jobToInspect =
+        jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
     }
 
     if (jobToInspect?.id) {
@@ -108,7 +124,8 @@ export async function checkMicrosoftProvisioningJobDetails(
     }
     return {
       completed: false,
-      message: "No provisioning job found or configured for this Service Principal.",
+      message:
+        "No provisioning job found or configured for this Service Principal.",
     };
   } catch (e) {
     if (
@@ -138,7 +155,10 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const appDetails = await microsoft.getApplicationDetails(token, appObjectId);
+    const appDetails = await microsoft.getApplicationDetails(
+      token,
+      appObjectId,
+    );
     if (!appDetails) {
       return {
         completed: false,
@@ -146,12 +166,10 @@ export async function checkMicrosoftSamlAppSettingsApplied(
       };
     }
 
-    const hasCorrectIdentifierUri = appDetails.identifierUris?.includes(
-      expectedSpEntityId,
-    );
-    const hasCorrectReplyUrl = appDetails.web?.redirectUris?.includes(
-      expectedAcsUrl,
-    );
+    const hasCorrectIdentifierUri =
+      appDetails.identifierUris?.includes(expectedSpEntityId);
+    const hasCorrectReplyUrl =
+      appDetails.web?.redirectUris?.includes(expectedAcsUrl);
 
     if (hasCorrectIdentifierUri && hasCorrectReplyUrl) {
       return {
@@ -184,7 +202,11 @@ export async function checkMicrosoftAttributeMappingsApplied(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const schema = await microsoft.getSynchronizationSchema(token, spObjectId, jobId);
+    const schema = await microsoft.getSynchronizationSchema(
+      token,
+      spObjectId,
+      jobId,
+    );
     const userMappingRule = schema?.synchronizationRules?.find((rule) =>
       rule.objectMappings?.some(
         (om) =>
@@ -196,11 +218,12 @@ export async function checkMicrosoftAttributeMappingsApplied(
       (om) => om.targetObjectName?.toLowerCase() === "user",
     );
 
-    const hasUserPrincipalNameToUserName = userObjectMapping?.attributeMappings?.some(
-      (am) =>
-        am.targetAttributeName === "userName" &&
-        am.source?.expression?.toLowerCase().includes("[userprincipalname]"),
-    );
+    const hasUserPrincipalNameToUserName =
+      userObjectMapping?.attributeMappings?.some(
+        (am) =>
+          am.targetAttributeName === "userName" &&
+          am.source?.expression?.toLowerCase().includes("[userprincipalname]"),
+      );
     const hasMailToEmail = userObjectMapping?.attributeMappings?.some(
       (am) =>
         am.targetAttributeName === 'emails[type eq "work"].value' &&
@@ -216,13 +239,15 @@ export async function checkMicrosoftAttributeMappingsApplied(
     }
     return {
       completed: false,
-      message: "Key default attribute mappings not fully confirmed or schema/job not found.",
+      message:
+        "Key default attribute mappings not fully confirmed or schema/job not found.",
     };
   } catch (e) {
     if (e instanceof APIError && e.status === 404) {
       return {
         completed: false,
-        message: "Synchronization schema or job not found. Mappings cannot be checked.",
+        message:
+          "Synchronization schema or job not found. Mappings cannot be checked.",
       };
     }
     return handleCheckError(e, "Failed to check attribute mappings.");

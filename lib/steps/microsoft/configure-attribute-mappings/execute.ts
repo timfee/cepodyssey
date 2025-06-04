@@ -40,7 +40,9 @@ export async function executeConfigureAttributeMappings(
     const attributeMappingSourceTypeAttribute =
       "Attribute" as MicrosoftGraph.AttributeMappingSourceType;
 
-    const schemaPayload: { synchronizationRules: MicrosoftGraph.SynchronizationRule[] } = {
+    const schemaPayload: {
+      synchronizationRules: MicrosoftGraph.SynchronizationRule[];
+    } = {
       synchronizationRules: [
         {
           name: "UserProvisioningToGoogleWorkspace",
@@ -129,7 +131,10 @@ export async function executeConfigureAttributeMappings(
       message:
         "Default attribute mappings configured. Review in Azure Portal; customize if specific needs exist.",
       outputs: { [OUTPUT_KEYS.FLAG_M4_PROV_MAPPINGS_CONFIGURED]: true },
-      resourceUrl: portalUrls.azure.enterpriseApp.provisioning(spObjectId, appId),
+      resourceUrl: portalUrls.azure.enterpriseApp.provisioning(
+        spObjectId,
+        appId,
+      ),
     };
   } catch (e) {
     return handleExecutionError(e, "M-4");

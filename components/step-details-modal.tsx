@@ -10,7 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ExternalLinkIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
-import { selectStepDetailsModal, closeStepDetailsModal } from "@/lib/redux/slices/modals";
+import {
+  selectStepDetailsModal,
+  closeStepDetailsModal,
+} from "@/lib/redux/slices/modals";
 
 export function StepDetailsModal() {
   const dispatch = useAppDispatch();

@@ -1,8 +1,17 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useState, type ReactElement } from "react";
 import { Logger } from "@/lib/utils/logger";
 
@@ -49,7 +58,11 @@ export interface ErrorDialogProps {
 /**
  * Displays a detailed error dialog with optional diagnostics information.
  */
-export function ErrorDialog({ error, open, onOpenChange }: ErrorDialogProps): ReactElement {
+export function ErrorDialog({
+  error,
+  open,
+  onOpenChange,
+}: ErrorDialogProps): ReactElement {
   const [showDiag, setShowDiag] = useState(false);
 
   const handleCopy = (): void => {
@@ -72,7 +85,11 @@ export function ErrorDialog({ error, open, onOpenChange }: ErrorDialogProps): Re
           {error.actions?.length ? (
             <div className="flex gap-2">
               {error.actions.map((action) => (
-                <Button key={action.label} onClick={action.onClick} variant={action.variant}>
+                <Button
+                  key={action.label}
+                  onClick={action.onClick}
+                  variant={action.variant}
+                >
                   {action.icon}
                   {action.label}
                 </Button>
@@ -82,7 +99,9 @@ export function ErrorDialog({ error, open, onOpenChange }: ErrorDialogProps): Re
           {error.diagnostics ? (
             <Collapsible open={showDiag} onOpenChange={setShowDiag}>
               <CollapsibleTrigger>
-                <Button variant="outline">{showDiag ? "Hide Diagnostics" : "Show Diagnostics"}</Button>
+                <Button variant="outline">
+                  {showDiag ? "Hide Diagnostics" : "Show Diagnostics"}
+                </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2 max-h-60 overflow-auto text-sm">
                 <pre className="whitespace-pre-wrap">

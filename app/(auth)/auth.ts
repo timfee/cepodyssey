@@ -148,7 +148,10 @@ async function checkGoogleAdmin(
         const errorData = JSON.parse(responseBodyForLogging);
         Logger.warn("[Auth]", "checkGoogleAdmin: API error data", errorData);
       } catch {
-        Logger.warn("[Auth]", "checkGoogleAdmin: Could not parse error JSON from API.");
+        Logger.warn(
+          "[Auth]",
+          "checkGoogleAdmin: Could not parse error JSON from API.",
+        );
       }
       return false;
     }
@@ -157,7 +160,11 @@ async function checkGoogleAdmin(
       suspended?: boolean;
       primaryEmail?: string;
     };
-    Logger.debug("[Auth]", `checkGoogleAdmin: Parsed API response data for ${email}:`, data);
+    Logger.debug(
+      "[Auth]",
+      `checkGoogleAdmin: Parsed API response data for ${email}:`,
+      data,
+    );
 
     const isSuperAdmin = data.isAdmin === true && data.suspended === false;
     Logger.debug(
@@ -185,7 +192,10 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
     return false;
   }
   const fetchUrl = `${process.env.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
-  Logger.debug("[Auth]", `checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`);
+  Logger.debug(
+    "[Auth]",
+    `checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`,
+  );
   try {
     const res = await withRetry(() =>
       fetch(fetchUrl, { headers: { Authorization: `Bearer ${accessToken}` } }),
@@ -216,7 +226,11 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
     const data = JSON.parse(responseBodyForLogging) as {
       value?: { displayName?: string; roleTemplateId?: string }[];
     };
-    Logger.debug("[Auth]", "checkMicrosoftAdmin: API response data (roles)", data.value);
+    Logger.debug(
+      "[Auth]",
+      "checkMicrosoftAdmin: API response data (roles)",
+      data.value,
+    );
 
     const globalAdminRoleTemplateId = "62e90394-69f5-4237-9190-012177145e10"; // Global Administrator
     const isGlobalAdmin =
@@ -306,11 +320,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account && profile) {
         finalToken.error = undefined;
         if (account.provider === "google") {
-          Logger.debug(
-            "[Auth]",
-            "Google Profile in JWT callback:",
-            profile,
-          );
+          Logger.debug("[Auth]", "Google Profile in JWT callback:", profile);
           finalToken.googleAccessToken = account.access_token;
           finalToken.googleRefreshToken = account.refresh_token;
           // account.expires_at is a Unix timestamp in seconds
@@ -333,11 +343,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             );
           }
         } else if (account.provider === "microsoft-entra-id") {
-          Logger.debug(
-            "[Auth]",
-            "Microsoft Profile in JWT callback:",
-            profile,
-          );
+          Logger.debug("[Auth]", "Microsoft Profile in JWT callback:", profile);
           finalToken.microsoftAccessToken = account.access_token;
           finalToken.microsoftRefreshToken = account.refresh_token;
           finalToken.microsoftExpiresAt = account.expires_at

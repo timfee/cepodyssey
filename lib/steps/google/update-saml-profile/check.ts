@@ -16,7 +16,9 @@ export async function checkSamlProfileUpdate(
   const profileName = context.outputs[
     OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
   ] as string;
-  const expectedIdpEntityId = context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID] as string;
+  const expectedIdpEntityId = context.outputs[
+    OUTPUT_KEYS.IDP_ENTITY_ID
+  ] as string;
 
   if (!profileName || !expectedIdpEntityId) {
     return { completed: false, message: "Missing required configuration." };
@@ -34,7 +36,10 @@ export async function checkSamlProfileUpdate(
     }
 
     if (!profile?.name) {
-      return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+      return {
+        completed: false,
+        message: `SAML Profile '${profileName}' not found.`,
+      };
     }
 
     const resourceUrl = portalUrls.google.sso.samlProfile(profile.name);
@@ -82,6 +87,9 @@ export async function checkSamlProfileUpdate(
       outputs,
     };
   } catch (e) {
-    return handleCheckError(e, `Failed to check SAML Profile '${profileName}'.`);
+    return handleCheckError(
+      e,
+      `Failed to check SAML Profile '${profileName}'.`,
+    );
   }
 }

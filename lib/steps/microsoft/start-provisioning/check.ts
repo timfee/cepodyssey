@@ -9,7 +9,9 @@ import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftProvisioningJobDetails } from "../utils/common-checks";
 
-export async function checkStartProvisioning(context: StepContext): Promise<StepCheckResult> {
+export async function checkStartProvisioning(
+  context: StepContext,
+): Promise<StepCheckResult> {
   const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
   const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
   if (!spId || !jobId) {

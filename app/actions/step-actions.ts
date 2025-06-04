@@ -1,11 +1,15 @@
 "use server";
 
 import { checkStep, executeStep } from "@/lib/steps/registry";
-import type { StepCheckResult, StepContext, StepExecutionResult } from "@/lib/types";
+import type {
+  StepCheckResult,
+  StepContext,
+  StepExecutionResult,
+} from "@/lib/types";
 
 export async function executeStepCheck(
   stepId: string,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepCheckResult> {
   try {
     return await checkStep(stepId, context);
@@ -26,7 +30,7 @@ export async function executeStepCheck(
 
 export async function executeStepAction(
   stepId: string,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
   return executeStep(stepId, context);
 }
