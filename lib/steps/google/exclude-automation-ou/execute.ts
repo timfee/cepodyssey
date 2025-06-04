@@ -19,7 +19,10 @@ export async function executeExcludeAutomationOu(
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
     if (!profileFullName) {
-      return { success: false, error: { message: "Missing SAML profile name." } };
+      return {
+        success: false,
+        error: { message: "Missing SAML profile name.", code: "MISSING_DEPENDENCY" },
+      };
     }
     const automationOu = await google.getOrgUnit(token, "/Automation");
     if (!automationOu?.orgUnitId) {

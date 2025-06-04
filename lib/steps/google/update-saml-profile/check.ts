@@ -65,7 +65,6 @@ export async function checkSamlProfileUpdate(
       return {
         completed: false,
         message: `SAML Profile '${profile.displayName}' found but is not fully configured with IdP details or not enabled.`,
-        outputs,
       };
     }
 
@@ -74,7 +73,6 @@ export async function checkSamlProfileUpdate(
       return {
         completed: false,
         message: `SAML Profile '${profile.displayName}' is configured with IdP '${currentIdp}', not the expected '${expectedIdpEntityId}'.`,
-        outputs,
       };
     }
 

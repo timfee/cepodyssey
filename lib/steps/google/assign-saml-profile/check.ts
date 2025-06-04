@@ -55,7 +55,7 @@ export async function checkAssignSamlProfile(
 
     return configured
       ? { completed: true, message: "SAML profile configured.", outputs }
-      : { completed: false, message: "SAML profile not yet configured.", outputs };
+      : { completed: false, message: "SAML profile not yet configured." };
   } catch (e) {
     return handleCheckError(e, `Failed to check SAML Profile '${profileName}'.`);
   }

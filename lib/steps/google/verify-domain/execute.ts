@@ -16,7 +16,7 @@ export async function executeVerifyDomain(
     if (!context.domain) {
       return {
         success: false,
-        error: { message: "Primary domain not available in context." },
+        error: { message: "Primary domain not available in context.", code: "MISSING_CONFIG" },
       };
     }
     const result = await google.addDomain(token, context.domain);

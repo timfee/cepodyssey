@@ -18,7 +18,7 @@ export async function executeGrantSuperAdmin(
     if (!email) {
       return {
         success: false,
-        error: { message: "Provisioning user email missing." },
+        error: { message: "Provisioning user email missing.", code: "MISSING_DEPENDENCY" },
       };
     }
     const user = await google.getUser(token, email);

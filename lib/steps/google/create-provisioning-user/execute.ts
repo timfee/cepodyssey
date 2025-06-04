@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../utils/error-handling";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
  * Create the `azuread-provisioning` user inside the Automation OU.
@@ -14,16 +15,18 @@ export async function executeCreateProvisioningUser(
   context: StepContext,
 ): Promise<StepExecutionResult> {
   try {
+    const validation = validateRequiredOutputs(
+      context,
+      [OUTPUT_KEYS.AUTOMATION_OU_PATH],
+      "G-1 (Create Automation OU)"
+    );
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
+
     const token = await getGoogleToken();
     const domain = context.domain;
     const ouPath = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string;
-
-    if (!domain) {
-      return { success: false, error: { message: "Domain not available in context." } };
-    }
-    if (!ouPath) {
-      return { success: false, error: { message: "Automation OU path not found." } };
-    }
 
     const email = `azuread-provisioning@${domain}`;
     const tempPassword = `P@${Date.now()}w0rd`;
@@ -53,7 +56,10 @@ export async function executeCreateProvisioningUser(
     }
 
     if (!result.id || !result.primaryEmail) {
-      return { success: false, error: { message: "Failed to create provisioning user." } };
+      return {
+        success: false,
+        error: { message: "Failed to create provisioning user.", code: "API_ERROR" },
+      };
     }
 
     return {

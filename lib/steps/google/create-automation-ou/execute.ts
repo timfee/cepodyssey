@@ -42,7 +42,7 @@ export async function executeCreateAutomationOu(
     if (!result.orgUnitId || !result.orgUnitPath) {
       return {
         success: false,
-        error: { message: "Failed to create OU." },
+        error: { message: "Failed to create OU.", code: "API_ERROR" },
       };
     }
 

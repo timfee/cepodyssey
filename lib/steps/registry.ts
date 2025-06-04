@@ -21,10 +21,16 @@ export async function executeStep(
 ): Promise<StepExecutionResult> {
   const step = allStepDefinitions.find((s) => s.id === stepId);
   if (!step) {
-    return { success: false, error: { message: `Step ${stepId} not found` } };
+    return {
+      success: false,
+      error: { message: `Step ${stepId} not found`, code: "RESOURCE_NOT_FOUND" },
+    };
   }
   if (!step.execute) {
-    return { success: false, error: { message: "No execution available for this step." } };
+    return {
+      success: false,
+      error: { message: "No execution available for this step.", code: "UNKNOWN_ERROR" },
+    };
   }
   return step.execute(context);
 }
