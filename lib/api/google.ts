@@ -1,8 +1,11 @@
 import type { admin_directory_v1 } from "googleapis";
 
-import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import {
+  createEnablementError,
+  isAPIEnablementError,
+} from "./api-enablement-error";
 import { wrapAuthError } from "./auth-interceptor";
-import { isAPIEnablementError, createEnablementError } from "./api-enablement-error";
+import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -14,12 +17,12 @@ export type GoogleDomain = admin_directory_v1.Schema$Domains & {
 export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
 export interface GoogleLongRunningOperation {
-  name: string;
+  name?: string; // Name of the LRO itself, e.g., "operations/XYZ123"
   metadata?: {
     "@type"?: string;
     [key: string]: unknown;
   };
-  done: boolean;
+  done: boolean; // This is critical
   error?: {
     code?: number;
     message?: string;
@@ -28,7 +31,11 @@ export interface GoogleLongRunningOperation {
   };
   response?: {
     "@type"?: string;
-    [key: string]: unknown;
+    name?: string; // Name of the created resource, e.g., "inboundSamlSsoProfiles/ABC789"
+    customer?: string;
+    displayName?: string;
+    spConfig?: { entityId?: string; assertionConsumerServiceUri?: string };
+    [key: string]: unknown; // Allow other fields of InboundSamlSsoProfile
   };
 }
 
@@ -86,7 +93,7 @@ function getCloudIdentityApiBaseUrl(): string {
   const envBase = process.env.GOOGLE_IDENTITY_BASE;
   if (!envBase) {
     console.error(
-      "CRITICAL: GOOGLE_IDENTITY_BASE environment variable is not set!",
+      "CRITICAL: GOOGLE_IDENTITY_BASE environment variable is not set!"
     );
     throw new Error("Google Cloud Identity API base URL is not configured.");
   }
@@ -114,15 +121,15 @@ function handleGoogleError(error: unknown): never {
  */
 export async function getDomainVerificationStatus(
   token: string,
-  domainName: string,
+  domainName: string
 ): Promise<boolean> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
-        domainName,
+        domainName
       )}`,
-      token,
+      token
     );
     if (res.status === 404) return false;
     const data = await handleApiResponse<GoogleDomain>(res);
@@ -133,7 +140,7 @@ export async function getDomainVerificationStatus(
     if (error instanceof APIError && error.status === 404) return false;
     console.error(
       `Error fetching domain verification status for ${domainName}:`,
-      error,
+      error
     );
     handleGoogleError(error);
   }
@@ -148,7 +155,7 @@ export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits?type=all`,
-      token,
+      token
     );
     const data = await handleApiResponse<ListOrgUnitsResponse>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
@@ -165,7 +172,7 @@ export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
 export async function createOrgUnit(
   token: string,
   name: string,
-  parentOrgUnitPath = "/",
+  parentOrgUnitPath = "/"
 ): Promise<GoogleOrgUnit | { alreadyExists: true }> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
@@ -175,7 +182,7 @@ export async function createOrgUnit(
       {
         method: "POST",
         body: JSON.stringify({ name, parentOrgUnitPath }),
-      },
+      }
     );
     console.log("Sending request to createOrgUnit:", {
       name,
@@ -192,17 +199,17 @@ export async function createOrgUnit(
 /** Get a single organizational unit by path. */
 export async function getOrgUnit(
   token: string,
-  ouPath: string,
+  ouPath: string
 ): Promise<GoogleOrgUnit | null> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     console.log(
-      `getOrgUnit: Fetching OU by path '${ouPath}' with token ${token}`,
+      `getOrgUnit: Fetching OU by path '${ouPath}' with token ${token}`
     );
     const relativePath = ouPath.startsWith("/") ? ouPath.substring(1) : ouPath;
     if (!relativePath && ouPath === "/") {
       console.warn(
-        "getOrgUnit: Attempting to fetch root OU ('/') by path. This specific function expects a non-root path.",
+        "getOrgUnit: Attempting to fetch root OU ('/') by path. This specific function expects a non-root path."
       );
       return null;
     }
@@ -210,7 +217,7 @@ export async function getOrgUnit(
       return null;
     }
     const fetchUrl = `${baseUrl}/customer/${GWS_CUSTOMER_ID}/orgunits/${encodeURIComponent(
-      relativePath,
+      relativePath
     )}`;
     const res = await fetchWithAuth(fetchUrl, token);
 
@@ -231,7 +238,7 @@ export async function getOrgUnit(
 /** Create a user in Google Workspace. */
 export async function createUser(
   token: string,
-  user: Partial<DirectoryUser>,
+  user: Partial<DirectoryUser>
 ): Promise<DirectoryUser | { alreadyExists: true }> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
@@ -248,15 +255,15 @@ export async function createUser(
 /** Fetch a user by user key (email or ID). */
 export async function getUser(
   token: string,
-  userKey: string,
+  userKey: string
 ): Promise<DirectoryUser | null> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/users/${encodeURIComponent(
-        userKey,
+        userKey
       )}?fields=isAdmin,suspended,primaryEmail,name,id,orgUnitPath`,
-      token,
+      token
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<DirectoryUser>(res);
@@ -277,7 +284,7 @@ export async function listUsers(
     query?: string;
     orderBy?: string;
     maxResults?: number;
-  },
+  }
 ): Promise<DirectoryUser[]> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
@@ -302,7 +309,7 @@ export async function listUsers(
 /** Add a secondary domain to the Google Workspace tenant. */
 export async function addDomain(
   token: string,
-  domainName: string,
+  domainName: string
 ): Promise<GoogleDomain | { alreadyExists: true }> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
@@ -312,7 +319,7 @@ export async function addDomain(
       {
         method: "POST",
         body: JSON.stringify({ domainName }),
-      },
+      }
     );
     return handleApiResponse<GoogleDomain>(res);
   } catch (error) {
@@ -323,15 +330,15 @@ export async function addDomain(
 /** Retrieve domain details if present. */
 export async function getDomain(
   token: string,
-  domainName: string,
+  domainName: string
 ): Promise<GoogleDomain | null> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/domains/${encodeURIComponent(
-        domainName,
+        domainName
       )}`,
-      token,
+      token
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<GoogleDomain>(res);
@@ -354,7 +361,7 @@ export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roles`,
-      token,
+      token
     );
     const data = await handleApiResponse<ListAdminRolesResponse>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
@@ -369,7 +376,7 @@ export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
 export async function assignAdminRole(
   token: string,
   userEmail: string,
-  roleId: string,
+  roleId: string
 ): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
@@ -383,7 +390,7 @@ export async function assignAdminRole(
           assignedTo: userEmail,
           scopeType: "CUSTOMER",
         }),
-      },
+      }
     );
     return handleApiResponse<GoogleRoleAssignment>(res);
   } catch (error) {
@@ -394,17 +401,19 @@ export async function assignAdminRole(
 /** List admin role assignments for a user. */
 export async function listRoleAssignments(
   token: string,
-  userKey: string,
+  userKey: string
 ): Promise<GoogleRoleAssignment[]> {
   try {
     const baseUrl = getDirectoryApiBaseUrl();
     const res = await fetchWithAuth(
       `${baseUrl}/customer/${GWS_CUSTOMER_ID}/roleassignments?userKey=${encodeURIComponent(
-        userKey,
+        userKey
       )}`,
-      token,
+      token
     );
-    const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(res);
+    const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(
+      res
+    );
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return [];
     return data.items ?? [];
@@ -414,84 +423,163 @@ export async function listRoleAssignments(
 }
 
 /** Create a new inbound SAML SSO profile. */
+
 export async function createSamlProfile(
   token: string,
-  displayName: string,
+  displayName: string
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
-    const res = await fetchWithAuth(
-      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
+    console.log(
+      `Calling POST ${cloudIdentityBaseUrl}/inboundSamlSsoProfiles for displayName: ${displayName}`
+    );
+    const initialHttpResponse = await fetchWithAuth(
+      `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles`, // Your specified URL
       token,
       {
         method: "POST",
         body: JSON.stringify({ displayName }),
-      },
+      }
     );
 
-    if (res.status === 409) {
-      const body = (await res.json().catch(() => ({}))) as {
-        error?: { message?: string; status?: string };
-      };
-      const errMsg = body.error?.message?.toLowerCase() ?? "";
-      if (errMsg.includes("already exists") || body.error?.status === "ALREADY_EXISTS") {
-        return { alreadyExists: true };
-      }
-      throw new APIError(body.error?.message || "Conflict", res.status, body.error?.status);
-    }
-
-    const operation = (await handleApiResponse<GoogleLongRunningOperation>(res)) as GoogleLongRunningOperation;
-    if (!operation.name) {
-      throw new APIError("Invalid operation response: missing name", 500);
-    }
-
-    const MAX_POLLS = 12;
-    const POLL_INTERVAL_MS = 2500;
-
-    for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
-      if (attempt > 0) {
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      }
-      const pollRes = await fetchWithAuth(
-        `${cloudIdentityBaseUrl}/${operation.name}`,
-        token,
+    if (initialHttpResponse.status === 409) {
+      console.log(
+        `SAML Profile '${displayName}' creation returned 409 (already exists).`
       );
-      const status = (await handleApiResponse<GoogleLongRunningOperation>(pollRes)) as GoogleLongRunningOperation;
-      if (status.done) {
-        if (status.error) {
+      // Consider parsing error body for more specific "already exists" if needed
+      // const errorBody = await initialHttpResponse.json().catch(() => ({}));
+      // if (errorBody?.error?.status === 'ALREADY_EXISTS' || errorBody?.error?.message?.toLowerCase().includes('already exists'))
+      return { alreadyExists: true };
+      // else throw new APIError...
+    }
+
+    // This will parse JSON and throw an APIError if initialHttpResponse.ok is false.
+    // We expect the structure of a GoogleLongRunningOperation.
+    const operation =
+      await handleApiResponse<GoogleLongRunningOperation>(initialHttpResponse);
+    console.log(
+      "Direct response from POST /inboundSamlSsoProfiles:",
+      JSON.stringify(operation, null, 2)
+    );
+
+    // Since you've confirmed the response has "done: true" immediately:
+    if (operation.done) {
+      if (operation.error) {
+        console.error(
+          "SAML profile creation operation reported 'done' but with an error:",
+          operation.error
+        );
+        throw new APIError(
+          `SAML profile creation failed: ${operation.error.message}`,
+          operation.error.code || 500,
+          operation.error.status || "OPERATION_ERROR"
+        );
+      }
+
+      if (
+        operation.response &&
+        operation.response["@type"] ===
+          "type.googleapis.com/google.identity.cloudidentity.v1.InboundSamlSsoProfile"
+      ) {
+        const finalProfile =
+          operation.response as unknown as InboundSamlSsoProfile;
+        console.log(
+          "SAML Profile created successfully (operation was 'done: true' immediately):",
+          finalProfile
+        );
+
+        // IMPORTANT: Validate crucial fields on the 'finalProfile' object
+        if (
+          !finalProfile.name ||
+          !finalProfile.spConfig?.entityId ||
+          !finalProfile.spConfig?.assertionConsumerServiceUri
+        ) {
+          const missingFields = [];
+          if (!finalProfile.name)
+            missingFields.push("profile.name (resource name)");
+          if (!finalProfile.spConfig?.entityId)
+            missingFields.push("profile.spConfig.entityId");
+          if (!finalProfile.spConfig?.assertionConsumerServiceUri)
+            missingFields.push("profile.spConfig.assertionConsumerServiceUri");
+          console.error(
+            `Immediately completed SAML profile response is missing crucial fields: ${missingFields.join(", ")}`,
+            finalProfile
+          );
           throw new APIError(
-            `SAML profile creation failed: ${status.error.message}`,
-            status.error.code ?? 500,
-            status.error.status,
+            `Completed SAML profile response is missing essential details: ${missingFields.join(", ")}.`,
+            500,
+            "INCOMPLETE_PROFILE_DATA"
           );
         }
-        if (
-          status.response &&
-          status.response["@type"] ===
-            "type.googleapis.com/google.identity.cloudidentity.v1.InboundSamlSsoProfile"
-        ) {
-          return status.response as unknown as InboundSamlSsoProfile;
-        }
-        throw new APIError("Operation completed with unexpected response", 500);
+        return finalProfile; // Successfully extracted and validated the profile
+      } else {
+        console.error(
+          "Operation is 'done: true', but 'response' field is missing, not of expected type, or malformed:",
+          operation.response
+        );
+        throw new APIError(
+          "Operation completed but returned an unexpected or malformed response payload.",
+          500,
+          "MALFORMED_COMPLETED_OPERATION_PAYLOAD"
+        );
       }
+    } else {
+      // This block means operation.done was false.
+      // If the API *always* returns done:true as per your observation, this block indicates an unexpected API behavior.
+      // For a truly pending LRO, operation.name (the LRO's own name) would be needed for polling.
+      // If it's missing here, polling is impossible.
+      if (!operation.name || operation.name.trim() === "") {
+        console.error(
+          "Operation is not 'done' and is missing a valid LRO 'name' for polling:",
+          operation
+        );
+        throw new APIError(
+          "Pending operation response is missing a valid 'name' for polling. Cannot proceed.",
+          500,
+          "PENDING_LRO_MISSING_POLL_NAME"
+        );
+      }
+      // If you ever need to re-enable polling because the API *sometimes* returns a pending LRO:
+      // 1. The polling loop would go here.
+      // 2. It MUST use `operation.name` (the LRO's own name) for the polling URL,
+      //    NOT `operation.response.name` (which is the profile's name and only available after completion).
+      console.error(
+        "Operation returned as not 'done'. This was unexpected. Full LRO polling logic would be required here using operation.name: ",
+        operation.name
+      );
+      throw new APIError(
+        "Operation returned as not 'done', and full polling logic for this case is not currently enabled in the simplified version.",
+        500,
+        "UNEXPECTED_PENDING_LRO"
+      );
     }
-
-    throw new APIError("SAML profile creation timed out", 500, "TIMEOUT");
   } catch (error) {
-    handleGoogleError(error);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "alreadyExists" in error
+    ) {
+      return { alreadyExists: true };
+    }
+    if (!(error instanceof APIError)) {
+      console.error(
+        "Unhandled generic exception/error in createSamlProfile:",
+        error
+      );
+    }
+    return handleGoogleError(error); // Ensure this re-throws
   }
 }
-
 /** Retrieve a specific SAML profile. */
 export async function getSamlProfile(
   token: string,
-  profileFullName: string,
+  profileFullName: string
 ): Promise<InboundSamlSsoProfile | null> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
       `${cloudIdentityBaseUrl}/${profileFullName}`,
-      token,
+      token
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<InboundSamlSsoProfile>(res);
@@ -507,13 +595,13 @@ export async function getSamlProfile(
 
 /** List all SAML profiles for the customer. */
 export async function listSamlProfiles(
-  token: string,
+  token: string
 ): Promise<InboundSamlSsoProfile[]> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
       `${cloudIdentityBaseUrl}/inboundSamlSsoProfiles?parent=customers/${GWS_CUSTOMER_ID}`,
-      token,
+      token
     );
     const data = await handleApiResponse<{
       inboundSamlSsoProfiles?: InboundSamlSsoProfile[];
@@ -530,7 +618,7 @@ export async function listSamlProfiles(
 export async function updateSamlProfile(
   token: string,
   profileFullName: string,
-  config: Partial<Pick<InboundSamlSsoProfile, "idpConfig">>,
+  config: Partial<Pick<InboundSamlSsoProfile, "idpConfig">>
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
@@ -546,7 +634,7 @@ export async function updateSamlProfile(
       {
         method: "PATCH",
         body: JSON.stringify(config),
-      },
+      }
     );
     return handleApiResponse<InboundSamlSsoProfile>(res);
   } catch (error) {
@@ -561,7 +649,7 @@ interface AssignSamlSsoPayload {
 export async function assignSamlToOrgUnits(
   token: string,
   profileFullName: string,
-  assignments: AssignSamlSsoPayload["assignments"],
+  assignments: AssignSamlSsoPayload["assignments"]
 ): Promise<object | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
@@ -571,7 +659,7 @@ export async function assignSamlToOrgUnits(
       {
         method: "POST",
         body: JSON.stringify({ assignments } as AssignSamlSsoPayload),
-      },
+      }
     );
     return handleApiResponse<object>(res);
   } catch (error) {
@@ -587,7 +675,7 @@ export async function assignSamlToOrgUnits(
 export async function addIdpCredentials(
   token: string,
   profileFullName: string,
-  pemData?: string,
+  pemData?: string
 ): Promise<{ success: boolean } | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
@@ -598,7 +686,7 @@ export async function addIdpCredentials(
       {
         method: "POST",
         body: JSON.stringify(body),
-      },
+      }
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -612,15 +700,17 @@ export async function addIdpCredentials(
  */
 export async function listIdpCredentials(
   token: string,
-  profileFullName: string,
+  profileFullName: string
 ): Promise<IdpCredential[]> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const res = await fetchWithAuth(
       `${cloudIdentityBaseUrl}/${profileFullName}/idpCredentials`,
-      token,
+      token
     );
-    const data = await handleApiResponse<{ idpCredentials?: IdpCredential[] }>(res);
+    const data = await handleApiResponse<{ idpCredentials?: IdpCredential[] }>(
+      res
+    );
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
       return [];
     return data.idpCredentials ?? [];
