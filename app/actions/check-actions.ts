@@ -106,12 +106,14 @@ export async function checkOrgUnitExists(
     const { googleToken } = await getAuthenticatedTokens(["google"]);
     const orgUnit = await google.getOrgUnit(googleToken!, ouPath);
     if (orgUnit?.orgUnitId && orgUnit.orgUnitPath) {
+      const resourceUrl = `https://admin.google.com/ac/orgunits?ouid=${orgUnit.orgUnitId}`;
       return {
         completed: true,
         message: `Organizational Unit '${ouPath}' found.`,
         outputs: {
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
+          resourceUrl,
         },
       };
     }
@@ -274,6 +276,10 @@ export async function checkGoogleSamlProfileDetails(
       ssoMode: profile.ssoMode,
       idpEntityId: profile.idpConfig?.idpEntityId,
     };
+    const profileId = profile.name.split("/").pop();
+    outputs.resourceUrl = profileId
+      ? `https://admin.google.com/ac/sso/profile/${profileId}`
+      : "https://admin.google.com/ac/sso";
     if (profile.spConfig?.spEntityId) {
       outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] =
         profile.spConfig.spEntityId;
@@ -354,13 +360,13 @@ export async function checkMicrosoftServicePrincipal(
       if (applications[0]?.id) {
         appObjectId = applications[0].id;
       }
-      // These outputs are generic for any SP found by appClientId.
-      // The calling lambda in lib/steps.ts will map these to specific OUTPUT_KEYS (e.g., PROVISIONING_SP_OBJECT_ID or SAML_SSO_SP_OBJECT_ID).
+      const resourceUrl = `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${sp.id}/appId/${sp.appId}`;
       const outputs = {
         spId: sp.id,
         retrievedAppId: sp.appId,
         appObjectId: appObjectId,
         displayName: sp.displayName,
+        resourceUrl,
       };
       return {
         completed: true,
