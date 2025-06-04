@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
 import { useSessionSync } from "./use-session-sync";
+import { Logger } from "@/lib/utils/logger";
 
 /**
- * Runs lightweight "check" functions for a subset of steps once the
- * application configuration becomes available. It calls the provided
- * `executeCheck` for each step that has not yet completed.
+ * Runs lightweight `check` functions after configuration becomes available.
+ *
+ * @param executeCheck - Callback executed for each step needing a check
+ * @returns void
  */
-
-export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
+export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>): void {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
   const hasChecked = useRef(false);
@@ -44,7 +45,7 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
         (s) => s.metadata?.errorCode === "AUTH_EXPIRED",
       );
       if (authErrorPresent) {
-        console.log("Skipping auto-check due to existing auth errors");
+        Logger.info("[Hook]", "Skipping auto-check due to existing auth errors");
         return;
       }
 
@@ -53,14 +54,14 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
       try {
         // Check if session has required tokens
         if (!session.googleToken || !session.microsoftToken) {
-          console.warn("Session missing required tokens, skipping auto-check");
+          Logger.warn("[Hook]", "Session missing required tokens, skipping auto-check");
           setIsValidating(false);
           return;
         }
 
         // Check for refresh token error
         if (session.error === "RefreshTokenError") {
-          console.warn("Session has refresh token error, skipping auto-check");
+          Logger.warn("[Hook]", "Session has refresh token error, skipping auto-check");
           setIsValidating(false);
           return;
         }
@@ -91,12 +92,12 @@ export function useAutoCheck(executeCheck: (stepId: string) => Promise<void>) {
             // Add small delay between checks to avoid rate limiting
             await new Promise((resolve) => setTimeout(resolve, 500));
           } catch (error) {
-            console.error(`Check failed for ${stepId}:`, error);
+            Logger.error("[Hook]", `Check failed for ${stepId}`, error);
             // Continue with other checks even if one fails
           }
         }
       } catch (error) {
-        console.error("Auto-check error:", error);
+        Logger.error("[Hook]", "Auto-check error", error);
       } finally {
         setIsValidating(false);
       }
