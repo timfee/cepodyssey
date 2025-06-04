@@ -1,5 +1,6 @@
 import { store } from "@/lib/redux/store";
 import { addApiLog, updateApiLog } from "@/lib/redux/slices/debug-panel";
+import { Logger } from "@/lib/utils/logger";
 
 export class ApiLogger {
   static logRequest(url: string, init?: RequestInit): string {
@@ -49,6 +50,12 @@ export class ApiLogger {
       }),
     );
 
+    Logger.debug(
+      "[ApiLogger]",
+      `Request ${init?.method || "GET"} ${url}`,
+      requestBody,
+    );
+
     return id;
   }
 
@@ -76,6 +83,12 @@ export class ApiLogger {
         },
       }),
     );
+
+    Logger.debug(
+      "[ApiLogger]",
+      `Response ${response.status} for request ${id}`,
+      responseBody,
+    );
   }
 
   static logError(id: string, error: unknown) {
@@ -95,6 +108,8 @@ export class ApiLogger {
         },
       }),
     );
+
+    Logger.error("[ApiLogger]", `Error for request ${id}`, error);
   }
 
   private static detectProvider(url: string): "google" | "microsoft" | "other" {
