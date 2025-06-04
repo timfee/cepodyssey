@@ -94,7 +94,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
           </Card>
 
           <ScrollArea className="h-[calc(100vh-24rem)]">
-            <div className="flex flex-col gap-4 pr-4 max-w-3xl mx-auto">
+            <div className="flex flex-col gap-4 pr-4">
               {cat.steps.map((step) => (
                 <StepCard
                   key={step.id}
