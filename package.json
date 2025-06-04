@@ -13,9 +13,10 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md}'",
     "type-check": "tsc --noEmit",
-    "dev:test": "concurrently \"pnpm dev\" \"pnpm dev:wait-and-test\"",
-    "dev:wait-and-test": "sleep 10 && curl -f http://localhost:3000 && echo 'Dev server is running successfully!'",
-    "test:build": "pnpm lint && pnpm type-check && pnpm build"
+    "dev:test": "node scripts/test-dev-server.js",
+    "test:runtime": "pnpm dev:test",
+    "test:build": "pnpm lint && pnpm type-check && pnpm build",
+    "test:all": "pnpm test:build && pnpm test:runtime"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
