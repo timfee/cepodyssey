@@ -120,3 +120,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  [data-radix-ui-dialog-overlay] {
+    @apply bg-black/80 backdrop-blur-sm;
+  }
+  .dark .bg-card {
+    @apply bg-gray-900/95;
+  }
+  .dark .border {
+    @apply border-gray-800;
+  }
+}
