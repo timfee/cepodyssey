@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { ErrorToastProvider } from "@/components/error-toast-provider";
 import { ModalManager } from "@/components/modal-manager";
+import { DebugPanel } from "@/components/debug-panel";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangleIcon } from "lucide-react";
@@ -57,6 +58,7 @@ export default function RootLayout({
           <ErrorToastProvider>
             {children}
             <ModalManager />
+            <DebugPanel />
             <Toaster richColors />
           </ErrorToastProvider>
         </Providers>
