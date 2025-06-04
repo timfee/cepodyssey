@@ -105,6 +105,7 @@ export const OUTPUT_KEYS = {
   // Google - G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "g5GoogleSsoProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "g5GoogleSsoProfileFullName",
+  // SP configuration returned from Google (entityId, ACS URI)
   GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
   GOOGLE_SAML_ACS_URL: "g5GoogleSamlAcsUrl",
   // Microsoft - M-1: Create Provisioning App

@@ -156,8 +156,8 @@ export async function executeG5InitiateGoogleSamlProfile(
       );
       if (
         !existingProfile?.name ||
-        !existingProfile.spConfig?.spEntityId ||
-        !existingProfile.spConfig?.assertionConsumerServiceUrl
+        !existingProfile.spConfig?.entityId ||
+        !existingProfile.spConfig?.assertionConsumerServiceUri
       ) {
         return {
           success: false,
@@ -179,16 +179,16 @@ export async function executeG5InitiateGoogleSamlProfile(
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: existingProfile.displayName,
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: existingProfile.name,
           [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]:
-            existingProfile.spConfig.spEntityId,
+            existingProfile.spConfig.entityId,
           [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
-            existingProfile.spConfig.assertionConsumerServiceUrl,
+            existingProfile.spConfig.assertionConsumerServiceUri,
         },
       };
     }
     if (
       !result.name ||
-      !result.spConfig?.spEntityId ||
-      !result.spConfig?.assertionConsumerServiceUrl
+      !result.spConfig?.entityId ||
+      !result.spConfig?.assertionConsumerServiceUri
     ) {
       return {
         success: false,
@@ -210,9 +210,9 @@ export async function executeG5InitiateGoogleSamlProfile(
       outputs: {
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: result.displayName,
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: result.name,
-        [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: result.spConfig.spEntityId,
+        [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: result.spConfig.entityId,
         [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
-          result.spConfig.assertionConsumerServiceUrl,
+          result.spConfig.assertionConsumerServiceUri,
       },
     };
   } catch (e) {
@@ -296,17 +296,18 @@ export async function executeG6UpdateGoogleSamlWithAzureIdp(
 
     await google.updateSamlProfile(googleToken, profileFullName, {
       idpConfig: {
-        idpEntityId,
-        ssoUrl,
-        signRequest: true,
-        certificates: [{ certificateData: certificate }],
+        entityId: idpEntityId,
+        singleSignOnServiceUri: ssoUrl,
       },
-      ssoMode: "SAML_SSO_ENABLED",
     });
+    await google.addIdpCredentials(
+      googleToken,
+      profileFullName,
+      certificate,
+    );
     return {
       success: true,
-      message:
-        "Google SAML Profile updated with Azure AD IdP information and enabled.",
+      message: "Google SAML Profile updated with Azure AD IdP information.",
       resourceUrl: "https://admin.google.com/ac/sso",
     };
   } catch (e) {

@@ -15,22 +15,23 @@ export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
 export interface InboundSamlSsoProfile {
   name?: string;
+  customer?: string;
   displayName?: string;
   idpConfig?: {
-    idpEntityId?: string;
-    ssoUrl?: string;
-    signRequest?: boolean;
-    certificates?: { certificateData: string }[];
+    entityId?: string;
+    singleSignOnServiceUri?: string;
+    logoutRedirectUri?: string;
+    changePasswordUri?: string;
   };
   spConfig?: {
-    spEntityId?: string;
-    assertionConsumerServiceUrl?: string;
+    entityId?: string;
+    assertionConsumerServiceUri?: string;
   };
-  ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED";
-  ssoAssignments?: {
-    orgUnitId?: string;
-    ssoMode?: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
-  }[];
+}
+
+export interface SsoAssignment {
+  orgUnitId: string;
+  ssoMode: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
 }
 
 export interface IdpCredential {
@@ -457,13 +458,12 @@ export async function listSamlProfiles(
 export async function updateSamlProfile(
   token: string,
   profileFullName: string,
-  config: Partial<Pick<InboundSamlSsoProfile, "idpConfig" | "ssoMode">>,
+  config: Partial<Pick<InboundSamlSsoProfile, "idpConfig">>,
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const cloudIdentityBaseUrl = getCloudIdentityApiBaseUrl();
     const updateMaskPaths: string[] = [];
     if (config.idpConfig) updateMaskPaths.push("idpConfig");
-    if (config.ssoMode) updateMaskPaths.push("ssoMode");
     const updateMask = updateMaskPaths.join(",");
 
     const res = await fetchWithAuth(
@@ -483,10 +483,7 @@ export async function updateSamlProfile(
 }
 
 interface AssignSamlSsoPayload {
-  assignments: {
-    orgUnitId: string;
-    ssoMode: "SSO_OFF" | "SAML_SSO_ENABLED" | "SSO_INHERITED";
-  }[];
+  assignments: SsoAssignment[];
 }
 /** Assign the SAML profile to one or more organizational units. */
 export async function assignSamlToOrgUnits(

@@ -73,10 +73,10 @@ const STEP_REGISTRY = {
       const profileName = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME] as string;
       if (!profileName) return { completed: false, message: "SAML profile name not found." };
       const result = await checkGoogleSamlProfileDetails(profileName, false, undefined);
-      if (result.completed && result.outputs?.ssoMode === "SAML_SSO_ENABLED") {
-        return { completed: true, message: "SAML profile is enabled and assigned." };
+      if (result.completed) {
+        return { completed: true, message: "SAML profile configured." };
       }
-      return { completed: false, message: "SAML profile not enabled or assigned." };
+      return { completed: false, message: "SAML profile not yet configured." };
     },
     execute: async (context: StepContext) => executeG7AssignGoogleSamlToRootOu(context),
   },
