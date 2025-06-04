@@ -10,6 +10,7 @@ import * as microsoft from "@/lib/api/microsoft";
 import { APIError } from "@/lib/api/utils";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
+import { getGoogleSamlProfileUrl } from "@/lib/utils";
 import type * as MicrosoftGraph from "microsoft-graph";
 import type { Session } from "next-auth";
 
@@ -111,7 +112,7 @@ export async function checkOrgUnitExists(
         outputs: {
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
-          resourceUrl: `https://admin.google.com/ac/orgunits?ouid=${orgUnit.orgUnitId}`,
+          resourceUrl: `https://admin.google.com/ac/orgunits/details?ouPath=${orgUnit.orgUnitPath}`,
         },
       };
     }
@@ -285,10 +286,7 @@ export async function checkGoogleSamlProfileDetails(
       };
     }
 
-    const profileId = profile.name.split("/").pop();
-    const resourceUrl = profileId
-      ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
-      : "https://admin.google.com/ac/sso";
+    const resourceUrl = getGoogleSamlProfileUrl(profile.name);
 
     const outputs: Record<string, unknown> = {
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,

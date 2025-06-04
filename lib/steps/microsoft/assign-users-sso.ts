@@ -1,5 +1,6 @@
 import type { StepDefinition } from "../../types";
 import { OUTPUT_KEYS } from "../../types";
+import { getAzurePortalUrl } from "../../utils";
 /**
  * Step definition for assigning users or groups to the Azure SSO application.
  */
@@ -17,13 +18,13 @@ export const m9AssignUsersSso: StepDefinition = {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${spId}/appId/${appId}`;
+      return getAzurePortalUrl("UsersAndGroups", spId as string, appId as string);
     },
     verify: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
       if (!spId || !appId) return null;
-      return `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/${spId}/appId/${appId}`;
+      return getAzurePortalUrl("UsersAndGroups", spId as string, appId as string);
     },
   },
 };

@@ -258,9 +258,9 @@ export function AutomationDashboard({
     ],
   );
 
-  const executeCheck = useCallback(
-    async (stepId: string) => {
-      if (!appConfig.domain || !appConfig.tenantId) return;
+const executeCheck = useCallback(
+  async (stepId: string) => {
+    if (!appConfig.domain || !appConfig.tenantId) return;
 
       const context: StepContext = {
         domain: appConfig.domain,
@@ -273,6 +273,32 @@ export function AutomationDashboard({
 
         if (checkResult.outputs) {
           dispatch(addOutputs(checkResult.outputs));
+        }
+
+        // Handle auth errors from the check result
+        if (!checkResult.completed && checkResult.outputs?.errorCode === "AUTH_EXPIRED") {
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "failed",
+              error: checkResult.message || "Authentication expired",
+              metadata: {
+                errorCode: "AUTH_EXPIRED",
+                errorProvider: checkResult.outputs.errorProvider,
+                checkedAt: new Date().toISOString(),
+              },
+            }),
+          );
+
+          toast.error("Authentication expired", {
+            description: checkResult.message || "Please sign in again to continue.",
+            duration: 10000,
+            action: {
+              label: "Sign In",
+              onClick: () => router.push("/login"),
+            },
+          });
+          return;
         }
 
         if (!checkResult.completed && checkResult.outputs?.errorCode) {
@@ -334,55 +360,22 @@ export function AutomationDashboard({
           );
         }
       } catch (error: unknown) {
-        console.error(`Auto-check failed for ${stepId}:`, error);
-        const err = error as {
-          code?: string;
-          message?: string;
-          provider?: string;
-        };
-
-        if (
-          err?.code === "AUTH_EXPIRED" ||
-          err?.message?.includes("authentication expired") ||
-          err?.message?.includes("AUTH_EXPIRED")
-        ) {
-          dispatch(
-            updateStep({
-              id: stepId,
-              status: "failed",
-              error: "Authentication expired. Please sign in again.",
-              metadata: {
-                errorCode: "AUTH_EXPIRED",
-                errorProvider: err.provider || "unknown",
-              },
-            }),
-          );
-
-          toast.error("Authentication expired", {
-            description: "Please sign in again to continue.",
-            duration: 10000,
-            action: {
-              label: "Sign In",
-              onClick: () => router.push("/login"),
-            },
-          });
-
-          throw error;
-        }
+        // This catch block should rarely be hit now since we handle errors in executeStepCheck
+        console.error(`Unexpected error in executeCheck for ${stepId}:`, error);
 
         dispatch(
           updateStep({
             id: stepId,
             status: "failed",
-            error: err?.message || "Unknown error occurred",
+            error: "An unexpected error occurred",
             metadata: {
-              errorCode: err?.code || "UNKNOWN_ERROR",
+              errorCode: "UNEXPECTED_ERROR",
             },
           }),
         );
 
-        toast.error(`Error in ${stepId}`, {
-          description: err?.message || "An unexpected error occurred",
+        toast.error(`Unexpected error in ${stepId}`, {
+          description: "Please try again or contact support",
           duration: 10000,
         });
       }

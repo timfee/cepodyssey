@@ -2,6 +2,20 @@ import type * as MicrosoftGraph from "microsoft-graph";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
 import { wrapAuthError } from "./auth-interceptor";
 
+/**
+ * Azure Portal URL Reference:
+ *
+ * Gallery apps from Azure AD create both an App Registration and Enterprise Application.
+ * ALL configuration for gallery apps happens in the Enterprise Application interface:
+ *
+ * - Overview: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/{spId}/appId/{appId}
+ * - Provisioning: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/{appId}/objectId/{spId}
+ * - Single Sign-On: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/{appId}/objectId/{spId}
+ * - Users/Groups: /Microsoft_AAD_IAM/ManagedAppMenuBlade/~/UsersAndGroups/servicePrincipalId/{spId}/appId/{appId}
+ *
+ * Note: Microsoft uses inconsistent parameter names (servicePrincipalId vs objectId) across blades.
+ */
+
 const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
 
 function handleMicrosoftError(error: unknown): never {

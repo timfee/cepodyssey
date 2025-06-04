@@ -11,15 +11,39 @@ export async function executeStepCheck(
   try {
     return await checkStep(stepId, context);
   } catch (error) {
-    // For authentication errors, propagate them to the client
+    // For authentication errors, return a proper StepCheckResult instead of throwing
     if (isAuthenticationError(error)) {
-      throw {
-        code: "AUTH_EXPIRED",
+      return {
+        completed: false,
         message: error.message,
-        provider: error.provider,
+        outputs: {
+          errorCode: "AUTH_EXPIRED",
+          errorProvider: error.provider,
+          errorMessage: error.message,
+        },
       };
     }
-    // For other errors, throw them as is
-    throw error;
+
+    // For other errors, convert to StepCheckResult
+    if (error instanceof Error) {
+      return {
+        completed: false,
+        message: error.message,
+        outputs: {
+          errorCode: "UNKNOWN_ERROR",
+          errorMessage: error.message,
+        },
+      };
+    }
+
+    // Fallback for non-Error objects
+    return {
+      completed: false,
+      message: "An unknown error occurred",
+      outputs: {
+        errorCode: "UNKNOWN_ERROR",
+        errorMessage: String(error),
+      },
+    };
   }
 }
