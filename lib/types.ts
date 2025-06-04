@@ -93,14 +93,14 @@ export type ManagedStep = StepDefinition & StepStatusInfo;
  * that typically produces this output.
  */
 export const OUTPUT_KEYS = {
-  // Google - G-1: Create Automation OU
+  // Google - G-1: Create 'Automation' Organizational Unit
   AUTOMATION_OU_PATH: "g1AutomationOuPath",
   AUTOMATION_OU_ID: "g1AutomationOuId",
-  // Google - G-S0: Get Secret Token for Provisioning
-  GOOGLE_PROVISIONING_SECRET_TOKEN: "gs0GoogleProvisioningSecretToken",
+  // Google - G-2: Create Provisioning User
   SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
   SERVICE_ACCOUNT_ID: "g2ServiceAccountId",
   SERVICE_ACCOUNT_PASSWORD: "g2ServiceAccountPassword",
+  // Google - G-3: Grant Admin Privileges to Provisioning User
   SUPER_ADMIN_ROLE_ID: "g3SuperAdminRoleId",
   // Google - G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "g5GoogleSsoProfileName",

@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { addOutput } from "@/lib/redux/slices/app-config";
+import { useAppSelector } from "@/hooks/use-redux";
 import { OUTPUT_KEYS } from "@/lib/types";
 import {
   CheckCircle2Icon,
@@ -36,7 +35,6 @@ export function GoogleTokenModal({
   onClose,
   onComplete,
 }: GoogleTokenModalProps) {
-  const dispatch = useAppDispatch();
   const outputs = useAppSelector((state) => state.appConfig.outputs);
   const [token, setToken] = useState("");
   const [isValidating, setIsValidating] = useState(false);
@@ -50,12 +48,7 @@ export function GoogleTokenModal({
     }
     setIsValidating(true);
 
-    dispatch(
-      addOutput({
-        key: OUTPUT_KEYS.GOOGLE_PROVISIONING_SECRET_TOKEN,
-        value: token.trim(),
-      })
-    );
+    // Token no longer stored in global configuration; handled manually
 
     toast.success("Google provisioning token saved successfully!");
 

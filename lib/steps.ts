@@ -7,7 +7,62 @@ import { OUTPUT_KEYS } from "./types";
  * logic resides in server-side actions.
  */
 export const allStepDefinitions: StepDefinition[] = [
-  // Phase 1: Initial Google Workspace Setup
+  // Phase 1: Prepare Google Workspace
+  {
+    id: "G-1",
+    title: "Create 'Automation' Organizational Unit",
+    description:
+      "Creates a dedicated Organizational Unit named 'Automation' to house the provisioning user.",
+    category: "Google",
+    automatable: true,
+    requires: [],
+    adminUrls: {
+      configure: "https://admin.google.com/ac/orgunits",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH]
+          ? `https://admin.google.com/ac/orgunits/details?ouPath=${outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string}`
+          : "https://admin.google.com/ac/orgunits",
+    },
+  },
+  {
+    id: "G-2",
+    title: "Create Provisioning User in 'Automation' OU",
+    description:
+      "Creates the dedicated user 'azuread-provisioning' inside the Automation OU for Azure provisioning.",
+    category: "Google",
+    automatable: true,
+    requires: ["G-1"],
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
+          : "https://admin.google.com/ac/users",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
+          : "https://admin.google.com/ac/users",
+    },
+  },
+  {
+    id: "G-3",
+    title: "Grant Super Admin Privileges to Provisioning User",
+    description:
+      "Assigns Super Admin role to the provisioning user so Azure can manage users and groups.",
+    category: "Google",
+    automatable: true,
+    requires: ["G-2"],
+    adminUrls: {
+      configure: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
+          : "https://admin.google.com/ac/users",
+      verify: (outputs) =>
+        outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
+          ? `https://admin.google.com/ac/users/${outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string}`
+          : "https://admin.google.com/ac/users",
+    },
+  },
+
   {
     id: "G-4",
     title: "Add & Verify Domain for Federation",
@@ -32,26 +87,6 @@ export const allStepDefinitions: StepDefinition[] = [
     adminUrls: {
       configure: "https://admin.google.com/ac/sso",
       verify: "https://admin.google.com/ac/sso",
-    },
-  },
-  {
-    id: "G-S0",
-    title: "Enable Provisioning on SAML Profile",
-    description:
-      "Enables automatic user provisioning on the Azure AD SAML profile created in G-5. This requires copying a token from Google Admin Console.",
-    category: "Google",
-    automatable: false,
-    requires: ["G-5"],
-    adminUrls: {
-      configure: (outputs) => {
-        const profileName = outputs[
-          OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-        ] as string;
-        const profileId = profileName?.split("/").pop();
-        return profileId
-          ? `https://admin.google.com/ac/security/sso/sso-profiles/inboundSamlSsoProfiles%2F${profileId}`
-          : "https://admin.google.com/ac/security/sso";
-      },
     },
   },
 
@@ -106,10 +141,10 @@ export const allStepDefinitions: StepDefinition[] = [
     id: "M-3",
     title: "Authorize Azure AD Provisioning to Google Workspace",
     description:
-      "Configures the Azure AD provisioning app with Admin Credentials: Google's SCIM-based Tenant URL (https://www.googleapis.com/admin/directory/v1.12/scim) and the Secret Token obtained from Google Workspace in step G-S0. Tests the connection.",
+      "Manual step to authorize Azure AD to provision via OAuth. In the Azure portal, open the provisioning app, click 'Authorize', sign in with the Google provisioning user created in G-2, then test the connection.",
     category: "Microsoft",
-    automatable: true,
-    requires: ["M-2", "G-S0"],
+    automatable: false,
+    requires: ["M-2", "G-2"],
     adminUrls: {
       configure: (outputs) => {
         const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
@@ -330,5 +365,5 @@ export const allStepDefinitions: StepDefinition[] = [
  * Useful when resolving dependencies or executing actions.
  */
 export const stepDefinitionMap = new Map<string, StepDefinition>(
-  allStepDefinitions.map((def) => [def.id, def])
+  allStepDefinitions.map((def) => [def.id, def]),
 );
