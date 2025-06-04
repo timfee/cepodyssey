@@ -73,18 +73,19 @@ export function DebugPanel() {
   ).length;
 
   // Poll server-side logs so API requests from server actions appear
+  const seenIds = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (debugDisabled) return;
-    const seenIds = new Set<string>();
     const fetchLogs = async () => {
       try {
         const res = await fetch("/api/debug/logs");
         const data: { logs: ApiLogEntry[] } = await res.json();
         data.logs.forEach((log) => {
-          if (seenIds.has(log.id)) {
+          if (seenIds.current.has(log.id)) {
             dispatch(updateApiLog({ id: log.id, updates: log }));
           } else {
-            seenIds.add(log.id);
+            seenIds.current.add(log.id);
             dispatch(addApiLog(log));
           }
         });

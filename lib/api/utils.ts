@@ -110,19 +110,24 @@ export async function handleApiResponse<T>(
     };
     const message =
       errorBody.error?.message ?? `Connection failed. Please try again.`;
-    const errorLogId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    store.dispatch(
-      addApiLog({
-        id: errorLogId,
-        timestamp: new Date().toISOString(),
-        method: "ERROR",
-        url: "API Error",
-        error: `${res.status}: ${message}`,
-        responseStatus: res.status,
-        responseBody: errorBody,
-        provider: "other",
-      }),
-    );
+    const entry = {
+      id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      method: "ERROR",
+      url: "API Error",
+      error: `${res.status}: ${message}`,
+      responseStatus: res.status,
+      responseBody: errorBody,
+      provider: "other",
+    } as import("@/lib/redux/slices/debug-panel").ApiLogEntry;
+
+    if (typeof window === "undefined") {
+      const g = globalThis as { __API_LOGS__?: import("@/lib/redux/slices/debug-panel").ApiLogEntry[] };
+      const serverLogs = g.__API_LOGS__ || (g.__API_LOGS__ = []);
+      serverLogs.push(entry);
+    } else {
+      store.dispatch(addApiLog(entry));
+    }
     throw new APIError(message, res.status, errorBody.error?.code);
   }
   if (res.status === 204) {
