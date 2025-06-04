@@ -20,6 +20,7 @@ All components follow React 18 patterns with clear separation of concerns and st
 - `step.tsx` & `collapsible-step.tsx`: Individual step rendering
 - `auth.tsx`: Authentication status and controls
 - `form.tsx`: Configuration display (read-only)
+- `google-token-modal.tsx`: Legacy modal for entering a Google provisioning token. With the new OAuth-based M-3 step this component is largely obsolete and may be removed.
 
 ## React 18 Patterns
 

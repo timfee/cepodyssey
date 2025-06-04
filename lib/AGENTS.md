@@ -48,10 +48,17 @@ export interface StepStatusInfo {
 ```typescript
 // Centralized constants for step data flow
 export const OUTPUT_KEYS = {
+  // Google Outputs
   AUTOMATION_OU_ID: "g1AutomationOuId",
-  PROVISIONING_APP_ID: "m1ProvisioningAppId",
+  SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
   GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
-  // Never hardcode these strings elsewhere
+
+  // Microsoft Outputs
+  PROVISIONING_APP_ID: "m1ProvisioningAppId",
+  FLAG_M3_PROV_CREDS_CONFIGURED: "flagM3ProvCredsConfigured",
+
+  // Cross-System Outputs
+  IDP_ENTITY_ID: "m8IdpEntityId",
 } as const;
 ```
 
@@ -172,27 +179,38 @@ export type AppDispatch = typeof store.dispatch;
 ```typescript
 export const allStepDefinitions: StepDefinition[] = [
   {
-    id: "G-1",
-    title: "Create Automation OU",
-    description: "Creates an organizational unit for automation...",
+    id: "G-2",
+    title: "Create Provisioning User in 'Automation' OU",
+    description:
+      "Creates a dedicated user (e.g., azuread-provisioning@yourdomain.com) used later for Azure authorization.",
     category: "Google",
     automatable: true,
-    requires: [], // Dependencies
-    check: async (context: StepContext): Promise<StepCheckResult> => {
-      return checkOrgUnitExists("/Automation");
-    },
-    execute: async (context: StepContext): Promise<StepExecutionResult> => {
-      return executeG1CreateAutomationOu(context);
-    },
+    requires: ["G-1"],
     adminUrls: {
-      configure: "https://admin.google.com/ac/orgunits",
-      verify: (outputs) =>
-        outputs[OUTPUT_KEYS.AUTOMATION_OU_ID]
-          ? `https://admin.google.com/specific-url/${outputs[OUTPUT_KEYS.AUTOMATION_OU_ID]}`
-          : null,
+      configure: "https://admin.google.com/ac/users",
+    },
+  },
+  {
+    id: "M-3",
+    title: "Authorize Azure AD Provisioning to Google Workspace",
+    description:
+      "GUIDANCE: Go to the 'Google Cloud (Provisioning)' app in Azure Portal and authorize using the provisioning user.",
+    category: "Microsoft",
+    automatable: false,
+    requires: ["G-2", "M-2"],
+    adminUrls: {
+      configure: (outputs) => {
+        const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+        return appId
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/${appId}`
+          : null;
+      },
     },
   },
 ];
+
+// Note: The actual check and execute functions for these steps are registered in
+// `app/actions/step-registry.ts` and implemented as server actions.
 ```
 
 ## Utility Standards

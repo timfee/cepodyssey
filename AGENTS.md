@@ -5,10 +5,12 @@
 This is a Next.js application that automates Google Workspace and Microsoft Entra ID integration through a step-based workflow. It uses TypeScript, NextAuth for dual-provider authentication, and Redux Toolkit for state management.
 
 The automation mirrors the official Google documentation for federating Google
-Cloud with Microsoft Entra ID. Steps in this repository align with the manual
-workflow of provisioning users through the *Google Cloud/G Suite Connector by
-Microsoft* gallery app and configuring SAML-based single sign-on. See the README
-for a short summary of that workflow.
+Cloud with Microsoft Entra ID. The early steps create an **Automation**
+organizational unit and a provisioning user in Google Workspace, then guide the
+administrator through a manual OAuth consent in Azure AD. Later steps configure
+automatic provisioning and SAML-based single sign-on via the *Google Cloud/G
+Suite Connector by Microsoft* gallery app. See the README for a short summary of
+that workflow.
 
 ## Core Architecture Principles
 
@@ -18,6 +20,7 @@ for a short summary of that workflow.
 - Each step has `check` and `execute` functions following a standardized interface
 - Steps declare dependencies via `requires` array
 - Data flows between steps via standardized `OUTPUT_KEYS`
+- Provisioning credentials are established through an OAuth consent flow in Azure rather than a pre-shared token
 
 ### 2. Separation of Concerns
 
@@ -33,6 +36,7 @@ for a short summary of that workflow.
 - Admin privilege verification during sign-in
 - Token refresh with retry logic
 - Session-based configuration extraction
+- Provisioning authorization with Azure AD occurs via a manual OAuth flow using the dedicated Google service account
 
 ## Coding Standards
 
@@ -102,11 +106,12 @@ return {
 - ❌ Don't create multiple ways to handle the same API error types
 - ❌ Don't hardcode URLs or configuration values
 - ❌ Don't use Pages Router patterns in App Router context
+- ❌ Don't describe user provisioning authorization as fetching a SCIM token from Google's SAML settings; it's an OAuth flow in Azure
 
 ## Integration Points
 
-- **Google APIs**: Directory API, Cloud Identity API
-- **Microsoft Graph**: Applications, Service Principals, Synchronization
+- **Google APIs**: Directory API and Cloud Identity API are used for creating the Automation OU, managing users, and configuring SAML profiles
+- **Microsoft Graph**: Used to instantiate gallery apps and configure synchronization; provisioning authorization relies on the OAuth consent captured in step M-3
 - **NextAuth**: Custom providers with admin verification
 - **Redux**: Client state with persistence to localStorage
 

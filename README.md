@@ -27,8 +27,9 @@ and replicates the manual workflow in discrete steps:
 2. **Configure Microsoft Entra ID provisioning**
    - Add the *Google Cloud/G Suite Connector by Microsoft* gallery app as
      `Google Cloud (Provisioning)`.
-   - Authorize the app using the `azuread-provisioning` account and adjust the
-     attribute mappings for users and groups.
+  - Authorize the app in the Azure portal using the `azuread-provisioning`
+    account (the assistant provides guidance for this manual OAuth step) and
+    adjust the attribute mappings for users and groups.
    - Optionally assign specific users or groups and then enable automatic
      provisioning.
 3. **Set up single sign-on**
@@ -77,7 +78,7 @@ Set the following environment variables:
 ```
 GOOGLE_CLIENT_ID=<your id>
 GOOGLE_CLIENT_SECRET=<your secret>
-GOOGLE_ADMIN_SCOPES="openid email profile https://www.googleapis.com/auth/admin.directory.user ..."
+GOOGLE_ADMIN_SCOPES="openid email profile https://www.googleapis.com/auth/admin.directory.user https://www.googleapis.com/auth/admin.directory.group https://www.googleapis.com/auth/admin.directory.orgunit https://www.googleapis.com/auth/admin.directory.domain https://www.googleapis.com/auth/admin.directory.rolemanagement https://www.googleapis.com/auth/cloud-identity.inbound-sso"
 GOOGLE_API_BASE=https://admin.googleapis.com
 GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
 ```
@@ -119,7 +120,8 @@ To find your project ID:
 
 - **"API has not been used in project X before"**: Enable the mentioned API using the link in the error message
 - **"Request had insufficient authentication scopes"**: Re-authenticate after updating scopes in your environment
-- **403 Forbidden errors**: Ensure your Google Workspace admin account has Super Admin privileges
+- **403 Forbidden errors**: Ensure the signed-in admin or the `azuread-provisioning` service user has sufficient rights
+- **Problems creating the Automation OU or user**: Verify the Google account has privileges to manage organizational units and users
 
 ## Testing
 

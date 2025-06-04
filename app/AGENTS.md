@@ -97,3 +97,4 @@ async function getTokens(): Promise<{
 - Client components focus on UI state and user interaction
 - Configuration flows from session → Redux → server actions
 - Error boundaries catch and display React errors appropriately
+- Manual steps like M-3 still use the same pattern: the server action only verifies completion while the admin performs OAuth in the Azure portal.
