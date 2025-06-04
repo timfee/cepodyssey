@@ -22,9 +22,8 @@ app/
 ### File Organization
 
 - `auth-actions.ts`: Authentication utilities (tenant lookup)
-- `check-actions.ts`: Step verification functions
 - `config-actions.ts`: Configuration persistence
-- `execution-actions.ts`: Step execution logic
+- `step-actions.ts`: Thin wrappers that delegate to the step registry
 
 ### Server Action Standards
 

@@ -2,7 +2,7 @@
 
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import type { StepCheckResult, StepContext } from "@/lib/types";
-import { checkStep } from "./step-registry";
+import { checkStep } from "@/lib/steps/registry";
 
 export async function executeStepCheck(
   stepId: string,
