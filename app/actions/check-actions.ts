@@ -271,16 +271,14 @@ export async function checkGoogleSamlProfileDetails(
     const outputs: Record<string, unknown> = {
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
       [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
-      ssoMode: profile.ssoMode,
-      idpEntityId: profile.idpConfig?.idpEntityId,
+      idpEntityId: profile.idpConfig?.entityId,
     };
-    if (profile.spConfig?.spEntityId) {
-      outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] =
-        profile.spConfig.spEntityId;
+    if (profile.spConfig?.entityId) {
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] = profile.spConfig.entityId;
     }
-    if (profile.spConfig?.assertionConsumerServiceUrl) {
+    if (profile.spConfig?.assertionConsumerServiceUri) {
       outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] =
-        profile.spConfig.assertionConsumerServiceUrl;
+        profile.spConfig.assertionConsumerServiceUri;
     }
 
     if (checkExistsOnly) {
@@ -291,12 +289,14 @@ export async function checkGoogleSamlProfileDetails(
       };
     }
 
+    const idpCreds = await google.listIdpCredentials(
+      googleToken!,
+      profile.name,
+    );
     const isConfigured = !!(
-      profile.idpConfig?.idpEntityId &&
-      profile.idpConfig?.ssoUrl &&
-      profile.idpConfig?.certificates &&
-      profile.idpConfig.certificates.length > 0 &&
-      profile.ssoMode === "SAML_SSO_ENABLED"
+      profile.idpConfig?.entityId &&
+      profile.idpConfig?.singleSignOnServiceUri &&
+      idpCreds.length > 0
     );
 
     if (!isConfigured) {
@@ -309,11 +309,11 @@ export async function checkGoogleSamlProfileDetails(
 
     if (
       expectedIdpEntityId &&
-      profile.idpConfig?.idpEntityId !== expectedIdpEntityId
+      profile.idpConfig?.entityId !== expectedIdpEntityId
     ) {
       return {
         completed: false,
-        message: `SAML Profile '${profile.displayName}' is configured with IdP '${profile.idpConfig?.idpEntityId}', not the expected '${expectedIdpEntityId}'.`,
+        message: `SAML Profile '${profile.displayName}' is configured with IdP '${profile.idpConfig?.entityId}', not the expected '${expectedIdpEntityId}'.`,
         outputs,
       };
     }
@@ -322,7 +322,7 @@ export async function checkGoogleSamlProfileDetails(
       completed: true,
       message: `SAML Profile '${profile.displayName}' is correctly configured${
         expectedIdpEntityId ? ` with IdP '${expectedIdpEntityId}'` : ""
-      } and enabled.`,
+      }`,
       outputs,
     };
   } catch (e) {
