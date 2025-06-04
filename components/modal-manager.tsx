@@ -5,7 +5,7 @@ import {
   selectStepDetailsModal,
   selectStepOutputsModal,
 } from "@/lib/redux/slices/modals";
-import { StepDetailsModal } from "./step-details-modal";
+import { StepDetailsDialog } from "./step-details-dialog";
 import { StepOutputsDialog } from "./step-outputs-dialog";
 
 /**
@@ -18,7 +18,7 @@ export function ModalManager() {
 
   return (
     <>
-      {stepDetailsModal.step && <StepDetailsModal />}
+      {stepDetailsModal.step && <StepDetailsDialog />}
 
       {stepOutputsModal.step && <StepOutputsDialog />}
     </>
