@@ -79,6 +79,9 @@ export interface StepDefinition {
       | string
       | ((outputs: Record<string, unknown>) => string | null | undefined);
   };
+  // Optional server functions for verification and execution
+  check?: (context: StepContext) => Promise<StepCheckResult>;
+  execute?: (context: StepContext) => Promise<StepExecutionResult>;
 }
 
 /**

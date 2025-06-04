@@ -24,13 +24,12 @@ import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
 import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
-import { executeStep as executeStepAction } from "@/app/actions/step-registry";
+import { executeStepAction, executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
   StepContext,
 } from "@/lib/types";
-import { executeStepCheck } from "@/app/actions/unified-check-action";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

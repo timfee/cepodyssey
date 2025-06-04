@@ -209,8 +209,8 @@ export const allStepDefinitions: StepDefinition[] = [
   },
 ];
 
-// Note: The actual check and execute functions for these steps are registered in
-// `app/actions/step-registry.ts` and implemented as server actions.
+// Each step module includes its own check and execute functions. The step registry
+// in `lib/steps/registry.ts` simply looks up the appropriate module.
 ```
 
 ## Utility Standards

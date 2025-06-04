@@ -253,6 +253,32 @@ Google Cloud API enablement errors are specially handled:
 - Toast notifications with action buttons
 - Direct links to enable APIs in Google Cloud Console
 
+## Step Architecture
+
+### Self-Contained Step Modules
+
+Automation steps are organized into folders containing their definition, check, and execute functions:
+
+```
+lib/steps/
+├── google/
+│   ├── create-automation-ou/
+│   │   ├── index.ts
+│   │   ├── check.ts
+│   │   └── execute.ts
+│   └── utils/
+│       ├── auth.ts
+│       └── error-handling.ts
+```
+
+The registry in `lib/steps/registry.ts` exposes helper functions `checkStep` and `executeStep` which simply invoke the appropriate module functions.
+
+### Benefits
+
+1. **Easier Navigation** – everything for a step lives together
+2. **Simplified Imports** – server actions just call into the registry
+3. **Parallel Development** – multiple developers can work on different steps without conflicts
+
 
 # Testing
 
