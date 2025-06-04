@@ -1,8 +1,13 @@
 "use server";
 
+/**
+ * Check whether the provisioning job has been started in Azure.
+ * The job must exist and have an Active state.
+ */
+
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { checkMicrosoftProvisioningJobDetails } from "@/app/actions/check-actions";
+import { checkMicrosoftProvisioningJobDetails } from "../utils/common-checks";
 
 export async function checkStartProvisioning(context: StepContext): Promise<StepCheckResult> {
   const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;

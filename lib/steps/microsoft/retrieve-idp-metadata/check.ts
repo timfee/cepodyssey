@@ -1,5 +1,9 @@
 "use server";
 
+/**
+ * Confirm that IdP metadata values have been stored from Azure AD.
+ */
+
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 
