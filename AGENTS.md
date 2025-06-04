@@ -123,6 +123,62 @@ return {
 4. Update Redux state and types as needed
 5. Test authentication flows and error handling
 
+## State Management Architecture
+
+### Redux Store Structure
+
+The application uses Redux Toolkit for all global state management:
+
+```typescript
+store: {
+  appConfig: {
+    domain: string | null;
+    tenantId: string | null;
+    outputs: Record<string, unknown>;
+  },
+  setupSteps: {
+    steps: Record<string, StepStatusInfo>;
+  },
+  modals: {
+    googleToken: { isOpen: boolean };
+    stepDetails: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown> };
+    stepOutputs: { isOpen: boolean; step: ManagedStep | null; outputs: Record<string, unknown>; allStepsStatus: Record<string, { status: string }> };
+  }
+}
+```
+
+### Modal Management
+
+All modals are managed through Redux, providing:
+- Centralized state for all modal visibility
+- Type-safe modal data passing
+- Consistent open/close patterns
+- No prop drilling for modal callbacks
+
+```typescript
+// Opening a modal
+dispatch(openStepDetailsModal({ step, outputs }));
+
+// Closing a modal
+dispatch(closeStepDetailsModal());
+
+// Modal components read state directly
+const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
+```
+
+### State Persistence
+
+- **AppConfig**: Persisted to localStorage by domain
+- **SetupSteps**: Persisted with step progress
+- **Modals**: Ephemeral, not persisted
+
+### Best Practices
+
+1. **Never store functions in Redux state** - Use action creators instead
+2. **Keep modal data normalized** - Store IDs and look up full objects
+3. **Use selectors for computed state** - Don't duplicate data
+4. **Handle async operations in server actions** - Keep Redux synchronous
+
 ## URL Management System
 
 ### Centralized URL Builder (`lib/api/url-builder.ts`)
@@ -182,6 +238,7 @@ Google Cloud API enablement errors are specially handled:
 - Enhanced error messages with enable URLs
 - Toast notifications with action buttons
 - Direct links to enable APIs in Google Cloud Console
+
 
 # Testing
 

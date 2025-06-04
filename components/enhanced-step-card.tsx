@@ -41,6 +41,11 @@ import type { ManagedStep } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { allStepDefinitions } from "@/lib/steps";
 import { useState } from "react";
+import { useAppDispatch } from "@/hooks/use-redux";
+import {
+  openStepDetailsModal,
+  openStepOutputsModal,
+} from "@/lib/redux/slices/modals";
 
 interface StepCardProps {
   step: ManagedStep;
@@ -56,6 +61,7 @@ export function StepCard({
   canRunGlobal,
 }: StepCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const dispatch = useAppDispatch();
 
   // Get status icon and color
   const getStatusDisplay = () => {
@@ -223,6 +229,37 @@ export function StepCard({
               </a>
             </Button>
           )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              dispatch(
+                openStepDetailsModal({
+                  step,
+                  outputs,
+                })
+              )
+            }
+          >
+            <InfoIcon className="mr-2 h-4 w-4" /> View Details
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              dispatch(
+                openStepOutputsModal({
+                  step,
+                  outputs,
+                  allStepsStatus: {},
+                })
+              )
+            }
+          >
+            View Outputs
+          </Button>
         </div>
 
         {/* Expandable Details */}

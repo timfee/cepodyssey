@@ -135,6 +135,50 @@ const dispatch = useAppDispatch();
 dispatch(updateStep({ id: stepId, status: "completed" }));
 ```
 
+### Modal State Management
+
+All modals use Redux for state management:
+
+```typescript
+// Import modal actions
+import { openGoogleTokenModal, closeGoogleTokenModal } from "@/lib/redux/slices/modals";
+
+// Open modal with data
+dispatch(openStepDetailsModal({
+  step: managedStep,
+  outputs: currentOutputs,
+}));
+
+// Modal components are self-contained
+export function StepDetailsModal() {
+  const { isOpen, step, outputs } = useAppSelector(selectStepDetailsModal);
+  // Component reads everything from Redux
+}
+```
+
+**Modal Types:**
+- `GoogleTokenModal`: For entering provisioning token
+- `StepDetailsModal`: For viewing step instructions and links
+- `StepOutputsDialog`: For viewing inputs/outputs dependencies
+
+**Modal Manager Pattern:**
+
+The `ModalManager` component renders all modals based on Redux state:
+
+```typescript
+<Providers>
+  {children}
+  <ModalManager /> {/* Renders active modals */}
+  <Toaster />
+</Providers>
+```
+
+This ensures:
+- Modals are rendered at the root level
+- No z-index conflicts
+- Consistent modal behavior
+- Clean component hierarchy
+
 ### Event Handling with Transitions
 
 ```typescript
