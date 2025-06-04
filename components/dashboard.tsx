@@ -209,11 +209,13 @@ export function AutomationDashboard({
             id: toastId,
           });
         } else {
+          const errorMessage =
+            result.error?.message ?? "Unknown error during execution.";
           dispatch(
             updateStep({
               id: stepId,
               status: "failed",
-              error: result.error?.message ?? "Unknown error during execution.",
+              error: errorMessage,
               message: result.message,
               metadata: {
                 ...(result.outputs || {}),
@@ -221,13 +223,47 @@ export function AutomationDashboard({
               },
             }),
           );
-          // toast.error(
-          //   `${definition.title}: ${result.error?.message ?? "Failed"}`,
-          //   {
-          //     id: toastId,
-          //     duration: 10000,
-          //   },
-          // );
+
+          // Display authentication errors using the standard dialog
+          if (result.outputs?.errorCode === "AUTH_EXPIRED") {
+            dispatch(
+              showError({
+                error: {
+                  title: "Authentication Required",
+                  message: errorMessage,
+                  code: "AUTH_EXPIRED",
+                  provider: result.outputs
+                    .errorProvider as "google" | "microsoft",
+                  actions: [
+                    {
+                      type: ErrorActionType.SIGN_IN,
+                      label: "Sign In",
+                      variant: "default",
+                      icon: "LogInIcon",
+                    },
+                  ],
+                },
+                dismissible: false,
+              }),
+            );
+          } else {
+            dispatch(
+              showError({
+                error: {
+                  title: "Step Execution Failed",
+                  message: errorMessage,
+                  code: result.error?.code ?? "EXECUTION_ERROR",
+                  details: { stepId, errorMessage },
+                },
+                dismissible: true,
+              }),
+            );
+          }
+
+          toast.error(`${definition.title}: ${errorMessage}`, {
+            id: toastId,
+            duration: 10000,
+          });
         }
       } catch (err) {
         if (isAuthenticationError(err)) {
