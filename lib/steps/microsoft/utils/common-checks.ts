@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
 import { getMicrosoftToken } from "../../utils/auth";
+import { portalUrls } from "@/lib/api/url-builder";
 
 /**
  * Ensure the Azure service principal for the given app client ID exists.
@@ -34,7 +35,7 @@ export async function checkMicrosoftServicePrincipal(
           retrievedAppId: sp.appId,
           appObjectId,
           displayName: sp.displayName,
-          resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${sp.id}/appId/${sp.appId}`,
+          resourceUrl: portalUrls.azure.enterpriseApp.overview(sp.id, sp.appId),
         },
       };
     }

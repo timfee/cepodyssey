@@ -1,5 +1,11 @@
 import { withRetry } from "@/lib/api/utils";
-import { googleOAuthUrls, microsoftAuthUrls } from "@/lib/api/url-builder";
+import {
+  googleOAuthUrls,
+  microsoftAuthUrls,
+  googleDirectoryUrls,
+  microsoftGraphUrls,
+  API_BASES,
+} from "@/lib/api/url-builder";
 import { Logger } from "@/lib/utils/logger";
 import type { User } from "next-auth";
 import NextAuth from "next-auth";
@@ -140,11 +146,7 @@ async function checkGoogleAdmin(
     Logger.warn("[Auth]", "checkGoogleAdmin: Email or accessToken missing.");
     return false;
   }
-  const fetchUrl = `${
-    process.env.GOOGLE_API_BASE
-  }/admin/directory/v1/users/${encodeURIComponent(
-    email,
-  )}?fields=isAdmin,suspended,primaryEmail`;
+  const fetchUrl = googleDirectoryUrls.users.get(email);
 
   Logger.debug(
     "[Auth]",
@@ -213,7 +215,7 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
     Logger.warn("[Auth]", "checkMicrosoftAdmin: AccessToken missing.");
     return false;
   }
-  const fetchUrl = `${process.env.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
+  const fetchUrl = microsoftGraphUrls.me.memberOf();
   Logger.debug(
     "[Auth]",
     `checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`,
@@ -297,7 +299,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     MicrosoftEntraIDProvider({
       clientId: process.env.MICROSOFT_CLIENT_ID!,
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
-      issuer: `https://login.microsoftonline.com/${
+      issuer: `${API_BASES.microsoftLogin}/${
         process.env.MICROSOFT_TENANT_ID ?? "common"
       }/v2.0`,
       authorization: {
