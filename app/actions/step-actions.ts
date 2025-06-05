@@ -9,6 +9,8 @@ import type {
 } from "@/lib/types";
 import { checkStep, executeStep } from "@/lib/steps/registry";
 import type { StepId } from "@/lib/steps/step-refs";
+import { ApiLogger } from "@/lib/api/api-logger";
+import { getLogCollector, clearLogCollector } from "@/lib/api/log-collector";
 
 async function validateSession(): Promise<{ valid: boolean; error?: StepCheckResult }> {
   const session = await auth();
@@ -77,12 +79,24 @@ export async function executeStepCheck(
   stepId: StepId,
   context: StepContext,
 ): Promise<StepCheckResult> {
-  const sessionValidation = await validateSession();
-  if (!sessionValidation.valid) {
-    return sessionValidation.error!;
-  }
+  const requestId = `check-${stepId}-${Date.now()}`;
+  ApiLogger.setRequestId(requestId);
+
   try {
-    return await checkStep(stepId, context);
+    const sessionValidation = await validateSession();
+    if (!sessionValidation.valid) {
+      return sessionValidation.error!;
+    }
+
+    const result = await checkStep(stepId, context);
+
+    const collector = getLogCollector(requestId);
+    const apiLogs = collector.getLogs();
+
+    return {
+      ...result,
+      apiLogs,
+    };
   } catch (error) {
     // For authentication errors, return a proper StepCheckResult instead of throwing
     if (isAuthenticationError(error)) {
@@ -119,23 +133,43 @@ export async function executeStepCheck(
       },
     };
   }
+  finally {
+    clearLogCollector(requestId);
+    ApiLogger.clearRequestId();
+  }
 }
 
 export async function executeStepAction(
   stepId: StepId,
   context: StepContext,
 ): Promise<StepExecutionResult> {
-  const sessionValidation = await validateSession();
-  if (!sessionValidation.valid && sessionValidation.error) {
-    return {
-      success: false,
-      error: {
-        message: sessionValidation.error.message || "Authentication required",
-        code: "AUTH_EXPIRED",
-      },
-      outputs: sessionValidation.error.outputs,
-    };
-  }
+  const requestId = `execute-${stepId}-${Date.now()}`;
+  ApiLogger.setRequestId(requestId);
 
-  return executeStep(stepId, context);
+  try {
+    const sessionValidation = await validateSession();
+    if (!sessionValidation.valid && sessionValidation.error) {
+      return {
+        success: false,
+        error: {
+          message: sessionValidation.error.message || "Authentication required",
+          code: "AUTH_EXPIRED",
+        },
+        outputs: sessionValidation.error.outputs,
+      };
+    }
+
+    const result = await executeStep(stepId, context);
+
+    const collector = getLogCollector(requestId);
+    const apiLogs = collector.getLogs();
+
+    return {
+      ...result,
+      apiLogs,
+    };
+  } finally {
+    clearLogCollector(requestId);
+    ApiLogger.clearRequestId();
+  }
 }

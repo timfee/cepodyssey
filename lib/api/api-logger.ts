@@ -1,9 +1,19 @@
 import { store } from "@/lib/redux/store";
 import { addApiLog, updateApiLog, type ApiLogEntry } from "@/lib/redux/slices/debug-panel";
-import { forwardApiLog } from "@/app/actions/debug-actions";
 import { Logger } from "@/lib/utils/logger";
+import { getLogCollector } from "./log-collector";
 
 export class ApiLogger {
+  private static currentRequestId: string | null = null;
+
+  static setRequestId(requestId: string) {
+    this.currentRequestId = requestId;
+  }
+
+  static clearRequestId() {
+    this.currentRequestId = null;
+  }
+
   static logRequest(url: string, init?: RequestInit): string {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const provider = this.detectProvider(url);
@@ -42,17 +52,22 @@ export class ApiLogger {
       }
     }
 
-    store.dispatch(
-      addApiLog({
-        id,
-        timestamp: new Date().toISOString(),
-        method: init?.method || "GET",
-        url,
-        headers,
-        requestBody,
-        provider,
-      }),
-    );
+    const logEntry: ApiLogEntry = {
+      id,
+      timestamp: new Date().toISOString(),
+      method: init?.method || "GET",
+      url,
+      headers,
+      requestBody,
+      provider,
+    };
+
+    if (typeof window === "undefined" && this.currentRequestId) {
+      const collector = getLogCollector(this.currentRequestId);
+      collector.addLog(logEntry);
+    } else if (typeof window !== "undefined") {
+      store.dispatch(addApiLog(logEntry));
+    }
 
     Logger.debug(
       "[ApiLogger]",
@@ -80,25 +95,22 @@ export class ApiLogger {
       return;
     }
 
-    store.dispatch(
-      updateApiLog({
-        id,
-        updates: {
-          responseStatus: response.status,
-          responseBody,
-          duration,
-          error: response.ok ? undefined : `HTTP ${response.status}`,
-        },
-      }),
-    );
+    const updates = {
+      responseStatus: response.status,
+      responseBody,
+      duration,
+      error: response.ok ? undefined : `HTTP ${response.status}`,
+    };
 
-    if (typeof window === "undefined") {
-      const entry = store
-        .getState()
-        .debugPanel.logs.find((l) => l.id === id) as ApiLogEntry | undefined;
-      if (entry) {
-        forwardApiLog(entry);
+    if (typeof window === "undefined" && this.currentRequestId) {
+      const collector = getLogCollector(this.currentRequestId);
+      const logs = collector.getLogs();
+      const log = logs.find((l) => l.id === id);
+      if (log) {
+        Object.assign(log, updates);
       }
+    } else if (typeof window !== "undefined") {
+      store.dispatch(updateApiLog({ id, updates }));
     }
 
     Logger.debug(
@@ -117,22 +129,22 @@ export class ApiLogger {
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error);
-    store.dispatch(
-      updateApiLog({
-        id,
-        updates: {
-          error: errorMessage,
-        },
-      }),
-    );
-
-    if (typeof window === "undefined") {
-      const entry = store
-        .getState()
-        .debugPanel.logs.find((l) => l.id === id) as ApiLogEntry | undefined;
-      if (entry) {
-        forwardApiLog(entry);
+    if (typeof window === "undefined" && this.currentRequestId) {
+      const collector = getLogCollector(this.currentRequestId);
+      const logs = collector.getLogs();
+      const log = logs.find((l) => l.id === id);
+      if (log) {
+        log.error = errorMessage;
       }
+    } else if (typeof window !== "undefined") {
+      store.dispatch(
+        updateApiLog({
+          id,
+          updates: {
+            error: errorMessage,
+          },
+        }),
+      );
     }
 
     Logger.error("[ApiLogger]", `Error for request ${id}`, error);

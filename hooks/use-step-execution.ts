@@ -7,6 +7,7 @@ import type { StepId } from '@/lib/steps/step-refs';
 import { ErrorManager } from '@/lib/error-handling/error-manager';
 import { allStepDefinitions } from '@/lib/steps';
 import { toast } from 'sonner';
+import { addApiLog } from '@/lib/redux/slices/debug-panel';
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
@@ -40,6 +41,12 @@ export function useStepExecution() {
         };
 
         const result = await executeStepAction(stepId, context);
+
+        if (result.apiLogs && result.apiLogs.length > 0) {
+          result.apiLogs.forEach((log) => {
+            dispatch(addApiLog(log));
+          });
+        }
 
         if (result.outputs) {
           dispatch(addOutputs(result.outputs));
