@@ -1,5 +1,4 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import * as google from '@/lib/api/google';
 import { APIError } from '@/lib/api/utils';
@@ -8,7 +7,6 @@ import { handleCheckError } from '../../utils/error-handling';
 import { portalUrls } from '@/lib/api/url-builder';
 
 export const checkProvisioningUser = createStepCheck({
-  stepId: STEP_IDS.CREATE_PROVISIONING_USER,
   requiredOutputs: [],
   checkLogic: async (context) => {
     if (!context.domain) {

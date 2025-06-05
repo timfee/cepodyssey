@@ -1,10 +1,8 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import { checkMicrosoftServicePrincipal } from '../utils/common-checks';
 
 export const checkCreateSamlApp = createStepCheck({
-  stepId: STEP_IDS.CREATE_SAML_APP,
   requiredOutputs: [OUTPUT_KEYS.SAML_SSO_APP_ID],
   checkLogic: async (context) => {
     const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;

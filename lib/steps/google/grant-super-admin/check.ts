@@ -1,12 +1,10 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import * as google from '@/lib/api/google';
 import { getGoogleToken } from '../../utils/auth';
 import { handleCheckError } from '../../utils/error-handling';
 
 export const checkSuperAdmin = createStepCheck({
-  stepId: STEP_IDS.GRANT_SUPER_ADMIN,
   requiredOutputs: [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL],
   checkLogic: async (context) => {
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;

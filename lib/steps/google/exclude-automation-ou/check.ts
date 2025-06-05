@@ -1,5 +1,4 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import * as google from '@/lib/api/google';
 import { portalUrls } from '@/lib/api/url-builder';
 import { getGoogleToken } from '../../utils/auth';
@@ -7,7 +6,6 @@ import { createStepCheck } from '../../utils/check-factory';
 import { handleCheckError } from '../../utils/error-handling';
 
 export const checkExcludeAutomationOu = createStepCheck({
-  stepId: STEP_IDS.EXCLUDE_AUTOMATION_OU,
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME],
   checkLogic: async (context) => {
     const profileName = context.outputs[
