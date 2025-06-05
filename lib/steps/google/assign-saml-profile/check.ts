@@ -1,7 +1,7 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import { getGoogleToken } from "../../utils/auth";
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
+import type { InboundSamlSsoProfile } from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
 import { handleCheckError } from "../../utils/error-handling";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -14,16 +14,14 @@ export const checkAssignSamlProfile = createStepCheck({
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
     );
     try {
-      const token = await getGoogleToken();
-      let profile: google.InboundSamlSsoProfile | null = null;
+      let profile: InboundSamlSsoProfile | null = null;
       if (profileName.startsWith("inboundSamlSsoProfiles/")) {
-        profile = await google.getSamlProfile(
-          token,
+        profile = await googleApi.saml.getProfile(
           profileName,
           context.logger,
         );
       } else {
-        const profiles = await google.listSamlProfiles(token, context.logger);
+        const profiles = await googleApi.saml.listProfiles(context.logger);
         profile = profiles.find((p) => p.displayName === profileName) ?? null;
       }
       if (!profile?.name) {
@@ -47,8 +45,7 @@ export const checkAssignSamlProfile = createStepCheck({
         outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL] =
           profile.spConfig.assertionConsumerServiceUri;
       }
-      const idpCreds = await google.listIdpCredentials(
-        token,
+      const idpCreds = await googleApi.saml.listIdpCredentials(
         profile.name,
         context.logger,
       );

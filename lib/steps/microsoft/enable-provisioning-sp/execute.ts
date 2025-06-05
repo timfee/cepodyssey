@@ -13,8 +13,6 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_APP_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-
-    const { microsoftToken } = await getTokens();
     const spId = getRequiredOutput<string>(
       context,
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,

@@ -3,6 +3,7 @@ import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
 import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
+import { getOutputValue } from "../../utils/get-output";
 import { checkAssignUsers } from "./check";
 import { executeAssignUsers } from "./execute";
 
@@ -42,16 +43,16 @@ export const m9AssignUsersSso = defineStep({
   },
   urls: {
     configure: (outputs) => {
-      const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
-      const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
+      const spId = getOutputValue<string>(outputs, OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID);
+      const appId = getOutputValue<string>(outputs, OUTPUT_KEYS.SAML_SSO_APP_ID);
       if (!spId || !appId) return null;
-      return portalUrls.azure.enterpriseApp.usersAndGroups(spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.usersAndGroups(spId, appId);
     },
     verify: (outputs) => {
-      const spId = outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID];
-      const appId = outputs[OUTPUT_KEYS.SAML_SSO_APP_ID];
+      const spId = getOutputValue<string>(outputs, OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID);
+      const appId = getOutputValue<string>(outputs, OUTPUT_KEYS.SAML_SSO_APP_ID);
       if (!spId || !appId) return null;
-      return portalUrls.azure.enterpriseApp.usersAndGroups(spId as string, appId as string);
+      return portalUrls.azure.enterpriseApp.usersAndGroups(spId, appId);
     },
   },
   handlers: { check: checkAssignUsers, execute: executeAssignUsers },

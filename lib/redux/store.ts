@@ -1,18 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { appStateSlice } from "./slices/app-state";
 import { uiStateSlice } from "./slices/ui-state";
+import { config } from "@/lib/config";
 
 export const store = configureStore({
   reducer: {
     app: appStateSlice.reducer,
     ui: uiStateSlice.reducer,
   },
-  devTools: process.env.NODE_ENV !== "production",
+  devTools: config.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       // Allow Date objects in state metadata
-      serializableCheck: process.env.NODE_ENV !== "production",
-      immutableCheck: process.env.NODE_ENV !== "production",
+      serializableCheck: config.NODE_ENV !== "production",
+      immutableCheck: config.NODE_ENV !== "production",
     }),
 });
 

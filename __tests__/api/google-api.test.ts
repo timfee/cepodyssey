@@ -1,4 +1,4 @@
-import { createUser, getUser } from '@/lib/api/google'
+import { googleApi } from '@/lib/api/google/index'
 import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
 import { AlreadyExistsError } from '@/lib/api/errors'
@@ -6,7 +6,7 @@ import { AlreadyExistsError } from '@/lib/api/errors'
 describe('Google API', () => {
   describe('users', () => {
     it('should create a user', async () => {
-      const user = await createUser('token', {
+      const user = await googleApi.users.create({
         primaryEmail: 'test@example.com',
         name: { givenName: 'Test', familyName: 'User' },
       })
@@ -26,12 +26,12 @@ describe('Google API', () => {
       )
 
       await expect(
-        createUser('token', { primaryEmail: 'existing@example.com' }),
+        googleApi.users.create({ primaryEmail: 'existing@example.com' }),
       ).rejects.toThrow(AlreadyExistsError)
     })
 
     it('should return null for non-existent user', async () => {
-      const user = await getUser('token', 'nonexistent@example.com')
+      const user = await googleApi.users.get('nonexistent@example.com')
       expect(user).toBeNull()
     })
   })

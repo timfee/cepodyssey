@@ -1,8 +1,7 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
 
 export const checkSamlProfile = createStepCheck({
@@ -10,8 +9,7 @@ export const checkSamlProfile = createStepCheck({
   checkLogic: async (_context) => {
     const profileDisplayName = "Azure AD SSO";
     try {
-      const token = await getGoogleToken();
-      const profiles = await google.listSamlProfiles(token);
+      const profiles = await googleApi.saml.listProfiles();
       const profile = profiles.find(
         (p) => p.displayName === profileDisplayName,
       );

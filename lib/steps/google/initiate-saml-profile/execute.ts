@@ -1,9 +1,8 @@
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { AlreadyExistsError } from "@/lib/api/errors";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 
@@ -11,15 +10,14 @@ export const executeInitiateSamlProfile = withExecutionHandling({
   stepId: STEP_IDS.INITIATE_SAML_PROFILE,
   requiredOutputs: [],
   executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
     const profileDisplayName = "Azure AD SSO";
 
     let result;
     try {
-      result = await google.createSamlProfile(token, profileDisplayName);
+      result = await googleApi.saml.createProfile(profileDisplayName);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const profiles = await google.listSamlProfiles(token);
+        const profiles = await googleApi.saml.listProfiles();
         const existing = profiles.find(
           (p) => p.displayName === profileDisplayName,
         );

@@ -11,3 +11,16 @@ export function getRequiredOutput<T>(context: StepContext, key: string): T {
   }
   return value as T;
 }
+
+/**
+ * Safely read a value from a step's outputs record.
+ * Returns `undefined` if the key is missing instead of throwing.
+ */
+export function getOutputValue<T>(
+  outputs: Record<string, unknown>,
+  key: string,
+): T | undefined {
+  const value = outputs[key];
+  if (value === undefined || value === null) return undefined;
+  return value as T;
+}

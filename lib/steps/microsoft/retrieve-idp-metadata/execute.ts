@@ -2,7 +2,6 @@ import { microsoftApi } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -14,10 +13,10 @@ export const executeRetrieveIdpMetadata = withExecutionHandling({
     OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const { tenantId } = await getTokens();
+    const tenantId = context.tenantId;
     const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
     const spId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID);
-    const { certificate, ssoUrl, entityId } = await microsoft.getSamlMetadata(
+    const { certificate, ssoUrl, entityId } = await microsoftApi.saml.getMetadata(
       tenantId,
       appId,
       context.logger,
