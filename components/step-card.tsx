@@ -138,10 +138,60 @@ const getProviderColorClass = (provider: string): string => {
   }
 };
 
-const renderMonospace = (text: string | undefined) =>
-  text ? (
-    <code className="font-mono text-xs bg-slate-100 p-0.5 rounded">{text}</code>
-  ) : null;
+
+// Parse action string and substitute parameters using available outputs
+function parseApiAction(
+  action: string,
+  outputs: Record<string, unknown>,
+): { method: string; path: string; isManual: boolean } {
+  let trimmed = action.trim();
+  let isManual = false;
+
+  if (/^manual:/i.test(trimmed)) {
+    isManual = true;
+    trimmed = trimmed.replace(/^manual:\s*/i, "");
+  }
+
+  const match = trimmed.match(/^([A-Z]+)\s+(.+)/);
+  if (!match) {
+    return { method: "", path: trimmed, isManual: true };
+  }
+
+  const [, method, rawPath] = match;
+  const path = rawPath.replace(/\{([^}]+)\}/g, (_, key) => {
+    const val = outputs[key];
+    return val !== undefined ? String(val) : `{${key}}`;
+  });
+
+  return { method, path, isManual };
+}
+
+// Get Tailwind text color class based on HTTP method
+function getMethodColor(method: string): string {
+  switch (method.toUpperCase()) {
+    case "GET":
+      return "text-blue-600";
+    case "POST":
+      return "text-green-600";
+    case "PATCH":
+      return "text-orange-600";
+    case "PUT":
+      return "text-purple-600";
+    case "DELETE":
+      return "text-red-600";
+    default:
+      return "text-muted-foreground";
+  }
+}
+
+// Format value for display with truncation
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") {
+    return value.length > 50 ? `${value.slice(0, 47)}...` : value;
+  }
+  return String(value);
+}
 
 export function StepCard({
   step,
@@ -173,6 +223,13 @@ export function StepCard({
     () => getStepOutputs(step.id as StepId),
     [step.id]
   );
+
+  const parsedActions = useMemo(() => {
+    if (!step.actions) return [] as { method: string; path: string }[];
+    return step.actions
+      .map((a) => parseApiAction(a, outputs))
+      .filter((a) => !a.isManual);
+  }, [step.actions, outputs]);
 
   const canExecutePrimary = !(
     step.status === "in_progress" ||
@@ -310,36 +367,79 @@ export function StepCard({
                 </div>
                 {requiredInputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
-                      Inputs
-                    </h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {requiredInputs.map((input, index) => (
-                        <li key={index}>{input.data.description}</li>
-                      ))}
-                    </ul>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Inputs</h4>
+                    <div className="grid text-sm border border-border rounded">
+                      <div className="grid grid-cols-3 bg-muted text-muted-foreground font-medium px-2 py-1">
+                        <div>Variable</div>
+                        <div>Value</div>
+                        <div>From Step</div>
+                      </div>
+                      {requiredInputs.map((input, index) => {
+                        const val = input.data.key ? outputs[input.data.key] : undefined;
+                        const display = formatValue(val) || "(Not collected yet)";
+                        return (
+                          <div
+                            key={index}
+                            className="grid grid-cols-3 items-start gap-2 px-2 py-1 border-t border-border"
+                          >
+                            <code className="font-mono text-xs break-all">{input.data.key}</code>
+                            <code
+                              className={cn(
+                                "font-mono text-xs rounded px-1 py-0.5 break-all",
+                                val != null ? "bg-slate-100" : "bg-muted"
+                              )}
+                              title={typeof val === "string" ? val : undefined}
+                            >
+                              {display || ""}
+                            </code>
+                            <span className="text-xs">{input.stepTitle}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 {producedOutputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
-                      Outputs
-                    </h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {producedOutputs.map((output, index) => (
-                        <li key={index}>{output.description}</li>
-                      ))}
-                    </ul>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Outputs</h4>
+                    <div className="grid text-sm border border-border rounded">
+                      <div className="grid grid-cols-2 bg-muted text-muted-foreground font-medium px-2 py-1">
+                        <div>Variable</div>
+                        <div>Value</div>
+                      </div>
+                      {producedOutputs.map((output, index) => {
+                        const val = outputs[output.key];
+                        const display = formatValue(val) || "<will be generated>";
+                        return (
+                          <div
+                            key={index}
+                            className="grid grid-cols-2 items-start gap-2 px-2 py-1 border-t border-border"
+                          >
+                            <code className="font-mono text-xs break-all">{output.key}</code>
+                            <code
+                              className={cn(
+                                "font-mono text-xs rounded px-1 py-0.5 break-all",
+                                val != null ? "bg-slate-100" : "bg-muted"
+                              )}
+                              title={typeof val === "string" ? val : undefined}
+                            >
+                              {display}
+                            </code>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-                {step.actions && step.actions.length > 0 && (
+                {parsedActions.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
-                      Automated Actions
-                    </h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {step.actions.map((action, index) => (
-                        <li key={index}>{renderMonospace(action)}</li>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">API Endpoints</h4>
+                    <ul className="space-y-1 text-sm">
+                      {parsedActions.map((action, index) => (
+                        <li key={index} className="flex gap-2 items-baseline">
+                          <span className={cn("font-mono text-xs", getMethodColor(action.method))}>{action.method}</span>
+                          <code className="font-mono text-xs break-all">{action.path}</code>
+                        </li>
                       ))}
                     </ul>
                   </div>
