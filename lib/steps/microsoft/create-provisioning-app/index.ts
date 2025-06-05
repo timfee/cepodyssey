@@ -1,9 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkProvisioningApp } from "./check";
 import { executeCreateProvisioningApp } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
 export const M1_OUTPUTS: StepOutput[] = [
   { key: OUTPUT_KEYS.PROVISIONING_APP_ID, description: "App (Client) ID" },
@@ -19,29 +20,28 @@ export const M1_OUTPUTS: StepOutput[] = [
 
 export const M1_INPUTS: StepInput[] = [];
 
-export const m1CreateProvisioningApp: StepDefinition = {
+export const m1CreateProvisioningApp = defineStep({
   id: STEP_IDS.CREATE_PROVISIONING_APP,
-  title: "Create Azure AD Enterprise App for Provisioning",
-  description: "Add Google sync app from Microsoft's gallery",
-  details:
-    "Instantiates the Google Cloud/G Suite Connector by Microsoft gallery app. This creates an app registration and service principal used for provisioning users to Google Workspace.",
-
-  category: "Microsoft",
-  activity: "Provisioning",
-  provider: "Microsoft",
-
-  automatability: "automated",
-  automatable: true,
-
-  inputs: M1_INPUTS,
-  outputs: M1_OUTPUTS,
+  metadata: {
+    title: "Create Azure AD Enterprise App for Provisioning",
+    description: "Add Google sync app from Microsoft's gallery",
+    details:
+      "Instantiates the Google Cloud/G Suite Connector by Microsoft gallery app. This creates an app registration and service principal used for provisioning users to Google Workspace.",
+    category: "Microsoft",
+    activity: "Provisioning",
+    provider: "Microsoft",
+  },
+  io: {
+    inputs: M1_INPUTS,
+    outputs: M1_OUTPUTS,
+  },
   requires: [],
   nextStep: {
     id: STEP_IDS.ENABLE_PROVISIONING_SP,
     description: "Enable the service principal",
   },
   actions: ["POST /applicationTemplates/{templateId}/instantiate"],
-  adminUrls: {
+  urls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
@@ -61,6 +61,5 @@ export const m1CreateProvisioningApp: StepDefinition = {
       );
     },
   },
-  check: checkProvisioningApp,
-  execute: executeCreateProvisioningApp,
-};
+  handlers: { check: checkProvisioningApp, execute: executeCreateProvisioningApp },
+});

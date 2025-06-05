@@ -1,11 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkStartProvisioning } from "./check";
 import { executeStartProvisioning } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
-
-export const M5_OUTPUTS: StepOutput[] = [];
+import { defineStep } from "../../utils/step-factory";
 
 export const M5_INPUTS: StepInput[] = [
   {
@@ -37,28 +36,29 @@ export const M5_INPUTS: StepInput[] = [
   },
 ];
 
-export const m5StartProvisioning: StepDefinition = {
+export const m5StartProvisioning = defineStep({
   id: STEP_IDS.START_PROVISIONING,
-  title: "Define Scope & Start Provisioning Job",
-  description: "Start syncing users (configure who to sync first)",
-  details:
-    "Defines which users and groups should be provisioned and then starts the synchronization job in Azure AD. The initial sync may take several minutes to complete.",
-
-  category: "Microsoft",
-  activity: "Provisioning",
-  provider: "Microsoft",
-
-  automatability: "supervised",
-  automatable: true,
-  inputs: M5_INPUTS,
-  outputs: M5_OUTPUTS,
+  metadata: {
+    title: "Define Scope & Start Provisioning Job",
+    description: "Start syncing users (configure who to sync first)",
+    details:
+      "Defines which users and groups should be provisioned and then starts the synchronization job in Azure AD. The initial sync may take several minutes to complete.",
+    category: "Microsoft",
+    activity: "Provisioning",
+    provider: "Microsoft",
+    automatability: "supervised",
+  },
+  io: {
+    inputs: M5_INPUTS,
+    outputs: [],
+  },
   requires: [STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS],
   nextStep: {
     id: STEP_IDS.CREATE_SAML_APP,
     description: "Create SAML app for SSO",
   },
   actions: ["POST /servicePrincipals/{id}/synchronization/jobs"],
-  adminUrls: {
+  urls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
@@ -78,6 +78,5 @@ export const m5StartProvisioning: StepDefinition = {
       );
     },
   },
-  check: checkStartProvisioning,
-  execute: executeStartProvisioning,
-};
+  handlers: { check: checkStartProvisioning, execute: executeStartProvisioning },
+});

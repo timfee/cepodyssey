@@ -22,6 +22,7 @@ export const checkConfigureSamlApp = createStepCheck({
       appObjectId,
       spEntityId,
       acsUrl,
+      context.logger,
     );
     return result;
   },

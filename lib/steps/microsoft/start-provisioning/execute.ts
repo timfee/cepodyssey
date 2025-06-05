@@ -19,7 +19,12 @@ export const executeStartProvisioning = withExecutionHandling({
     ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
 
-    await microsoft.startProvisioningJob(microsoftToken, spId, jobId);
+    await microsoft.startProvisioningJob(
+      microsoftToken,
+      spId,
+      jobId,
+      context.logger,
+    );
 
     return {
       success: true,

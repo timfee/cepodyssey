@@ -1,11 +1,11 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAssignSamlProfile } from "./check";
 import { executeAssignSamlProfile } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
-export const G7_OUTPUTS: StepOutput[] = [];
 export const G7_INPUTS: StepInput[] = [
   {
     type: "keyValue",
@@ -18,21 +18,21 @@ export const G7_INPUTS: StepInput[] = [
   },
 ];
 
-export const g7AssignSamlProfile: StepDefinition = {
+export const g7AssignSamlProfile = defineStep({
   id: STEP_IDS.ASSIGN_SAML_PROFILE,
-  title: "Assign Google SAML Profile to Users/OUs",
-  description: "Turn on single sign-on for your users",
-  details:
-    "Assigns the created SAML profile to your Organizational Units or user groups so that sign-in requests are redirected to Microsoft. This enables SSO for selected users.",
-
-  category: "SSO",
-  activity: "SSO",
-  provider: "Google",
-
-  automatability: "automated",
-  automatable: true,
-  inputs: G7_INPUTS,
-  outputs: G7_OUTPUTS,
+  metadata: {
+    title: "Assign Google SAML Profile to Users/OUs",
+    description: "Turn on single sign-on for your users",
+    details:
+      "Assigns the created SAML profile to your Organizational Units or user groups so that sign-in requests are redirected to Microsoft. This enables SSO for selected users.",
+    category: "SSO",
+    activity: "SSO",
+    provider: "Google",
+  },
+  io: {
+    inputs: G7_INPUTS,
+    outputs: [],
+  },
   requires: [STEP_IDS.UPDATE_SAML_PROFILE],
   nextStep: {
     id: STEP_IDS.EXCLUDE_AUTOMATION_OU,
@@ -40,10 +40,9 @@ export const g7AssignSamlProfile: StepDefinition = {
   },
 
   actions: ["POST /v1/inboundSamlSsoProfiles/{profile}:assignToOrgUnits"],
-  adminUrls: {
+  urls: {
     configure: portalUrls.google.sso.main(),
     verify: portalUrls.google.sso.main(),
   },
-  check: checkAssignSamlProfile,
-  execute: executeAssignSamlProfile,
-};
+  handlers: { check: checkAssignSamlProfile, execute: executeAssignSamlProfile },
+});

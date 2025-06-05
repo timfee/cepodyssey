@@ -7,11 +7,11 @@ import { handleCheckError } from "../../utils/error-handling";
 
 export const checkSamlProfile = createStepCheck({
   requiredOutputs: [],
-  checkLogic: async (_context) => {
+  checkLogic: async (context) => {
     const profileDisplayName = "Azure AD SSO";
     try {
       const token = await getGoogleToken();
-      const profiles = await google.listSamlProfiles(token);
+      const profiles = await google.listSamlProfiles(token, context.logger);
       const profile = profiles.find(
         (p) => p.displayName === profileDisplayName,
       );

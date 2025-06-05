@@ -8,7 +8,10 @@ export const checkEnableProvisioningSp = createStepCheck({
     const spId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
-    const result = await checkMicrosoftServicePrincipalEnabled(spId);
+    const result = await checkMicrosoftServicePrincipalEnabled(
+      spId,
+      context.logger,
+    );
     return result;
   },
 });

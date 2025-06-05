@@ -1,9 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAuthorizeProvisioning } from "./check";
 import { executeAuthorizeProvisioning } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
 export const M3_OUTPUTS: StepOutput[] = [
   {
@@ -25,22 +26,23 @@ export const M3_INPUTS: StepInput[] = [
   },
 ];
 
-export const m3AuthorizeProvisioning: StepDefinition = {
+export const m3AuthorizeProvisioning = defineStep({
   id: STEP_IDS.AUTHORIZE_PROVISIONING,
-  title: "Authorize Azure AD Provisioning to Google Workspace",
-  description:
-    "Connect Microsoft to Google: Click 'Authorize' in Azure and sign in with the Google sync user",
-  details:
-    "Manually complete the OAuth consent flow in the Azure portal using the provisioning user. This grants Azure AD permission to manage users and groups in Google Workspace.",
-
-  category: "Microsoft",
-  activity: "Provisioning",
-  provider: "Microsoft",
-
-  automatability: "manual",
-  automatable: false,
-  inputs: M3_INPUTS,
-  outputs: M3_OUTPUTS,
+  metadata: {
+    title: "Authorize Azure AD Provisioning to Google Workspace",
+    description:
+      "Connect Microsoft to Google: Click 'Authorize' in Azure and sign in with the Google sync user",
+    details:
+      "Manually complete the OAuth consent flow in the Azure portal using the provisioning user. This grants Azure AD permission to manage users and groups in Google Workspace.",
+    category: "Microsoft",
+    activity: "Provisioning",
+    provider: "Microsoft",
+    automatability: "manual",
+  },
+  io: {
+    inputs: M3_INPUTS,
+    outputs: M3_OUTPUTS,
+  },
   requires: [STEP_IDS.ENABLE_PROVISIONING_SP, STEP_IDS.GRANT_SUPER_ADMIN],
   nextStep: {
     id: STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
@@ -53,7 +55,7 @@ export const m3AuthorizeProvisioning: StepDefinition = {
     "Manual: Grant consent",
     "Manual: Test connection",
   ],
-  adminUrls: {
+  urls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
@@ -73,6 +75,5 @@ export const m3AuthorizeProvisioning: StepDefinition = {
       );
     },
   },
-  check: checkAuthorizeProvisioning,
-  execute: executeAuthorizeProvisioning,
-};
+  handlers: { check: checkAuthorizeProvisioning, execute: executeAuthorizeProvisioning },
+});

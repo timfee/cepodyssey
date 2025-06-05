@@ -12,7 +12,11 @@ export const checkAttributeMappings = createStepCheck({
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
-    const result = await checkMicrosoftAttributeMappingsApplied(spId, jobId);
+    const result = await checkMicrosoftAttributeMappingsApplied(
+      spId,
+      jobId,
+      context.logger,
+    );
     return result;
   },
 });

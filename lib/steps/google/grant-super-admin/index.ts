@@ -1,16 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkSuperAdmin } from "./check";
 import { executeGrantSuperAdmin } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
-
-export const G3_OUTPUTS: StepOutput[] = [
-  {
-    key: OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID,
-    description: "Role assignment ID for Super Admin",
-  },
-];
+import { defineStep } from "../../utils/step-factory";
 
 export const G3_INPUTS: StepInput[] = [
   {
@@ -24,30 +18,30 @@ export const G3_INPUTS: StepInput[] = [
   },
 ];
 
-export const g3GrantSuperAdmin: StepDefinition = {
+export const g3GrantSuperAdmin = defineStep({
   id: STEP_IDS.GRANT_SUPER_ADMIN,
-  title: "Grant Super Admin Privileges to Provisioning User",
-  description: "Give the sync user admin permissions",
-  details:
-    "Assigns Super Admin role to the provisioning user, granting full access to manage users, groups, and organizational units. This is required for Azure AD to perform provisioning operations.",
-
-  category: "Google",
-  activity: "Foundation",
-  provider: "Google",
-
-  automatability: "automated",
-  automatable: true,
-
-  inputs: G3_INPUTS,
-  outputs: G3_OUTPUTS,
+  metadata: {
+    title: "Grant Super Admin Privileges to Provisioning User",
+    description: "Give the sync user admin permissions",
+    details:
+      "Assigns Super Admin role to the provisioning user, granting full access to manage users, groups, and organizational units. This is required for Azure AD to perform provisioning operations.",
+    category: "Google",
+    activity: "Foundation",
+    provider: "Google",
+  },
+  io: {
+    inputs: G3_INPUTS,
+    outputs: [
+      { key: OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID, description: "Role assignment ID for Super Admin" },
+    ] as StepOutput[],
+  },
   requires: [STEP_IDS.CREATE_PROVISIONING_USER, STEP_IDS.VERIFY_DOMAIN],
   nextStep: {
     id: STEP_IDS.VERIFY_DOMAIN,
     description: "Verify your domain for federation",
   },
-
   actions: ["POST /admin/directory/v1/customer/{customerId}/roleassignments"],
-  adminUrls: {
+  urls: {
     configure: (outputs) =>
       outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]
         ? portalUrls.google.users.details(
@@ -61,6 +55,5 @@ export const g3GrantSuperAdmin: StepDefinition = {
           )
         : portalUrls.google.users.list(),
   },
-  check: checkSuperAdmin,
-  execute: executeGrantSuperAdmin,
-};
+  handlers: { check: checkSuperAdmin, execute: executeGrantSuperAdmin },
+});

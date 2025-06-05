@@ -19,9 +19,14 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     ] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
-    await microsoft.patchServicePrincipal(microsoftToken, spId, {
-      accountEnabled: true,
-    });
+    await microsoft.patchServicePrincipal(
+      microsoftToken,
+      spId,
+      {
+        accountEnabled: true,
+      },
+      context.logger,
+    );
 
     return {
       success: true,

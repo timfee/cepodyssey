@@ -2,6 +2,7 @@
 
 import * as microsoft from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
+import type { ApiLogger } from "@/lib/api/api-logger";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
@@ -13,15 +14,21 @@ import { getMicrosoftToken } from "../../utils/auth";
  */
 export async function checkMicrosoftServicePrincipal(
   appClientId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const sp = await microsoft.getServicePrincipalByAppId(token, appClientId);
+    const sp = await microsoft.getServicePrincipalByAppId(
+      token,
+      appClientId,
+      logger,
+    );
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
       const apps = await microsoft.listApplications(
         token,
         `appId eq '${appClientId}'`,
+        logger,
       );
       if (apps[0]?.id) {
         appObjectId = apps[0].id;
@@ -55,10 +62,15 @@ export async function checkMicrosoftServicePrincipal(
  */
 export async function checkMicrosoftServicePrincipalEnabled(
   spObjectId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const sp = await microsoft.getServicePrincipalDetails(token, spObjectId);
+    const sp = await microsoft.getServicePrincipalDetails(
+      token,
+      spObjectId,
+      logger,
+    );
     if (sp?.accountEnabled === true) {
       return { completed: true, message: "Service Principal is enabled." };
     }
@@ -82,6 +94,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
 export async function checkMicrosoftProvisioningJobDetails(
   spObjectId: string,
   jobId?: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
@@ -91,9 +104,14 @@ export async function checkMicrosoftProvisioningJobDetails(
         token,
         spObjectId,
         jobId,
+        logger,
       );
     } else {
-      const jobs = await microsoft.listSynchronizationJobs(token, spObjectId);
+      const jobs = await microsoft.listSynchronizationJobs(
+        token,
+        spObjectId,
+        logger,
+      );
       jobToInspect =
         jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
     }
@@ -152,12 +170,14 @@ export async function checkMicrosoftSamlAppSettingsApplied(
   appObjectId: string,
   expectedSpEntityId: string,
   expectedAcsUrl: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
     const appDetails = await microsoft.getApplicationDetails(
       token,
       appObjectId,
+      logger,
     );
     if (!appDetails) {
       return {
@@ -199,6 +219,7 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 export async function checkMicrosoftAttributeMappingsApplied(
   spObjectId: string,
   jobId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
@@ -206,6 +227,7 @@ export async function checkMicrosoftAttributeMappingsApplied(
       token,
       spObjectId,
       jobId,
+      logger,
     );
     const userMappingRule = schema?.synchronizationRules?.find((rule) =>
       rule.objectMappings?.some(
@@ -259,12 +281,14 @@ export async function checkMicrosoftAttributeMappingsApplied(
  */
 export async function checkMicrosoftAppAssignments(
   servicePrincipalObjectId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
     const assignments = await microsoft.listAppRoleAssignments(
       token,
       servicePrincipalObjectId,
+      logger,
     );
     const hasAssignments = assignments && assignments.length > 0;
     return {

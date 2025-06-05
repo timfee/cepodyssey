@@ -1,9 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAttributeMappings } from "./check";
 import { executeConfigureAttributeMappings } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
 export const M4_OUTPUTS: StepOutput[] = [
   {
@@ -42,28 +43,29 @@ export const M4_INPUTS: StepInput[] = [
   },
 ];
 
-export const m4ConfigureAttributeMappings: StepDefinition = {
+export const m4ConfigureAttributeMappings = defineStep({
   id: STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
-  title: "Configure Attribute Mappings (Provisioning)",
-  description: "Set up how user data syncs between systems",
-  details:
-    "Defines how Azure AD attributes map to Google Workspace fields. Proper mappings ensure user information like names and group membership sync correctly.",
-
-  category: "Microsoft",
-  activity: "Provisioning",
-  provider: "Microsoft",
-
-  automatability: "manual",
-  automatable: true,
-  inputs: M4_INPUTS,
-  outputs: M4_OUTPUTS,
+  metadata: {
+    title: "Configure Attribute Mappings (Provisioning)",
+    description: "Set up how user data syncs between systems",
+    details:
+      "Defines how Azure AD attributes map to Google Workspace fields. Proper mappings ensure user information like names and group membership sync correctly.",
+    category: "Microsoft",
+    activity: "Provisioning",
+    provider: "Microsoft",
+    automatability: "manual",
+  },
+  io: {
+    inputs: M4_INPUTS,
+    outputs: M4_OUTPUTS,
+  },
   requires: [STEP_IDS.AUTHORIZE_PROVISIONING],
   nextStep: {
     id: STEP_IDS.START_PROVISIONING,
     description: "Start synchronization job",
   },
   actions: ["Manual: Edit attribute mappings in portal"],
-  adminUrls: {
+  urls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
@@ -83,6 +85,5 @@ export const m4ConfigureAttributeMappings: StepDefinition = {
       );
     },
   },
-  check: checkAttributeMappings,
-  execute: executeConfigureAttributeMappings,
-};
+  handlers: { check: checkAttributeMappings, execute: executeConfigureAttributeMappings },
+});

@@ -8,10 +8,14 @@ import { APIError } from "@/lib/api/utils";
 
 export const checkAutomationOu = createStepCheck({
   requiredOutputs: [],
-  checkLogic: async (_context) => {
+  checkLogic: async (context) => {
     try {
       const token = await getGoogleToken();
-      const orgUnit = await google.getOrgUnit(token, "/Automation");
+      const orgUnit = await google.getOrgUnit(
+        token,
+        "/Automation",
+        context.logger,
+      );
       if (orgUnit?.orgUnitId && orgUnit.orgUnitPath) {
         return {
           completed: true,

@@ -1,11 +1,11 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkSamlProfileUpdate } from "./check";
 import { executeUpdateSamlProfile } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
-export const G6_OUTPUTS: StepOutput[] = [];
 export const G6_INPUTS: StepInput[] = [
   {
     type: "keyValue",
@@ -45,21 +45,21 @@ export const G6_INPUTS: StepInput[] = [
   },
 ];
 
-export const g6UpdateSamlProfile: StepDefinition = {
+export const g6UpdateSamlProfile = defineStep({
   id: STEP_IDS.UPDATE_SAML_PROFILE,
-  title: "Update Google SAML Profile with Azure AD IdP Info",
-  description: "Connect Google to Microsoft using sign-on details",
-  details:
-    "Updates the Google SAML profile with metadata from Azure AD including entity ID, SSO URL, and certificate. This completes the trust relationship for SSO.",
-
-  category: "SSO",
-  activity: "SSO",
-  provider: "Google",
-
-  automatability: "automated",
-  automatable: true,
-  inputs: G6_INPUTS,
-  outputs: G6_OUTPUTS,
+  metadata: {
+    title: "Update Google SAML Profile with Azure AD IdP Info",
+    description: "Connect Google to Microsoft using sign-on details",
+    details:
+      "Updates the Google SAML profile with metadata from Azure AD including entity ID, SSO URL, and certificate. This completes the trust relationship for SSO.",
+    category: "SSO",
+    activity: "SSO",
+    provider: "Google",
+  },
+  io: {
+    inputs: G6_INPUTS,
+    outputs: [],
+  },
   requires: [STEP_IDS.INITIATE_SAML_PROFILE, STEP_IDS.RETRIEVE_IDP_METADATA],
   nextStep: {
     id: STEP_IDS.ASSIGN_SAML_PROFILE,
@@ -67,10 +67,9 @@ export const g6UpdateSamlProfile: StepDefinition = {
   },
 
   actions: ["PATCH /v1/inboundSamlSsoProfiles/{profile}"],
-  adminUrls: {
+  urls: {
     configure: portalUrls.google.sso.main(),
     verify: portalUrls.google.sso.main(),
   },
-  check: checkSamlProfileUpdate,
-  execute: executeUpdateSamlProfile,
-};
+  handlers: { check: checkSamlProfileUpdate, execute: executeUpdateSamlProfile },
+});

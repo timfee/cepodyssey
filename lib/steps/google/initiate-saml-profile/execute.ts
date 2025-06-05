@@ -10,16 +10,20 @@ import { withExecutionHandling } from "../../utils/execute-wrapper";
 export const executeInitiateSamlProfile = withExecutionHandling({
   stepId: STEP_IDS.INITIATE_SAML_PROFILE,
   requiredOutputs: [],
-  executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
+  executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
     const profileDisplayName = "Azure AD SSO";
 
     let result;
     try {
-      result = await google.createSamlProfile(token, profileDisplayName);
+      result = await google.createSamlProfile(
+        token,
+        profileDisplayName,
+        context.logger,
+      );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const profiles = await google.listSamlProfiles(token);
+        const profiles = await google.listSamlProfiles(token, context.logger);
         const existing = profiles.find(
           (p) => p.displayName === profileDisplayName,
         );

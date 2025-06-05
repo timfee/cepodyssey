@@ -18,9 +18,9 @@ export const executeVerifyDomain = withExecutionHandling({
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    const user = await google.getLoggedInUser(token);
+    const user = await google.getLoggedInUser(token, context.logger);
     try {
-      await google.addDomain(token, context.domain);
+      await google.addDomain(token, context.domain, context.logger);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
         return {

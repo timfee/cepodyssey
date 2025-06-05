@@ -10,7 +10,7 @@ import { withExecutionHandling } from "../../utils/execute-wrapper";
 export const executeCreateProvisioningApp = withExecutionHandling({
   stepId: STEP_IDS.CREATE_PROVISIONING_APP,
   requiredOutputs: [],
-  executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
+  executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const { microsoftToken } = await getTokens();
     const TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
     const appName = "Google Workspace User Provisioning";
@@ -24,18 +24,21 @@ export const executeCreateProvisioningApp = withExecutionHandling({
         microsoftToken,
         TEMPLATE_ID,
         appName,
+        context.logger,
       );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
         const existingApps = await microsoft.listApplications(
           microsoftToken,
           `displayName eq '${appName}'`,
+          context.logger,
         );
         const existingApp = existingApps[0];
         if (existingApp?.appId) {
           const sp = await microsoft.getServicePrincipalByAppId(
             microsoftToken,
             existingApp.appId,
+            context.logger,
           );
           if (existingApp.id && sp?.id) {
             return {

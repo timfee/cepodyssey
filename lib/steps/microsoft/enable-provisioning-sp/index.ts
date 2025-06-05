@@ -1,9 +1,10 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import type { StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkEnableProvisioningSp } from "./check";
 import { executeEnableProvisioningSp } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { defineStep } from "../../utils/step-factory";
 
 export const M2_OUTPUTS: StepOutput[] = [
   {
@@ -33,29 +34,28 @@ export const M2_INPUTS: StepInput[] = [
   },
 ];
 
-export const m2EnableProvisioningSp: StepDefinition = {
+export const m2EnableProvisioningSp = defineStep({
   id: STEP_IDS.ENABLE_PROVISIONING_SP,
-  title: "Enable Provisioning App Service Principal",
-  description: "Enable the sync app",
-  details:
-    "Enables the service principal created by the gallery app so that it can accept credentials and configuration settings.",
-
-  category: "Microsoft",
-  activity: "Provisioning",
-  provider: "Microsoft",
-
-  automatability: "automated",
-  automatable: true,
-
-  inputs: M2_INPUTS,
-  outputs: M2_OUTPUTS,
+  metadata: {
+    title: "Enable Provisioning App Service Principal",
+    description: "Enable the sync app",
+    details:
+      "Enables the service principal created by the gallery app so that it can accept credentials and configuration settings.",
+    category: "Microsoft",
+    activity: "Provisioning",
+    provider: "Microsoft",
+  },
+  io: {
+    inputs: M2_INPUTS,
+    outputs: M2_OUTPUTS,
+  },
   requires: [STEP_IDS.CREATE_PROVISIONING_APP],
   nextStep: {
     id: STEP_IDS.AUTHORIZE_PROVISIONING,
     description: "Authorize provisioning using Google admin",
   },
   actions: ["PATCH /servicePrincipals/{id}"],
-  adminUrls: {
+  urls: {
     configure: (outputs) => {
       const spId = outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID];
       const appId = outputs[OUTPUT_KEYS.PROVISIONING_APP_ID];
@@ -75,6 +75,5 @@ export const m2EnableProvisioningSp: StepDefinition = {
       );
     },
   },
-  check: checkEnableProvisioningSp,
-  execute: executeEnableProvisioningSp,
-};
+  handlers: { check: checkEnableProvisioningSp, execute: executeEnableProvisioningSp },
+});

@@ -47,6 +47,7 @@ export const executeConfigureSamlApp = withExecutionHandling({
       microsoftToken,
       appObjectId,
       appPatchPayload,
+      context.logger,
     );
 
     return {

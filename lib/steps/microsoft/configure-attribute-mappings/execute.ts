@@ -31,6 +31,7 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
       spId,
       jobId,
       schema,
+      context.logger,
     );
 
     return {
