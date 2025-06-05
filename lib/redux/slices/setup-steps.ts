@@ -1,4 +1,5 @@
 import type { StepStatusInfo } from "@/lib/types";
+import { StepStatus } from "@/lib/constants/enums";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface SetupStepsState {
@@ -25,7 +26,7 @@ export const setupStepsSlice = createSlice({
     /** Updates the status and metadata of a single step. */
     updateStep(state, action: PayloadAction<{ id: string } & StepStatusInfo>) {
       const { id, ...statusInfo } = action.payload;
-      const existingStep = state.steps[id] ?? { status: "pending" };
+      const existingStep = state.steps[id] ?? { status: StepStatus.PENDING };
       state.steps[id] = { ...existingStep, ...statusInfo };
     },
     markStepComplete(
@@ -35,7 +36,7 @@ export const setupStepsSlice = createSlice({
       const { id, isUserMarked } = action.payload;
       state.steps[id] = {
         ...state.steps[id],
-        status: "completed",
+        status: StepStatus.COMPLETED,
         completionType: isUserMarked ? "user-marked" : "server-verified",
       };
       if (isUserMarked) {
@@ -46,7 +47,7 @@ export const setupStepsSlice = createSlice({
       const id = action.payload;
       state.steps[id] = {
         ...state.steps[id],
-        status: "pending",
+        status: StepStatus.PENDING,
         completionType: undefined,
       };
       state.userCompletions[id] = false;

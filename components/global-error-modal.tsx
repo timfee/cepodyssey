@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { Provider } from "@/lib/constants/enums";
+import type { ProviderValue } from "@/lib/types";
 import {
   clearError,
   selectError,
@@ -49,7 +51,7 @@ export function GlobalErrorModal() {
     | {
         category?: string;
         code?: string;
-        provider?: "google" | "microsoft";
+        provider?: ProviderValue;
       }
     | undefined;
 
@@ -80,7 +82,7 @@ export function GlobalErrorModal() {
           {isAuthError && details?.provider && (
             <p className="mt-2 text-sm text-muted-foreground">
               Provider:{" "}
-              {details.provider === "google"
+              {details.provider === Provider.GOOGLE
                 ? "Google Workspace"
                 : "Microsoft Entra ID"}
             </p>

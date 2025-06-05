@@ -10,11 +10,10 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type {
-  StepAutomatability,
-  StepCompletionType,
-  StepStatus,
-} from "./workflow-types";
+import type { StepCompletionType } from "./workflow-types";
+import type { StepAutomatability } from "./workflow-types";
+import type { StepStatus } from "./workflow-types";
+import { StepStatus as StepStatusEnum, Automatability } from "@/lib/constants/enums";
 
 export interface StatusDisplayConfig {
   icon: LucideIcon;
@@ -107,7 +106,7 @@ export function getStatusDisplayConfig(
   status: StepStatus,
   completionType?: StepCompletionType,
 ): StatusDisplayConfig {
-  if (status === "completed") {
+  if (status === StepStatusEnum.COMPLETED) {
     return completionType === "user-marked"
       ? stateConfigMap["completed-user"]
       : stateConfigMap["completed-verified"];
@@ -118,5 +117,5 @@ export function getStatusDisplayConfig(
 export function getAutomatabilityDisplayConfig(
   automatability?: StepAutomatability,
 ): AutomatabilityDisplayConfig {
-  return automatabilityConfigMap[automatability || "manual"];
+  return automatabilityConfigMap[automatability || Automatability.MANUAL];
 }

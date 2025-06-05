@@ -1,15 +1,9 @@
 export type StepId = import("@/lib/steps/step-refs").StepId;
 
-export type StepStatus =
-  | "completed"
-  | "pending"
-  | "in_progress"
-  | "failed"
-  | "available"
-  | "blocked";
+export type StepStatus = import("@/lib/types").StepStatusValue | "available";
 
 export type StepCompletionType = "server-verified" | "user-marked" | null;
-export type StepAutomatability = "automated" | "supervised" | "manual";
+export type StepAutomatability = import("@/lib/types").AutomatabilityValue;
 
 export type ManagedStep = import("@/lib/types").ManagedStep;
 

@@ -10,6 +10,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { ManagedStep } from "./workflow-types";
+import { Automatability, StepStatus } from "@/lib/constants/enums";
 
 export function BlockedMessage() {
   return (
@@ -35,7 +36,7 @@ export function CompletedButtons({
 }: CompletedButtonsProps) {
   return (
     <>
-      {step.automatability !== "manual" && (
+      {step.automatability !== Automatability.MANUAL && (
         <Button
           variant="outline"
           size="sm"
@@ -45,7 +46,7 @@ export function CompletedButtons({
           <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-run
         </Button>
       )}
-      {step.automatability === "manual" &&
+      {step.automatability === Automatability.MANUAL &&
         step.completionType === "user-marked" && (
           <Button
             variant="outline"
@@ -81,26 +82,26 @@ export function ExecutionButtons({
     <>
       <Button
         size="sm"
-        onClick={step.automatability !== "manual" ? onExecute : onMarkComplete}
+        onClick={step.automatability !== Automatability.MANUAL ? onExecute : onMarkComplete}
         disabled={!canExecute || isProcessing}
-        variant={step.automatability === "manual" ? "outline" : "default"}
+        variant={step.automatability === Automatability.MANUAL ? "outline" : "default"}
       >
         {isProcessing ? (
           <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-        ) : step.automatability !== "manual" ? (
+        ) : step.automatability !== Automatability.MANUAL ? (
           <Zap className="mr-1.5 h-4 w-4" />
         ) : (
           <UserCheck className="mr-1.5 h-4 w-4" />
         )}
         {isProcessing
           ? "Processing..."
-          : step.automatability !== "manual"
-            ? step.status === "failed"
+          : step.automatability !== Automatability.MANUAL
+            ? step.status === StepStatus.FAILED
               ? "Retry"
               : "Execute"
             : "Mark as Complete"}
       </Button>
-      {step.automatability !== "manual" && step.status !== "failed" && (
+      {step.automatability !== Automatability.MANUAL && step.status !== StepStatus.FAILED && (
         <Button
           variant="link"
           size="sm"

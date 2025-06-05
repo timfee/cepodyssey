@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { ProviderValue } from "@/lib/types";
 
 export interface ApiLogEntry {
   id: string;
@@ -11,7 +12,7 @@ export interface ApiLogEntry {
   responseBody?: unknown;
   error?: string;
   duration?: number;
-  provider?: "google" | "microsoft" | "other";
+  provider?: ProviderValue | "other";
 }
 
 export interface AppErrorLogEntry {
@@ -27,7 +28,7 @@ export interface DebugPanelState {
   isOpen: boolean;
   logs: ApiLogEntry[];
   maxLogs: number;
-  filter: "all" | "google" | "microsoft" | "errors";
+  filter: "all" | ProviderValue | "errors";
 }
 
 const initialState: DebugPanelState = {

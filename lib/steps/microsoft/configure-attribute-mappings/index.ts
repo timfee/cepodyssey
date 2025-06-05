@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { checkAttributeMappings } from "./check";
 import { executeConfigureAttributeMappings } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export const M4_OUTPUTS: StepOutput[] = [
   {
@@ -53,7 +54,7 @@ export const m4ConfigureAttributeMappings: StepDefinition = {
   activity: "Provisioning",
   provider: "Microsoft",
 
-  automatability: "manual",
+  automatability: Automatability.MANUAL,
   automatable: true,
   inputs: M4_INPUTS,
   outputs: M4_OUTPUTS,

@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { checkConfigureSamlApp } from "./check";
 import { executeConfigureSamlApp } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export const M7_OUTPUTS: StepOutput[] = [
   {
@@ -71,7 +72,7 @@ export const m7ConfigureSamlApp: StepDefinition = {
   activity: "SSO",
   provider: "Microsoft",
 
-  automatability: "manual",
+  automatability: Automatability.MANUAL,
   automatable: true,
 
   inputs: M7_INPUTS,

@@ -6,6 +6,7 @@ import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { store } from "@/lib/redux/store";
 import { addApiLog } from "@/lib/redux/slices/debug-panel";
+import { StepStatus } from "@/lib/constants/enums";
 
 /**
  * Automatically checks step status when configuration is available.
@@ -42,8 +43,8 @@ export function useAutoCheck(
         const shouldCheck =
           force ||
           !checkedSteps.current.has(stepId) ||
-          status?.status === "failed" ||
-          status?.status === "pending";
+          status?.status === StepStatus.FAILED ||
+          status?.status === StepStatus.PENDING;
 
         if (shouldCheck && !recentlyChecked) {
           console.log(`[AutoCheck] Checking step ${stepId}`);

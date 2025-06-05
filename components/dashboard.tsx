@@ -32,7 +32,12 @@ import {
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
-import type { StepCheckResult, StepContext } from "@/lib/types";
+import type {
+  StepCheckResult,
+  StepContext,
+  StepStatusValue,
+} from "@/lib/types";
+import { StepStatus } from "@/lib/constants/enums";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -83,9 +88,9 @@ export function AutomationDashboard({
         dispatch(addOutputs(persisted.outputs || {}));
         console.log("Previous progress restored");
       } else {
-        const initialStepStatuses: Record<string, { status: "pending" }> = {};
+        const initialStepStatuses: Record<string, { status: StepStatusValue }> = {};
         allStepDefinitions.forEach((def) => {
-          initialStepStatuses[def.id] = { status: "pending" };
+          initialStepStatuses[def.id] = { status: StepStatus.PENDING };
         });
         dispatch(initializeSteps(initialStepStatuses));
       }
@@ -145,7 +150,7 @@ export function AutomationDashboard({
       dispatch(
         updateStep({
           id: stepId,
-          status: "in_progress",
+          status: StepStatus.IN_PROGRESS,
           message: "Checking status...",
         }),
       );
@@ -175,7 +180,7 @@ export function AutomationDashboard({
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: "Authentication expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
@@ -193,7 +198,7 @@ export function AutomationDashboard({
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: errorMessage,
               metadata: checkResult.outputs,
               lastCheckedAt: new Date().toISOString(),
@@ -225,7 +230,7 @@ export function AutomationDashboard({
           dispatch(
             updateStep({
               id: stepId,
-              status: "completed",
+              status: StepStatus.COMPLETED,
               message: checkResult.message || "Check passed",
               metadata: {
                 preExisting: true,
@@ -240,7 +245,7 @@ export function AutomationDashboard({
           dispatch(
             updateStep({
               id: stepId,
-              status: "pending",
+              status: StepStatus.PENDING,
               message: checkResult.message || "Not completed",
               error: null,
               metadata: checkResult.outputs || {},
@@ -254,7 +259,7 @@ export function AutomationDashboard({
         dispatch(
           updateStep({
             id: stepId,
-            status: "failed",
+            status: StepStatus.FAILED,
             error: error instanceof Error ? error.message : "Check failed",
             lastCheckedAt: new Date().toISOString(),
           }),
@@ -287,11 +292,14 @@ export function AutomationDashboard({
       if (
         step.automatable &&
         (!currentStepState ||
-          currentStepState.status === "pending" ||
-          currentStepState.status === "failed")
+          currentStepState.status === StepStatus.PENDING ||
+          currentStepState.status === StepStatus.FAILED)
       ) {
         await handleExecute(step.id as StepId);
-        if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
+        if (
+          store.getState().setupSteps.steps[step.id]?.status ===
+          StepStatus.FAILED
+        ) {
           anyStepFailed = true;
           break;
         }
@@ -305,7 +313,7 @@ export function AutomationDashboard({
   const ProgressSummary = () => {
     const totalSteps = allStepDefinitions.length;
     const completedSteps = Object.values(stepsStatusMap).filter(
-      (s) => s.status === "completed",
+      (s) => s.status === StepStatus.COMPLETED,
     ).length;
     const progressPercent = (completedSteps / totalSteps) * 100;
 

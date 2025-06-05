@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { checkTestSso } from "./check";
 import { executeTestSso } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export const M10_OUTPUTS: StepOutput[] = [
   { key: OUTPUT_KEYS.FLAG_M10_SSO_TESTED, description: "SSO tested" },
@@ -32,7 +33,7 @@ export const m10TestSso: StepDefinition = {
   activity: "SSO",
   provider: "Microsoft",
 
-  automatability: "manual",
+  automatability: Automatability.MANUAL,
   automatable: false,
 
   inputs: M10_INPUTS,

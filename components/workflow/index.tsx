@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter } from "@/components/ui/card";
 import { useAppDispatch } from "@/hooks/use-redux";
+import { StepStatus } from "@/lib/constants/enums";
 import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import {
   markStepComplete as markStepCompleteAction,
@@ -57,9 +58,9 @@ export function WorkflowStepCard({
     [step.automatability],
   );
 
-  const isProcessing = step.status === "in_progress";
-  const isCompleted = step.status === "completed";
-  const isBlocked = step.status === "blocked";
+  const isProcessing = step.status === StepStatus.IN_PROGRESS;
+  const isCompleted = step.status === StepStatus.COMPLETED;
+  const isBlocked = step.status === StepStatus.BLOCKED;
 
   const canExecuteStep = useMemo(() => {
     if (!canRunGlobal || isProcessing || isCompleted || isBlocked) return false;

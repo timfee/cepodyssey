@@ -20,6 +20,7 @@ import {
   toggleDebugPanel,
 } from "@/lib/redux/slices/debug-panel";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
+import { Provider } from "@/lib/constants/enums";
 import { Bug, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
 export function DebugPanel() {
@@ -83,7 +84,7 @@ export function DebugPanel() {
 
       <div className="p-3 border-b">
         <div className="flex gap-2 flex-wrap">
-          {(["all", "google", "microsoft", "errors"] as const).map(
+          {(["all", Provider.GOOGLE, Provider.MICROSOFT, "errors"] as const).map(
             (filterType) => (
               <Button
                 key={filterType}

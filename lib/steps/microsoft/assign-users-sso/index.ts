@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { checkAssignUsers } from "./check";
 import { executeAssignUsers } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export const M9_OUTPUTS: StepOutput[] = [];
 
@@ -39,7 +40,7 @@ export const m9AssignUsersSso: StepDefinition = {
   activity: "SSO",
   provider: "Microsoft",
 
-  automatability: "manual",
+  automatability: Automatability.MANUAL,
   automatable: true,
 
   inputs: M9_INPUTS,

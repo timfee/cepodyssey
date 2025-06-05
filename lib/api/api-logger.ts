@@ -1,5 +1,6 @@
 import type { ApiLogEntry } from "@/lib/redux/slices/debug-panel";
 import { isApiDebugEnabled } from "@/lib/utils";
+import { Provider } from "@/lib/constants/enums";
 
 export class ApiLogger {
   private logs: ApiLogEntry[] = [];
@@ -83,13 +84,13 @@ export class ApiLogger {
     }
   }
 
-  private detectProvider(url: string): "google" | "microsoft" | "other" {
+  private detectProvider(url: string): typeof Provider[keyof typeof Provider] | "other" {
     if (
       url.startsWith(process.env.GOOGLE_API_BASE!) ||
       url.startsWith(process.env.GOOGLE_IDENTITY_BASE!)
     )
-      return "google";
-    if (url.startsWith(process.env.GRAPH_API_BASE!)) return "microsoft";
+      return Provider.GOOGLE;
+    if (url.startsWith(process.env.GRAPH_API_BASE!)) return Provider.MICROSOFT;
     return "other";
   }
 }

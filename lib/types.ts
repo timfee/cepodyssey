@@ -2,8 +2,15 @@
  * Defines the dynamic status and metadata of a step, typically stored in Redux.
  */
 import type { ApiLogger } from "./api/api-logger";
+import { Automatability, Provider, StepStatus } from "./constants/enums";
+
+export type StepStatusValue =
+  (typeof StepStatus)[keyof typeof StepStatus];
+export type ProviderValue = (typeof Provider)[keyof typeof Provider];
+export type AutomatabilityValue =
+  (typeof Automatability)[keyof typeof Automatability];
 export interface StepStatusInfo {
-  status: "pending" | "in_progress" | "completed" | "failed" | "blocked";
+  status: StepStatusValue;
   completionType?: "server-verified" | "user-marked";
   error?: string | null;
   message?: string;
@@ -45,7 +52,7 @@ export interface StepCheckResult {
     responseBody?: unknown;
     error?: string;
     duration?: number;
-    provider?: "google" | "microsoft" | "other";
+    provider?: ProviderValue | "other";
   }>;
 }
 
@@ -72,7 +79,7 @@ export interface StepExecutionResult {
     responseBody?: unknown;
     error?: string;
     duration?: number;
-    provider?: "google" | "microsoft" | "other";
+    provider?: ProviderValue | "other";
   }>;
 }
 
@@ -125,7 +132,7 @@ export interface StepDefinition {
   provider: "Google" | "Microsoft";
 
   // Execution characteristics
-  automatability: "automated" | "supervised" | "manual";
+  automatability: AutomatabilityValue;
   automatable: boolean; // Keep for backward compatibility, derive from automatability
 
   // Dependencies and flow

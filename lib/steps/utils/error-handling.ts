@@ -32,7 +32,7 @@ export function handleCheckError(
         method: "AUTH_ERROR",
         url: error.provider || "unknown",
         error: `Authentication Error: ${error.message}`,
-        provider: error.provider === "google" ? "google" : "microsoft",
+        provider: error.provider,
       }),
     );
 

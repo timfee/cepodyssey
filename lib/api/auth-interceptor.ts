@@ -1,11 +1,13 @@
 import { APIError } from "./utils";
 import { auth } from "@/app/(auth)/auth";
 import { ApiLogger } from "./api-logger";
+import type { ProviderValue } from "@/lib/types";
+import { Provider } from "@/lib/constants/enums";
 
 export class AuthenticationError extends APIError {
   constructor(
     message: string,
-    public provider: "google" | "microsoft",
+    public provider: ProviderValue,
     public originalError?: unknown,
   ) {
     super(message, 401, "AUTH_EXPIRED");
@@ -67,11 +69,11 @@ export function isAuthenticationError(
 
 export function wrapAuthError(
   error: unknown,
-  provider: "google" | "microsoft",
+  provider: ProviderValue,
 ): AuthenticationError {
   if (error instanceof APIError && error.status === 401) {
     return new AuthenticationError(
-      `${provider === "google" ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,
+      `${provider === Provider.GOOGLE ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,
       provider,
       error,
     );
@@ -85,14 +87,14 @@ export function wrapAuthError(
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},
-  provider: "google" | "microsoft",
+  provider: ProviderValue,
   logger?: ApiLogger,
 ): Promise<Response> {
   const session = await auth();
 
   // Select the correct token based on the provider
   const token =
-    provider === "google" ? session?.googleToken : session?.microsoftToken;
+    provider === Provider.GOOGLE ? session?.googleToken : session?.microsoftToken;
 
   if (!token) {
     throw new AuthenticationError(

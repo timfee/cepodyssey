@@ -1,11 +1,12 @@
 import { auth } from "@/app/(auth)/auth";
+import { Provider } from "@/lib/constants/enums";
 
 export interface SessionValidation {
   valid: boolean;
   googleValid: boolean;
   microsoftValid: boolean;
   error?: {
-    provider: "google" | "microsoft" | "both";
+    provider: (typeof Provider)[keyof typeof Provider] | "both";
     message: string;
     code?: string;
   };
@@ -32,8 +33,8 @@ export async function validateSessionTokens(): Promise<SessionValidation> {
       const missingProvider = !session.googleToken
         ? !session.microsoftToken
           ? "both"
-          : "google"
-        : "microsoft";
+          : Provider.GOOGLE
+        : Provider.MICROSOFT;
 
       return {
         valid: false,
@@ -55,8 +56,8 @@ export async function validateSessionTokens(): Promise<SessionValidation> {
       const missingProvider = !googleValid
         ? !microsoftValid
           ? "both"
-          : "google"
-        : "microsoft";
+          : Provider.GOOGLE
+        : Provider.MICROSOFT;
 
       return {
         valid: false,
@@ -67,7 +68,7 @@ export async function validateSessionTokens(): Promise<SessionValidation> {
           message:
             missingProvider === "both"
               ? "Both providers authentication required"
-              : missingProvider === "google"
+              : missingProvider === Provider.GOOGLE
                 ? "Please sign in with Google"
                 : "Please sign in with Microsoft",
           code: "AUTH_MISSING",

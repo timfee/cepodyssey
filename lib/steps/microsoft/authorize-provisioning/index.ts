@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { checkAuthorizeProvisioning } from "./check";
 import { executeAuthorizeProvisioning } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export const M3_OUTPUTS: StepOutput[] = [
   {
@@ -37,7 +38,7 @@ export const m3AuthorizeProvisioning: StepDefinition = {
   activity: "Provisioning",
   provider: "Microsoft",
 
-  automatability: "manual",
+  automatability: Automatability.MANUAL,
   automatable: false,
   inputs: M3_INPUTS,
   outputs: M3_OUTPUTS,
