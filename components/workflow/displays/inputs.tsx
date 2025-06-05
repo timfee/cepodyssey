@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { formatValue } from "./utils";
-import type { DisplayInput } from "./workflow-types";
+import { formatValue } from "../utils";
+import type { DisplayInput } from "../workflow-types";
 
 interface StepCardInputsDisplayProps {
   inputs: DisplayInput[];
