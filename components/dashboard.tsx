@@ -71,31 +71,34 @@ export function AutomationDashboard({
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
 
-  // Effect: load saved progress from localStorage.
+  // Effect: load saved progress from storage.
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain,
-      );
-      if (persisted) {
-        dispatch(initializeSteps(persisted.steps));
-        // Merge outputs saved for this domain.
-        dispatch(addOutputs(persisted.outputs || {}));
-        console.log("Previous progress restored");
-      } else {
-        const initialStepStatuses: Record<string, { status: "pending" }> = {};
-        allStepDefinitions.forEach((def) => {
-          initialStepStatuses[def.id] = { status: "pending" };
-        });
-        dispatch(initializeSteps(initialStepStatuses));
+    async function load() {
+      if (appConfig.domain && appConfig.domain !== "") {
+        const persisted: PersistedProgress | null = await loadProgress(
+          appConfig.domain,
+        );
+        if (persisted) {
+          dispatch(initializeSteps(persisted.steps));
+          // Merge outputs saved for this domain.
+          dispatch(addOutputs(persisted.outputs || {}));
+          console.log("Previous progress restored");
+        } else {
+          const initialStepStatuses: Record<string, { status: "pending" }> = {};
+          allStepDefinitions.forEach((def) => {
+            initialStepStatuses[def.id] = { status: "pending" };
+          });
+          dispatch(initializeSteps(initialStepStatuses));
+        }
       }
     }
+    void load();
   }, [appConfig.domain, dispatch]);
 
   // Effect: persist Redux state for this domain.
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
-      saveProgress(appConfig.domain, {
+      void saveProgress(appConfig.domain, {
         steps: stepsStatusMap,
         outputs: appConfig.outputs,
       });

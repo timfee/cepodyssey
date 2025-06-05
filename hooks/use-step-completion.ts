@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { secureStorage } from "@/lib/storage";
 
 export function useStepCompletion(
   stepId: string,
@@ -6,14 +7,20 @@ export function useStepCompletion(
 ) {
   const storageKey = `workflow-step-status-${stepId}`;
 
-  const [isCompleted, setIsCompleted] = useState(() => {
-    if (typeof window === "undefined") return initialCompleted;
-    const stored = localStorage.getItem(storageKey);
-    return stored ? JSON.parse(stored) : initialCompleted;
-  });
+  const [isCompleted, setIsCompleted] = useState(initialCompleted);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(isCompleted));
+    async function load() {
+      const stored = await secureStorage.load<boolean>(storageKey);
+      if (stored !== null) {
+        setIsCompleted(stored);
+      }
+    }
+    void load();
+  }, [storageKey]);
+
+  useEffect(() => {
+    void secureStorage.save(storageKey, isCompleted);
   }, [isCompleted, storageKey]);
 
   return [isCompleted, setIsCompleted] as const;
