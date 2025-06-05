@@ -19,6 +19,7 @@ if (typeof global.BroadcastChannel === 'undefined') {
     addEventListener() {}
     removeEventListener() {}
   }
+
   
   // @ts-expect-error BroadcastChannel not implemented in jsdom
   global.BroadcastChannel = BroadcastChannelMock
