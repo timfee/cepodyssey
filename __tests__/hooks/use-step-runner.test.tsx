@@ -4,6 +4,7 @@ import { useStepRunner } from '@/components/dashboard/hooks/use-step-runner'
 import { store } from '@/lib/redux/store'
 import { setDomain, setTenantId, initializeSteps, updateStep, clearAllData } from '@/lib/redux/slices/app-state'
 import { StepStatus } from '@/lib/constants/enums'
+import type { StepId } from '@/lib/steps/step-refs'
 
 jest.mock('@/hooks/use-session-sync', () => ({ useSessionSync: jest.fn() }))
 jest.mock('@/hooks/use-step-execution', () => ({ useStepExecution: jest.fn() }))
@@ -40,7 +41,7 @@ it('dispatches error when not authorized', async () => {
   ;(useAutoCheck as jest.Mock).mockReturnValue({ manualRefresh: jest.fn(), isChecking: false })
   const { result } = renderHook(() => useStepRunner(), { wrapper })
   await act(async () => {
-    await result.current.handleExecute('A' as any)
+    await result.current.handleExecute('A' as StepId)
   })
   expect(store.getState().ui.error?.message).toContain('Please sign in')
   expect(execMock).not.toHaveBeenCalled()

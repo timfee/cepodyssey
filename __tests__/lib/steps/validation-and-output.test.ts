@@ -15,10 +15,10 @@ describe('validateRequiredOutputs', () => {
   })
 
   it('detects missing config', () => {
-    const result = validateRequiredOutputs(
-      { domain: null as any, tenantId: null as any, outputs: {} },
-      [],
-    )
+      const result = validateRequiredOutputs(
+        { domain: null as unknown as string, tenantId: null as unknown as string, outputs: {} },
+        [],
+      )
     expect(result.valid).toBe(false)
     expect(result.error?.code).toBe('MISSING_CONFIG')
     expect(result.error?.message).toContain('domain')

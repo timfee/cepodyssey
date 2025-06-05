@@ -5,6 +5,7 @@ import { APIError } from "../../utils";
 import type { ServicePrincipal, AppRoleAssignment } from "../types";
 import type { ApiLogger } from "../../api-logger";
 
+/** Helpers for working with Microsoft service principals. */
 export const servicePrincipals = {
   async getByAppId(appId: string, logger?: ApiLogger): Promise<ServicePrincipal | null> {
     try {

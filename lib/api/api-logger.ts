@@ -3,6 +3,10 @@ import { config } from "@/lib/config";
 import { serverLogger } from "@/lib/logging/server-logger";
 import { randomUUID } from "crypto";
 
+/**
+ * Collects request and response metadata during server actions. Logs are
+ * streamed to the client for debugging when API debug mode is enabled.
+ */
 export class ApiLogger {
   /**
    * Add an arbitrary log message.

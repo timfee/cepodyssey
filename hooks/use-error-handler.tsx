@@ -1,6 +1,9 @@
 import { useAppDispatch } from "./use-redux";
 import { setError } from "@/lib/redux/slices/ui-state";
 
+/**
+ * Returns a helper for dispatching errors to the global error modal.
+ */
 export function useErrorHandler() {
   const dispatch = useAppDispatch();
 

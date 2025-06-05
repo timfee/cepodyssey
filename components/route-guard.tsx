@@ -9,6 +9,10 @@ interface RouteGuardProps {
   requireAuth?: boolean;
 }
 
+/**
+ * Protects pages that require authentication and handles redirect logic
+ * client-side to avoid exposing protected content.
+ */
 export function RouteGuard({ children, requireAuth = true }: RouteGuardProps) {
   const { status } = useSession();
   const router = useRouter();

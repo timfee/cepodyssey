@@ -1,3 +1,6 @@
+/**
+ * Structure of a single log entry captured by the server logger.
+ */
 export interface LogEntry {
   id: string;
   timestamp: string;
@@ -17,6 +20,10 @@ export interface LogEntry {
   };
 }
 
+/**
+ * Minimal interface implemented by loggers that support retrieval
+ * of recent entries for display in the debug panel.
+ */
 export interface Logger {
   log(entry: Omit<LogEntry, 'id' | 'timestamp'>): void;
   getRecentLogs(count?: number): LogEntry[];

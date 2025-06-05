@@ -13,6 +13,10 @@ interface ActionToolbarProps {
   isLoadingSession: boolean;
 }
 
+/**
+ * Displays the user's authentication and configuration status along with any
+ * required actions before automation can run.
+ */
 export function ActionToolbar({ session, isLoadingSession }: ActionToolbarProps) {
   const domain = useAppSelector((state) => state.app.domain);
   const tenantId = useAppSelector((state) => state.app.tenantId);

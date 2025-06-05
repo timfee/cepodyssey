@@ -18,7 +18,7 @@ export function withExecutionHandling({
 }) {
   return async function (context: StepContext): Promise<StepExecutionResult> {
     try {
-      // Handle boilerplate input validation
+      // Validate that prerequisites are present before executing
       const validation = validateRequiredOutputs(
         context,
         requiredOutputs,

@@ -5,6 +5,7 @@ import { APIError } from "../../utils";
 import type { SynchronizationJob, SynchronizationSchema } from "../types";
 import type { ApiLogger } from "../../api-logger";
 
+/** Microsoft user provisioning job helpers. */
 export const provisioning = {
   async createJob(
     servicePrincipalId: string,

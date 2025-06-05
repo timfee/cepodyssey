@@ -21,11 +21,17 @@ const makeStep = (id: StepId): StepDefinition & { check: jest.Mock; execute: jes
   execute: jest.fn(async () => ({ success: true })),
 })
 
-const ctx = { domain: 'ex', tenantId: 't', outputs: {} }
+import type { StepContext } from '@/lib/types'
+
+const ctx: StepContext = { domain: 'ex', tenantId: 't', outputs: {} }
 
 describe('step registry integration', () => {
   const stepA = makeStep('G-1' as StepId)
-  const stepB: StepDefinition = { ...makeStep('G-2' as StepId), check: undefined, execute: undefined as any }
+  const stepB: StepDefinition = {
+    ...makeStep('G-2' as StepId),
+    check: undefined,
+    execute: undefined as unknown as StepDefinition['execute'],
+  }
   const defs = [stepA, stepB]
 
   it('gets steps and io definitions', () => {
@@ -35,31 +41,31 @@ describe('step registry integration', () => {
   })
 
   it('runs checkStep and passes logger', async () => {
-    const result = await checkStep(defs, 'G-1' as StepId, ctx as any)
+    const result = await checkStep(defs, 'G-1' as StepId, ctx)
     expect(stepA.check).toHaveBeenCalledWith(expect.objectContaining({ domain: 'ex', tenantId: 't', logger: expect.anything() }))
     expect(result.completed).toBe(true)
   })
 
   it('returns message when step lacks check logic', async () => {
-    const res = await checkStep(defs, 'G-2' as StepId, ctx as any)
+    const res = await checkStep(defs, 'G-2' as StepId, ctx)
     expect(res.message).toContain('No check')
   })
 
   it('throws when step id missing', async () => {
-    await expect(checkStep(defs, 'X-0' as StepId, ctx as any)).rejects.toThrow('Step X-0 not found')
+    await expect(checkStep(defs, 'X-0' as StepId, ctx)).rejects.toThrow('Step X-0 not found')
   })
 
   it('executes step or reports missing execute', async () => {
-    const execRes = await executeStep(defs, 'G-1' as StepId, ctx as any)
+    const execRes = await executeStep(defs, 'G-1' as StepId, ctx)
     expect(stepA.execute).toHaveBeenCalledWith(expect.objectContaining({ logger: expect.anything() }))
     expect(execRes.success).toBe(true)
 
-    const missingRes = await executeStep(defs, 'G-2' as StepId, ctx as any)
+    const missingRes = await executeStep(defs, 'G-2' as StepId, ctx)
     expect(missingRes.success).toBe(false)
     expect(missingRes.error?.code).toBe('NO_EXECUTE_FUNCTION')
   })
 
   it('throws when executing unknown step', async () => {
-    await expect(executeStep(defs, 'X-0' as StepId, ctx as any)).rejects.toThrow()
+    await expect(executeStep(defs, 'X-0' as StepId, ctx)).rejects.toThrow()
   })
 })
