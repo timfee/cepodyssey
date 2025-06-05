@@ -3,7 +3,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { ApiLogger } from "@/lib/api/api-logger";
-import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type {
   StepCheckResult,
@@ -12,7 +11,8 @@ import type {
   StepDefinition,
 } from "@/lib/types";
 
-function getStep(stepId: StepId): StepDefinition | undefined {
+async function getStep(stepId: StepId): Promise<StepDefinition | undefined> {
+  const { allStepDefinitions } = await import("@/lib/steps");
   return allStepDefinitions.find((s) => s.id === stepId);
 }
 
@@ -43,7 +43,7 @@ export async function executeStepCheck(
     const sessionValidation = await validateSession();
     if (!sessionValidation.valid) return sessionValidation.error!;
 
-    const step = getStep(stepId);
+    const step = await getStep(stepId);
     if (!step?.check) {
       return { completed: false, message: "No check logic for this step." };
     }
@@ -102,7 +102,7 @@ export async function executeStepAction(
       };
     }
 
-    const step = getStep(stepId);
+    const step = await getStep(stepId);
     if (!step?.execute) {
       return {
         success: false,

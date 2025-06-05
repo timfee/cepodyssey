@@ -1,6 +1,6 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import * as google from "@/lib/api/google";
+import { getUser } from "@/lib/api/google";
 import { APIError } from "@/lib/api/utils";
 import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
@@ -15,7 +15,7 @@ export const checkProvisioningUser = createStepCheck({
     try {
       const token = await getGoogleToken();
       const email = `azuread-provisioning@${context.domain}`;
-      const user = await google.getUser(token, email, context.logger);
+      const user = await getUser(token, email, context.logger);
       if (user?.primaryEmail) {
         return {
           completed: true,

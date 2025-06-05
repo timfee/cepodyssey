@@ -1,4 +1,4 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { startProvisioningJob } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -19,7 +19,7 @@ export const executeStartProvisioning = withExecutionHandling({
     ] as string;
     const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
 
-    await microsoft.startProvisioningJob(microsoftToken, spId, jobId);
+    await startProvisioningJob(microsoftToken, spId, jobId);
 
     return {
       success: true,

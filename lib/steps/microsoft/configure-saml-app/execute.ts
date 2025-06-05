@@ -1,4 +1,4 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { updateApplication, type Application } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -32,7 +32,7 @@ export const executeConfigureSamlApp = withExecutionHandling({
     ] as string;
     const primaryDomain = context.domain as string;
 
-    const appPatchPayload: Partial<microsoft.Application> = {
+    const appPatchPayload: Partial<Application> = {
       identifierUris: [googleSpEntityId, `https://${primaryDomain}`],
       web: {
         redirectUris: [googleAcsUrl],
@@ -43,7 +43,7 @@ export const executeConfigureSamlApp = withExecutionHandling({
       },
     };
 
-    await microsoft.updateApplication(
+    await updateApplication(
       microsoftToken,
       appObjectId,
       appPatchPayload,

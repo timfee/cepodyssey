@@ -1,4 +1,4 @@
-import * as google from "@/lib/api/google";
+import { createUser, getUser, type DirectoryUser } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -17,7 +17,7 @@ export const executeCreateProvisioningUser = withExecutionHandling({
 
     const email = `azuread-provisioning@${domain}`;
     const tempPassword = `P@${Date.now()}w0rd`;
-    const user: google.DirectoryUser = {
+    const user: DirectoryUser = {
       primaryEmail: email,
       name: { givenName: "Microsoft Entra ID", familyName: "Provisioning" },
       password: tempPassword,
@@ -25,12 +25,12 @@ export const executeCreateProvisioningUser = withExecutionHandling({
       changePasswordAtNextLogin: false,
     };
 
-    let result: google.DirectoryUser;
+    let result: DirectoryUser;
     try {
-      result = await google.createUser(token, user, context.logger);
+      result = await createUser(token, user, context.logger);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const existing = await google.getUser(token, email, context.logger);
+        const existing = await getUser(token, email, context.logger);
         if (existing?.primaryEmail && existing.id) {
           return {
             success: true,

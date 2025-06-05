@@ -41,7 +41,7 @@ export function saveProgress(
  * @param domain The primary domain, used as part of the localStorage key.
  * @returns The persisted progress data, or null if not found.
  */
-export function loadProgress(domain: string): PersistedProgress | null {
+export async function loadProgress(domain: string): Promise<PersistedProgress | null> {
   if (typeof window === "undefined" || !domain) return null;
   try {
     const key = getStorageKey(domain);
@@ -50,8 +50,7 @@ export function loadProgress(domain: string): PersistedProgress | null {
     const parsed = JSON.parse(savedData) as PersistedProgress;
 
     // Import step definitions to check which steps are checkable
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { allStepDefinitions } = require("@/lib/steps");
+    const { allStepDefinitions } = await import("@/lib/steps");
 
     // Filter out checkable steps from persisted state
     const filteredSteps: Record<string, StepStatusInfo> = {};

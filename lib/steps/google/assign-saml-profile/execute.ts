@@ -1,4 +1,4 @@
-import * as google from "@/lib/api/google";
+import { assignSamlToOrgUnits } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -15,7 +15,7 @@ export const executeAssignSamlProfile = withExecutionHandling({
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
     ] as string;
 
-    await google.assignSamlToOrgUnits(
+    await assignSamlToOrgUnits(
       token,
       profileFullName,
       [{ orgUnitId: "/", ssoMode: "SAML_SSO_ENABLED" }],

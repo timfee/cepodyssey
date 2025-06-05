@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
-import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
@@ -29,6 +28,7 @@ export function useAutoCheck(
       isCheckingRef.current = true;
       setIsChecking(true);
 
+      const { allStepDefinitions } = await import("@/lib/steps");
       const checkableSteps = allStepDefinitions
         .filter((s) => s.check)
         .map((s) => s.id as StepId);

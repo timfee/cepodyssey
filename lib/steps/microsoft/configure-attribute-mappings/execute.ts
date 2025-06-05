@@ -1,4 +1,4 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { configureAttributeMappings } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
 import { OUTPUT_KEYS } from "@/lib/types";
@@ -26,7 +26,7 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
       id: "GoogleApps",
     };
 
-    await microsoft.configureAttributeMappings(
+    await configureAttributeMappings(
       microsoftToken,
       spId,
       jobId,

@@ -1,4 +1,10 @@
-import * as microsoft from "@/lib/api/microsoft";
+import {
+  createEnterpriseApp,
+  listApplications,
+  getServicePrincipalByAppId,
+  type Application,
+  type ServicePrincipal,
+} from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -16,24 +22,24 @@ export const executeCreateProvisioningApp = withExecutionHandling({
     const appName = "Google Workspace User Provisioning";
 
     let result: {
-      application: microsoft.Application;
-      servicePrincipal: microsoft.ServicePrincipal;
+      application: Application;
+      servicePrincipal: ServicePrincipal;
     };
     try {
-      result = await microsoft.createEnterpriseApp(
+      result = await createEnterpriseApp(
         microsoftToken,
         TEMPLATE_ID,
         appName,
       );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const existingApps = await microsoft.listApplications(
+        const existingApps = await listApplications(
           microsoftToken,
           `displayName eq '${appName}'`,
         );
         const existingApp = existingApps[0];
         if (existingApp?.appId) {
-          const sp = await microsoft.getServicePrincipalByAppId(
+          const sp = await getServicePrincipalByAppId(
             microsoftToken,
             existingApp.appId,
           );

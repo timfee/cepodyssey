@@ -1,6 +1,16 @@
 "use server";
 
-import * as microsoft from "@/lib/api/microsoft";
+import {
+  getServicePrincipalByAppId,
+  listApplications,
+  getServicePrincipalDetails,
+  type SynchronizationJob,
+  getProvisioningJob,
+  listSynchronizationJobs,
+  getApplicationDetails,
+  getSynchronizationSchema,
+  listAppRoleAssignments,
+} from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
@@ -16,10 +26,10 @@ export async function checkMicrosoftServicePrincipal(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const sp = await microsoft.getServicePrincipalByAppId(token, appClientId);
+    const sp = await getServicePrincipalByAppId(token, appClientId);
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
-      const apps = await microsoft.listApplications(
+      const apps = await listApplications(
         token,
         `appId eq '${appClientId}'`,
       );
@@ -58,7 +68,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const sp = await microsoft.getServicePrincipalDetails(token, spObjectId);
+    const sp = await getServicePrincipalDetails(token, spObjectId);
     if (sp?.accountEnabled === true) {
       return { completed: true, message: "Service Principal is enabled." };
     }
@@ -85,15 +95,15 @@ export async function checkMicrosoftProvisioningJobDetails(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    let jobToInspect: microsoft.SynchronizationJob | null = null;
+    let jobToInspect: SynchronizationJob | null = null;
     if (jobId) {
-      jobToInspect = await microsoft.getProvisioningJob(
+      jobToInspect = await getProvisioningJob(
         token,
         spObjectId,
         jobId,
       );
     } else {
-      const jobs = await microsoft.listSynchronizationJobs(token, spObjectId);
+      const jobs = await listSynchronizationJobs(token, spObjectId);
       jobToInspect =
         jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
     }
@@ -155,7 +165,7 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const appDetails = await microsoft.getApplicationDetails(
+    const appDetails = await getApplicationDetails(
       token,
       appObjectId,
     );
@@ -202,7 +212,7 @@ export async function checkMicrosoftAttributeMappingsApplied(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const schema = await microsoft.getSynchronizationSchema(
+    const schema = await getSynchronizationSchema(
       token,
       spObjectId,
       jobId,
@@ -262,7 +272,7 @@ export async function checkMicrosoftAppAssignments(
 ): Promise<StepCheckResult> {
   try {
     const token = await getMicrosoftToken();
-    const assignments = await microsoft.listAppRoleAssignments(
+    const assignments = await listAppRoleAssignments(
       token,
       servicePrincipalObjectId,
     );

@@ -1,4 +1,4 @@
-import * as google from "@/lib/api/google";
+import { createOrgUnit, getOrgUnit, type GoogleOrgUnit } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -38,9 +38,9 @@ export const executeCreateAutomationOu = withExecutionHandling({
       };
     }
 
-    let created: google.GoogleOrgUnit;
+    let created: GoogleOrgUnit;
     try {
-      created = await google.createOrgUnit(
+      created = await createOrgUnit(
         token,
         ouName,
         parentPath,
@@ -49,7 +49,7 @@ export const executeCreateAutomationOu = withExecutionHandling({
       );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const existing = await google.getOrgUnit(
+        const existing = await getOrgUnit(
           token,
           `${parentPath}${ouName}`,
           context.logger,

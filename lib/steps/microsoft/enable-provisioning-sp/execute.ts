@@ -1,4 +1,4 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { patchServicePrincipal } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -19,7 +19,7 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     ] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
 
-    await microsoft.patchServicePrincipal(microsoftToken, spId, {
+    await patchServicePrincipal(microsoftToken, spId, {
       accountEnabled: true,
     });
 

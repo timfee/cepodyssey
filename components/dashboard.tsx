@@ -17,11 +17,7 @@ import { useStore } from "react-redux";
 import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import {
-  loadProgress,
-  saveProgress,
-  type PersistedProgress,
-} from "@/lib/redux/persistence";
+import { loadProgress, saveProgress } from "@/lib/redux/persistence";
 import { addOutputs } from "@/lib/redux/slices/app-config";
 import { setError } from "@/lib/redux/slices/errors";
 import {
@@ -30,9 +26,8 @@ import {
   updateStep,
 } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
-import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
-import type { StepCheckResult, StepContext } from "@/lib/types";
+import type { StepCheckResult, StepContext, StepDefinition } from "@/lib/types";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -68,29 +63,35 @@ export function AutomationDashboard({
     (state: RootState) => state.setupSteps.steps,
   );
 
+  const [stepDefs, setStepDefs] = React.useState<StepDefinition[]>([]);
+
+  useEffect(() => {
+    import("@/lib/steps").then((mod) => setStepDefs(mod.allStepDefinitions));
+  }, []);
+
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
 
   // Effect: load saved progress from localStorage.
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain,
-      );
-      if (persisted) {
-        dispatch(initializeSteps(persisted.steps));
-        // Merge outputs saved for this domain.
-        dispatch(addOutputs(persisted.outputs || {}));
-        console.log("Previous progress restored");
-      } else {
-        const initialStepStatuses: Record<string, { status: "pending" }> = {};
-        allStepDefinitions.forEach((def) => {
-          initialStepStatuses[def.id] = { status: "pending" };
-        });
-        dispatch(initializeSteps(initialStepStatuses));
+    async function init() {
+      if (appConfig.domain && appConfig.domain !== "" && stepDefs.length > 0) {
+        const persisted = await loadProgress(appConfig.domain);
+        if (persisted) {
+          dispatch(initializeSteps(persisted.steps));
+          dispatch(addOutputs(persisted.outputs || {}));
+          console.log("Previous progress restored");
+        } else {
+          const initialStepStatuses: Record<string, { status: "pending" }> = {};
+          stepDefs.forEach((def) => {
+            initialStepStatuses[def.id] = { status: "pending" };
+          });
+          dispatch(initializeSteps(initialStepStatuses));
+        }
       }
     }
-  }, [appConfig.domain, dispatch]);
+    init();
+  }, [appConfig.domain, dispatch, stepDefs]);
 
   // Effect: persist Redux state for this domain.
   useEffect(() => {
@@ -282,7 +283,7 @@ export function AutomationDashboard({
     }
     console.log("Running automation...");
     let anyStepFailed = false;
-    for (const step of allStepDefinitions) {
+    for (const step of stepDefs) {
       const currentStepState = store.getState().setupSteps.steps[step.id];
       if (
         step.automatable &&
@@ -300,10 +301,10 @@ export function AutomationDashboard({
     if (!anyStepFailed) {
       console.log("All steps completed");
     }
-  }, [handleExecute, store, canRunAutomation]);
+  }, [handleExecute, store, canRunAutomation, stepDefs]);
 
   const ProgressSummary = () => {
-    const totalSteps = allStepDefinitions.length;
+    const totalSteps = stepDefs.length;
     const completedSteps = Object.values(stepsStatusMap).filter(
       (s) => s.status === "completed",
     ).length;

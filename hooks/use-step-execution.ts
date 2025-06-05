@@ -6,7 +6,6 @@ import {
   clearCheckTimestamp,
   updateStep,
 } from "@/lib/redux/slices/setup-steps";
-import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./use-redux";
@@ -17,6 +16,7 @@ export function useStepExecution() {
 
   const executeStep = useCallback(
     async (stepId: StepId) => {
+      const { allStepDefinitions } = await import("@/lib/steps");
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
         ErrorManager.dispatch(new Error(`Step ${stepId} not found`), {

@@ -1,4 +1,4 @@
-import * as google from "@/lib/api/google";
+import { updateSamlProfile, addIdpCredentials } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -23,7 +23,7 @@ export const executeUpdateSamlProfile = withExecutionHandling({
     const idpEntityId = context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID] as string;
     const cert = context.outputs[OUTPUT_KEYS.IDP_CERTIFICATE_BASE64] as string;
 
-    await google.updateSamlProfile(
+    await updateSamlProfile(
       token,
       profileName,
       {
@@ -35,7 +35,7 @@ export const executeUpdateSamlProfile = withExecutionHandling({
       context.logger,
     );
 
-    await google.addIdpCredentials(token, profileName, cert, context.logger);
+    await addIdpCredentials(token, profileName, cert, context.logger);
 
     return {
       success: true,

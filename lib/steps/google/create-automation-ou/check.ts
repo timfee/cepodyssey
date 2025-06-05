@@ -1,5 +1,5 @@
 import { OUTPUT_KEYS } from "@/lib/types";
-import * as google from "@/lib/api/google";
+import { getOrgUnit } from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../../utils/auth";
 import { createStepCheck } from "../../utils/check-factory";
@@ -11,7 +11,7 @@ export const checkAutomationOu = createStepCheck({
   checkLogic: async (_context) => {
     try {
       const token = await getGoogleToken();
-      const orgUnit = await google.getOrgUnit(token, "/Automation");
+      const orgUnit = await getOrgUnit(token, "/Automation");
       if (orgUnit?.orgUnitId && orgUnit.orgUnitPath) {
         return {
           completed: true,

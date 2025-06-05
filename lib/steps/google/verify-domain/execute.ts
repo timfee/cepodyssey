@@ -1,4 +1,4 @@
-import * as google from "@/lib/api/google";
+import { getLoggedInUser, addDomain } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -18,9 +18,9 @@ export const executeVerifyDomain = withExecutionHandling({
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    const user = await google.getLoggedInUser(token);
+    const user = await getLoggedInUser(token);
     try {
-      await google.addDomain(token, context.domain);
+      await addDomain(token, context.domain);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
         return {
