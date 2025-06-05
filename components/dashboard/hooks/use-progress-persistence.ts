@@ -9,12 +9,12 @@ import type { RootState } from "@/lib/redux/store";
 export function useProgressPersistence() {
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.app);
+  const domain = useAppSelector((state: RootState) => state.app.domain);
   const stepsStatusMap = useAppSelector((state: RootState) => state.app.steps);
 
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      const persisted: PersistedProgress | null = loadProgress(appConfig.domain);
+    if (domain && domain !== "") {
+      const persisted: PersistedProgress | null = loadProgress(domain);
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
         dispatch(addOutputs(persisted.outputs || {}));
@@ -26,14 +26,14 @@ export function useProgressPersistence() {
         dispatch(initializeSteps(initialStatuses));
       }
     }
-  }, [appConfig.domain, dispatch]);
+  }, [domain, dispatch]);
 
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      void saveProgress(appConfig.domain, {
+    if (domain && domain !== "") {
+      void saveProgress(domain, {
         steps: stepsStatusMap,
         outputs: store.getState().app.outputs,
       });
     }
-  }, [appConfig.domain, stepsStatusMap, store]);
+  }, [domain, stepsStatusMap, store]);
 }

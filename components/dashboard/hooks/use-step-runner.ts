@@ -16,7 +16,8 @@ export function useStepRunner() {
   const { session, status } = useSessionSync();
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.app);
+  const domain = useAppSelector((state: RootState) => state.app.domain);
+  const tenantId = useAppSelector((state: RootState) => state.app.tenantId);
 
   const currentSession = session;
   const canRunAutomation = useMemo(
@@ -24,10 +25,10 @@ export function useStepRunner() {
       !!(
         currentSession?.hasGoogleAuth &&
         currentSession?.hasMicrosoftAuth &&
-        appConfig.domain &&
-        appConfig.tenantId
+        domain &&
+        tenantId
       ),
-    [currentSession?.hasGoogleAuth, currentSession?.hasMicrosoftAuth, appConfig.domain, appConfig.tenantId]
+    [currentSession?.hasGoogleAuth, currentSession?.hasMicrosoftAuth, domain, tenantId]
   );
 
   const { executeStep } = useStepExecution();
@@ -47,7 +48,7 @@ export function useStepRunner() {
 
   const executeCheck = useCallback(
     async (stepId: StepId): Promise<StepCheckResult> => {
-      if (!appConfig.domain || !appConfig.tenantId) {
+      if (!domain || !tenantId) {
         return { completed: false } as StepCheckResult;
       }
 
@@ -56,8 +57,8 @@ export function useStepRunner() {
       );
 
       const context: StepContext = {
-        domain: appConfig.domain,
-        tenantId: appConfig.tenantId,
+        domain,
+        tenantId,
         outputs: store.getState().app.outputs,
       };
 
@@ -158,7 +159,7 @@ export function useStepRunner() {
         return { completed: false } as StepCheckResult;
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store]
+    [domain, tenantId, dispatch, store]
   );
 
   const { manualRefresh, isChecking } = useAutoCheck(executeCheck);

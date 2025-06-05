@@ -15,7 +15,8 @@ interface SessionGuardProps {
 
 export function SessionGuard({ serverSession, children }: SessionGuardProps) {
   const { session, status } = useSessionSync();
-  const appConfig = useAppSelector((state) => state.app);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
   const isLoading = status === "loading";
   const currentSession = session ?? serverSession;
 
@@ -34,7 +35,7 @@ export function SessionGuard({ serverSession, children }: SessionGuardProps) {
       !session?.hasMicrosoftAuth ||
       (session?.error as unknown as string) === "MissingTokens" ||
       session?.error === "RefreshTokenError") &&
-    (appConfig.domain || appConfig.tenantId)
+    (domain || tenantId)
   ) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">

@@ -25,7 +25,8 @@ import { useErrorHandler } from "@/hooks/use-error-handler";
  */
 export function AuthStatus() {
   const { data: session, status } = useSession();
-  const { domain, tenantId } = useAppSelector((state) => state.app);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
   const { handleError } = useErrorHandler();
 
   const isConfigReady = !!domain && !!tenantId;

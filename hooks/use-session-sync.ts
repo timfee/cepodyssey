@@ -16,7 +16,8 @@ export function useSessionSync() {
   const dispatch = useAppDispatch();
   const { handleError } = useErrorHandler();
   const lastCheckRef = useRef<number>(Date.now());
-  const appConfig = useAppSelector((state) => state.app);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
 
   useEffect(() => {
     const checkInterval = setInterval(async () => {
@@ -36,14 +37,14 @@ export function useSessionSync() {
 
   useEffect(() => {
     if (session && status === "authenticated") {
-      if (session.authFlowDomain && !appConfig.domain) {
+      if (session.authFlowDomain && !domain) {
         console.log(
           "Syncing domain from session to Redux:",
           session.authFlowDomain,
         );
         dispatch(setDomain(session.authFlowDomain));
       }
-      if (session.microsoftTenantId && !appConfig.tenantId) {
+      if (session.microsoftTenantId && !tenantId) {
         console.log(
           "Syncing tenant from session to Redux:",
           session.microsoftTenantId,
@@ -51,7 +52,7 @@ export function useSessionSync() {
         dispatch(setTenantId(session.microsoftTenantId));
       }
     }
-  }, [session, status, appConfig.domain, appConfig.tenantId, dispatch]);
+  }, [session, status, domain, tenantId, dispatch]);
 
   return { session, status };
 }
