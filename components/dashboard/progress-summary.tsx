@@ -6,7 +6,6 @@ import { Progress } from "@/components/ui/progress";
 import { RefreshCw, Loader2Icon, PlayIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
 import { clearAllCheckTimestamps } from "@/lib/redux/slices/app-state";
-import { allStepDefinitions } from "@/lib/steps";
 import { StepStatus } from "@/lib/constants/enums";
 
 interface ProgressSummaryProps {
@@ -20,7 +19,13 @@ export function ProgressSummary({ onRunAll, onRefresh, isRefreshing, canRunAutom
   const dispatch = useAppDispatch();
   const stepsStatusMap = useAppSelector((state) => state.app.steps);
 
-  const totalSteps = allStepDefinitions.length;
+  const [totalSteps, setTotalSteps] = React.useState(0);
+  React.useEffect(() => {
+    void (async () => {
+      const { allStepDefinitions } = await import("@/lib/steps");
+      setTotalSteps(allStepDefinitions.length);
+    })();
+  }, []);
   const completedSteps = Object.values(stepsStatusMap).filter(
     (s) => s.status === StepStatus.COMPLETED,
   ).length;

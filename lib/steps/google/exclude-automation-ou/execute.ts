@@ -1,4 +1,4 @@
-import { googleApi } from "@/lib/api/google";
+import { assignSamlToOrgUnits } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -15,7 +15,8 @@ export const executeExcludeAutomationOu = withExecutionHandling({
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
     );
 
-    await googleApi.saml.assignToOrgUnits(
+    await assignSamlToOrgUnits(
+      token,
       profileFullName,
       [{ orgUnitId: "/Automation", ssoMode: "SSO_OFF" }],
       context.logger,

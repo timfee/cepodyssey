@@ -6,6 +6,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
+import { getTokens } from "../../utils/auth";
 
 export const executeConfigureAttributeMappings = withExecutionHandling({
   stepId: STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,

@@ -1,4 +1,4 @@
-import { googleApi } from "@/lib/api/google";
+import { createSamlProfile, listSamlProfiles } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -14,10 +14,10 @@ export const executeInitiateSamlProfile = withExecutionHandling({
 
     let result;
     try {
-      result = await googleApi.saml.createProfile(profileDisplayName);
+      result = await createSamlProfile(token, profileDisplayName);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const profiles = await googleApi.saml.listProfiles();
+        const profiles = await listSamlProfiles(token);
         const existing = profiles.find(
           (p) => p.displayName === profileDisplayName,
         );

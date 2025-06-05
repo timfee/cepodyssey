@@ -1,4 +1,9 @@
-import { googleApi } from "@/lib/api/google";
+import {
+  getUser,
+  listRoleAssignments,
+  assignAdminRole,
+} from "@/lib/api/google";
+
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -46,7 +51,8 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         error: { message: "Customer ID not found in previous step." },
       };
     }
-    const user = await googleApi.users.get(email);
+
+    const user = await getUser(token, email);
 
     if (user?.isAdmin) {
       return {
@@ -56,7 +62,8 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
-    const roles = await googleApi.roles.listAssignments(
+    const roles = await listRoleAssignments(
+      token,
       email,
       undefined,
       context.logger,

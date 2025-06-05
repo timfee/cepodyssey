@@ -6,10 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppSelector } from "@/hooks/use-redux";
-import { allStepDefinitions } from "@/lib/steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/metadata";
 import type { StepId } from "@/lib/steps/step-refs";
-import type { ManagedStep, StepStatusInfo } from "@/lib/types";
+import type { ManagedStep, StepStatusInfo, StepDefinition } from "@/lib/types";
 import { StepStatus } from "@/lib/constants/enums";
 import React from "react";
 import { WorkflowStepCard } from "./workflow";
@@ -25,8 +24,16 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const outputs = useAppSelector((state) => state.app.outputs);
   const canRunGlobalSteps = !!(domain && tenantId);
 
+  const [stepDefs, setStepDefs] = React.useState<StepDefinition[]>([]);
+  React.useEffect(() => {
+    void (async () => {
+      const { allStepDefinitions } = await import("@/lib/steps");
+      setStepDefs(allStepDefinitions);
+    })();
+  }, []);
+
   const managedSteps: ManagedStep[] = React.useMemo(() => {
-    return allStepDefinitions.map((definition) => {
+    return stepDefs.map((definition) => {
       const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || {
         status: StepStatus.PENDING,
       };
@@ -120,14 +127,8 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
                   allOutputs={outputs}
                   onExecute={onExecuteStep}
                   canRunGlobal={canRunGlobalSteps}
-                  stepInputDefs={getStepInputs(
-                    allStepDefinitions,
-                    step.id as StepId,
-                  )}
-                  stepOutputDefs={getStepOutputs(
-                    allStepDefinitions,
-                    step.id as StepId,
-                  )}
+                  stepInputDefs={getStepInputs(stepDefs, step.id as StepId)}
+                  stepOutputDefs={getStepOutputs(stepDefs, step.id as StepId)}
                 />
               ))}
             </div>
