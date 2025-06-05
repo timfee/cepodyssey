@@ -34,6 +34,7 @@ import { allStepDefinitions } from "@/lib/steps";
 import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
 import type { StepId } from "@/lib/steps/step-refs";
+import type { StepCheckResult } from "@/lib/types";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
   StepContext,
@@ -172,8 +173,10 @@ export function AutomationDashboard({
   );
 
   const executeCheck = useCallback(
-    async (stepId: StepId) => {
-      if (!appConfig.domain || !appConfig.tenantId) return;
+    async (stepId: StepId): Promise<StepCheckResult> => {
+      if (!appConfig.domain || !appConfig.tenantId) {
+        return { completed: false } as StepCheckResult;
+      }
 
       // Set the step to in_progress state before checking
       dispatch(
@@ -218,7 +221,7 @@ export function AutomationDashboard({
               lastCheckedAt: new Date().toISOString(),
             }),
           );
-          return;
+          return checkResult;
         }
 
         if (!checkResult.completed && checkResult.outputs?.errorCode) {
@@ -248,7 +251,7 @@ export function AutomationDashboard({
               }),
             );
           }
-          return;
+          return checkResult;
         }
 
         if (checkResult.completed) {
@@ -277,6 +280,7 @@ export function AutomationDashboard({
             }),
           );
         }
+        return checkResult;
       } catch (error) {
         console.error(`Unexpected error in executeCheck for ${stepId}:`, error);
 
@@ -297,6 +301,7 @@ export function AutomationDashboard({
                 : "An unexpected error occurred",
           }),
         );
+        return { completed: false } as StepCheckResult;
       }
     },
     [appConfig.domain, appConfig.tenantId, dispatch, store],

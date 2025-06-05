@@ -2,14 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
+import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
+import { store } from "@/lib/redux/store";
+import { addApiLog } from "@/lib/redux/slices/debug-panel";
 
 /**
  * Automatically checks step status when configuration is available.
  * Each step is only checked once per session unless manually refreshed.
  */
 export function useAutoCheck(
-  executeCheck: (stepId: StepId) => Promise<void>,
+  executeCheck: (stepId: StepId) => Promise<StepCheckResult>,
 ) {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
@@ -43,7 +46,12 @@ export function useAutoCheck(
           status?.status === "pending";
 
         if (shouldCheck && !recentlyChecked) {
-          await executeCheck(stepId);
+          const checkResult = await executeCheck(stepId);
+          if (checkResult && 'apiLogs' in checkResult && checkResult.apiLogs) {
+            checkResult.apiLogs.forEach((log) => {
+              store.dispatch(addApiLog(log));
+            });
+          }
           checkedSteps.current.add(stepId);
           await new Promise((r) => setTimeout(r, 300));
         }

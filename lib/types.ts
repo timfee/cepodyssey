@@ -33,6 +33,19 @@ export interface StepCheckResult {
   completed: boolean;
   message?: string;
   outputs?: Record<string, unknown>;
+  apiLogs?: Array<{
+    id: string;
+    timestamp: string;
+    method: string;
+    url: string;
+    headers?: Record<string, string>;
+    requestBody?: unknown;
+    responseStatus?: number;
+    responseBody?: unknown;
+    error?: string;
+    duration?: number;
+    provider?: "google" | "microsoft" | "other";
+  }>;
 }
 
 /**
@@ -47,6 +60,19 @@ export interface StepExecutionResult {
     message: string;
     code?: string;
   };
+  apiLogs?: Array<{
+    id: string;
+    timestamp: string;
+    method: string;
+    url: string;
+    headers?: Record<string, string>;
+    requestBody?: unknown;
+    responseStatus?: number;
+    responseBody?: unknown;
+    error?: string;
+    duration?: number;
+    provider?: "google" | "microsoft" | "other";
+  }>;
 }
 
 export interface StepInput {
