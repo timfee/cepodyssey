@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../../auth-interceptor";
+import { microsoftApiClient } from "../client";
 import { microsoftAuthUrls } from "../../url-builder";
 import { APIError } from "../../utils";
 import type { SamlMetadata } from "../types";
@@ -11,11 +11,11 @@ export const saml = {
     logger?: ApiLogger,
   ): Promise<SamlMetadata> {
     const url = microsoftAuthUrls.samlMetadata(tenantId, appId);
-    const res = await fetchWithAuth(url, {}, "microsoft", logger);
-    if (!res.ok) {
-      throw new APIError(`Failed to fetch SAML metadata: ${res.statusText}`, res.status);
-    }
-    const xml = await res.text();
+    const xml = await microsoftApiClient.request<string>(
+      url,
+      { method: "GET", responseType: "text" },
+      logger,
+    );
     const entityIdMatch = /entityID="([^"]+)"/.exec(xml);
     const ssoUrlMatch = /SingleSignOnService[^>]*Location="([^"]+)"/.exec(xml);
     const certMatch = /<X509Certificate>([^<]+)<\/X509Certificate>/.exec(xml);

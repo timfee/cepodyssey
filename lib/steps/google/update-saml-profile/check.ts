@@ -6,8 +6,8 @@ import {
   listIdpCredentials,
   type InboundSamlSsoProfile,
 } from "@/lib/api/google";
+
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
 import { getRequiredOutput } from "../../utils/get-output";
 
@@ -26,6 +26,7 @@ export const checkSamlProfileUpdate = createStepCheck({
       OUTPUT_KEYS.IDP_ENTITY_ID,
     );
     try {
+
       const token = await getGoogleToken();
       let profile: InboundSamlSsoProfile | null = null;
       if (profileName.startsWith("inboundSamlSsoProfiles/")) {

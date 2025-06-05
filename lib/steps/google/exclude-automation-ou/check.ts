@@ -5,8 +5,8 @@ import {
   listIdpCredentials,
   type InboundSamlSsoProfile,
 } from "@/lib/api/google";
+
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { createStepCheck } from "../../utils/check-factory";
 import { handleCheckError } from "../../utils/error-handling";
 import { getRequiredOutput } from "../../utils/get-output";

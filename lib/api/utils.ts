@@ -36,63 +36,6 @@ export async function withRetry<T>(
   throw lastError;
 }
 
-export async function fetchWithAuth(
-  url: string,
-  token: string,
-  init?: RequestInit,
-  logger?: ApiLogger,
-): Promise<Response> {
-  const doFetch = async (): Promise<Response> => {
-    const startTime = Date.now();
-    const logId = logger?.logRequest(url, {
-      ...init,
-      headers: {
-        ...init?.headers,
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    try {
-      const response = await fetch(url, {
-        ...init,
-        headers: {
-          ...init?.headers,
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (logger && logId) {
-        const responseClone = response.clone();
-        const responseBody = await responseClone.json().catch(() => null);
-        logger.logResponse(
-          logId,
-          response,
-          responseBody,
-          Date.now() - startTime,
-        );
-      }
-
-      return response;
-    } catch (error) {
-      if (logger && logId) {
-        logger.logError(logId, error);
-      }
-      throw error;
-    }
-  };
-
-  const fetcher = () => withRetry(doFetch);
-
-  const method = (init?.method ?? "GET").toUpperCase();
-  if (method === "GET") {
-    const key = `${method}:${url}:${JSON.stringify(init ?? {})}`;
-    return requestCache.request(key, fetcher);
-  }
-
-  return fetcher();
-}
 
 export async function handleApiResponse<T>(
   res: Response,

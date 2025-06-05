@@ -17,8 +17,6 @@ export const executeConfigureSamlApp = withExecutionHandling({
     OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-
-    const { microsoftToken } = await getTokens();
     const appObjectId = getRequiredOutput<string>(
       context,
       OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID,

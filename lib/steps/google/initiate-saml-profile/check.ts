@@ -2,7 +2,6 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
 import { listSamlProfiles } from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
 
 export const checkSamlProfile = createStepCheck({

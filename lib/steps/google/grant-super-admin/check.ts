@@ -15,6 +15,7 @@ export const checkSuperAdmin = createStepCheck({
     try {
       const token = await getGoogleToken();
       const user = await getUser(token, email, context.logger);
+
       if (!user) {
         return {
           completed: false,
@@ -31,6 +32,7 @@ export const checkSuperAdmin = createStepCheck({
       const roles = await listRoleAssignments(
         token,
         email,
+        undefined,
         context.logger,
       );
       const hasSuperAdmin = roles.some((r) => r.roleId === "3");

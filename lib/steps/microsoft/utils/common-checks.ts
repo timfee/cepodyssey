@@ -12,12 +12,27 @@ import {
   listAppRoleAssignments,
 } from "@/lib/api/microsoft";
 import type { ApiLogger } from "@/lib/api/api-logger";
-import type { SynchronizationJob, SynchronizationRule } from "@/lib/api/microsoft";
-import type * as MicrosoftGraph from "microsoft-graph";
+import type { SynchronizationJob } from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
+import { portalUrls } from "@/lib/api/url-builder";
 import { handleCheckError } from "../../utils/error-handling";
+
+function createCheckFunction<T, A extends unknown[]>(
+  checkName: string,
+  checkLogic: (...args: A) => Promise<T>,
+  resultMapper: (data: T) => StepCheckResult,
+) {
+  return async (...args: A): Promise<StepCheckResult> => {
+    try {
+      const result = await checkLogic(...args);
+      return resultMapper(result);
+    } catch (e) {
+      return handleCheckError(e, `Check failed: ${checkName}`);
+    }
+  };
+}
 
 /**
  * Ensure the Azure service principal for the given app client ID exists.
@@ -28,7 +43,7 @@ const checkMicrosoftServicePrincipalInner = createCheckFunction(
   "MicrosoftServicePrincipal",
   async (token: string, appClientId: string) => {
     const sp = await getServicePrincipalByAppId(token, appClientId);
-
+    
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
       const apps = await microsoftApi.applications.list(
@@ -60,8 +75,9 @@ const checkMicrosoftServicePrincipalInner = createCheckFunction(
 
 export async function checkMicrosoftServicePrincipal(
   appClientId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
-  return checkMicrosoftServicePrincipalInner(appClientId);
+  return checkMicrosoftServicePrincipalInner(appClientId, logger);
 }
 
 /**
@@ -88,8 +104,9 @@ const checkMicrosoftServicePrincipalEnabledInner = createCheckFunction(
 
 export async function checkMicrosoftServicePrincipalEnabled(
   spObjectId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
-  return checkMicrosoftServicePrincipalEnabledInner(spObjectId);
+  return checkMicrosoftServicePrincipalEnabledInner(spObjectId, logger);
 }
 
 /**
@@ -98,7 +115,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
 
 const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
   "MicrosoftProvisioningJobDetails",
-  async (token: string, spObjectId: string, jobId?: string) => {
+  async (spObjectId: string, jobId?: string, logger?: ApiLogger) => {
     try {
       let jobToInspect: SynchronizationJob | null = null;
       if (jobId) {
@@ -106,6 +123,7 @@ const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
           token,
           spObjectId,
           jobId,
+          logger,
         );
       } else {
         const jobs = await listSynchronizationJobs(token, spObjectId);
@@ -163,8 +181,9 @@ const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
 export async function checkMicrosoftProvisioningJobDetails(
   spObjectId: string,
   jobId?: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
-  return checkMicrosoftProvisioningJobDetailsInner(spObjectId, jobId);
+  return checkMicrosoftProvisioningJobDetailsInner(spObjectId, jobId, logger);
 }
 
 /**
@@ -174,10 +193,10 @@ export async function checkMicrosoftProvisioningJobDetails(
 const checkMicrosoftSamlAppSettingsAppliedInner = createCheckFunction(
   "MicrosoftSamlAppSettingsApplied",
   async (
-    token: string,
     appObjectId: string,
     expectedSpEntityId: string,
     expectedAcsUrl: string,
+    logger?: ApiLogger,
   ) => {
     const appDetails = await getApplicationDetails(token, appObjectId);
 
@@ -218,11 +237,13 @@ export async function checkMicrosoftSamlAppSettingsApplied(
   appObjectId: string,
   expectedSpEntityId: string,
   expectedAcsUrl: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
   return checkMicrosoftSamlAppSettingsAppliedInner(
     appObjectId,
     expectedSpEntityId,
     expectedAcsUrl,
+    logger,
   );
 }
 
@@ -232,12 +253,13 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 
 const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
   "MicrosoftAttributeMappingsApplied",
-  async (token: string, spObjectId: string, jobId: string) => {
+  async (spObjectId: string, jobId: string, logger?: ApiLogger) => {
     try {
       const schema = await getSynchronizationSchema(
         token,
         spObjectId,
         jobId,
+        logger,
       );
       const userMappingRule = schema?.synchronizationRules?.find((rule) =>
         rule.objectMappings?.some(
@@ -292,8 +314,9 @@ const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
 export async function checkMicrosoftAttributeMappingsApplied(
   spObjectId: string,
   jobId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
-  return checkMicrosoftAttributeMappingsAppliedInner(spObjectId, jobId);
+  return checkMicrosoftAttributeMappingsAppliedInner(spObjectId, jobId, logger);
 }
 
 /**
@@ -301,11 +324,12 @@ export async function checkMicrosoftAttributeMappingsApplied(
  */
 const checkMicrosoftAppAssignmentsInner = createCheckFunction(
   "MicrosoftAppAssignments",
-  async (token: string, servicePrincipalObjectId: string) => {
+  async (servicePrincipalObjectId: string, logger?: ApiLogger) => {
     try {
       const assignments = await listAppRoleAssignments(
         token,
         servicePrincipalObjectId,
+        logger,
       );
       const hasAssignments = assignments && assignments.length > 0;
       return {
@@ -331,7 +355,5 @@ export async function checkMicrosoftAppAssignments(
   servicePrincipalObjectId: string,
   logger?: ApiLogger,
 ): Promise<StepCheckResult> {
-
-  return checkMicrosoftAppAssignmentsInner(servicePrincipalObjectId);
-
+  return checkMicrosoftAppAssignmentsInner(servicePrincipalObjectId, logger);
 }

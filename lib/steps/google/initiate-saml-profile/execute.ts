@@ -3,7 +3,6 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { AlreadyExistsError } from "@/lib/api/errors";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 
@@ -11,7 +10,6 @@ export const executeInitiateSamlProfile = withExecutionHandling({
   stepId: STEP_IDS.INITIATE_SAML_PROFILE,
   requiredOutputs: [],
   executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
     const profileDisplayName = "Azure AD SSO";
 
     let result;
