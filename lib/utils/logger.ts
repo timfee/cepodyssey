@@ -20,7 +20,7 @@ import { config } from "@/lib/config";
 export class Logger {
   private static level: LogLevel = LogLevel.INFO;
   private static logLevelToShowInToasts: LogLevel = LogLevel.WARN;
-  private static isDevelopment = process.env.NODE_ENV === "development";
+  private static isDevelopment = config.NODE_ENV === "development";
   private static isEnabled = config.NEXT_PUBLIC_LOG_TO_CONSOLE !== "false";
   private static history: LogEntry[] = [];
   private static maxHistorySize = 100;

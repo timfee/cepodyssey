@@ -1,8 +1,7 @@
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { validateRequiredOutputs } from "../../utils/validation";
@@ -16,7 +15,6 @@ export const executeGrantSuperAdmin = withExecutionHandling({
     OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
 
     const validation = validateRequiredOutputs(context, [
       OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
@@ -48,7 +46,7 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         error: { message: "Customer ID not found in previous step." },
       };
     }
-    const user = await google.getUser(token, email);
+    const user = await googleApi.users.get(email);
 
     if (user?.isAdmin) {
       return {
@@ -58,9 +56,9 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
-    const roles = await google.listRoleAssignments(
-      token,
+    const roles = await googleApi.roles.listAssignments(
       email,
+      undefined,
       context.logger,
     );
     if (roles.some((r) => r.roleId === "3")) {
@@ -72,7 +70,12 @@ export const executeGrantSuperAdmin = withExecutionHandling({
       };
     }
 
-    await google.assignAdminRole(token, email, "3", customerId, context.logger);
+    await googleApi.roles.assign(
+      email,
+      "3",
+      customerId,
+      context.logger,
+    );
 
     return {
       success: true,

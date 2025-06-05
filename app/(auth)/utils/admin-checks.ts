@@ -1,6 +1,7 @@
 import { withRetry } from "@/lib/api/utils";
 import { Logger } from "@/lib/utils/logger";
 import type { JWT } from "next-auth/jwt";
+import { googleDirectoryUrls, microsoftGraphUrls } from "@/lib/api/url-builder";
 
 export async function validateTokenPresence(token: JWT): Promise<{
   valid: boolean;
@@ -29,9 +30,7 @@ export async function checkGoogleAdmin(
     Logger.warn("[Auth]", "checkGoogleAdmin: Email or accessToken missing.");
     return false;
   }
-  const fetchUrl = `${process.env.GOOGLE_API_BASE}/admin/directory/v1/users/${encodeURIComponent(
-    email,
-  )}?fields=isAdmin,suspended,primaryEmail`;
+  const fetchUrl = googleDirectoryUrls.users.get(email);
 
   Logger.debug(
     "[Auth]",
@@ -96,7 +95,7 @@ export async function checkMicrosoftAdmin(accessToken: string): Promise<boolean>
     Logger.warn("[Auth]", "checkMicrosoftAdmin: AccessToken missing.");
     return false;
   }
-  const fetchUrl = `${process.env.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
+  const fetchUrl = microsoftGraphUrls.me.memberOf();
   Logger.debug(
     "[Auth]",
     `checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`,

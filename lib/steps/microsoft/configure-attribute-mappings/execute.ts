@@ -15,7 +15,6 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_JOB_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const { microsoftToken } = await getTokens();
     const spId = getRequiredOutput<string>(
       context,
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,

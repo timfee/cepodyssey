@@ -1,8 +1,7 @@
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -16,7 +15,6 @@ export const executeUpdateSamlProfile = withExecutionHandling({
     OUTPUT_KEYS.IDP_CERTIFICATE_BASE64,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
     const profileName = getRequiredOutput<string>(
       context,
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
@@ -28,8 +26,7 @@ export const executeUpdateSamlProfile = withExecutionHandling({
       OUTPUT_KEYS.IDP_CERTIFICATE_BASE64,
     );
 
-    await google.updateSamlProfile(
-      token,
+    await googleApi.saml.updateProfile(
       profileName,
       {
         idpConfig: {
@@ -40,7 +37,11 @@ export const executeUpdateSamlProfile = withExecutionHandling({
       context.logger,
     );
 
-    await google.addIdpCredentials(token, profileName, cert, context.logger);
+    await googleApi.saml.addIdpCredentials(
+      profileName,
+      cert,
+      context.logger,
+    );
 
     return {
       success: true,

@@ -62,5 +62,5 @@ export function isApiDebugEnabled(): boolean {
   const flag = config.NEXT_PUBLIC_ENABLE_API_DEBUG;
   if (flag === "true") return true;
   if (flag === "false") return false;
-  return process.env.NODE_ENV !== "production";
+  return config.NODE_ENV !== "production";
 }
