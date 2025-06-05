@@ -1,16 +1,17 @@
-import { useCallback, useMemo } from "react";
-import { useStore } from "react-redux";
-import { useSessionSync } from "@/hooks/use-session-sync";
-import { useStepExecution } from "@/hooks/use-step-execution";
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { useSessionSync } from "@/hooks/use-session-sync";
+import { useStepExecution } from "@/hooks/use-step-execution";
+import { StepStatus } from "@/lib/constants/enums";
 import { addOutputs, updateStep } from "@/lib/redux/slices/app-state";
 import { setError } from "@/lib/redux/slices/ui-state";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult, StepContext } from "@/lib/types";
+import { useCallback, useMemo } from "react";
+import { useStore } from "react-redux";
 
 export function useStepRunner() {
   const { session, status } = useSessionSync();
@@ -28,7 +29,12 @@ export function useStepRunner() {
         domain &&
         tenantId
       ),
-    [currentSession?.hasGoogleAuth, currentSession?.hasMicrosoftAuth, domain, tenantId]
+    [
+      currentSession?.hasGoogleAuth,
+      currentSession?.hasMicrosoftAuth,
+      domain,
+      tenantId,
+    ]
   );
 
   const { executeStep } = useStepExecution();
@@ -37,7 +43,9 @@ export function useStepRunner() {
     async (stepId: StepId) => {
       if (!canRunAutomation) {
         dispatch(
-          setError({ message: "Please sign in to both Google and Microsoft to continue." })
+          setError({
+            message: "Please sign in to both Google and Microsoft to continue.",
+          })
         );
         return;
       }
@@ -53,7 +61,11 @@ export function useStepRunner() {
       }
 
       dispatch(
-        updateStep({ id: stepId, status: "in_progress", message: "Checking status..." })
+        updateStep({
+          id: stepId,
+          status: StepStatus.IN_PROGRESS,
+          message: "Checking status...",
+        })
       );
 
       const context: StepContext = {
@@ -72,13 +84,15 @@ export function useStepRunner() {
         if (checkResult.outputs?.errorCode === "AUTH_EXPIRED") {
           dispatch(
             setError({
-              message: checkResult.message || "Your session has expired. Please sign in again.",
+              message:
+                checkResult.message ||
+                "Your session has expired. Please sign in again.",
             })
           );
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: "Authentication expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
@@ -96,7 +110,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: errorMessage,
               metadata: checkResult.outputs,
               lastCheckedAt: new Date().toISOString(),
@@ -107,7 +121,9 @@ export function useStepRunner() {
             dispatch(
               setError({
                 message: errorMessage,
-                details: { apiUrl: errorMessage.match(/https:\/\/[^\s]+/)?.[0] },
+                details: {
+                  apiUrl: errorMessage.match(/https:\/\/[^\s]+/)?.[0],
+                },
               })
             );
           } else {
@@ -120,7 +136,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "completed",
+              status: StepStatus.COMPLETED,
               message: checkResult.message || "Check passed",
               metadata: {
                 preExisting: true,
@@ -134,7 +150,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "pending",
+              status: StepStatus.PENDING,
               message: checkResult.message || "Not completed",
               error: null,
               metadata: checkResult.outputs || {},
@@ -146,14 +162,17 @@ export function useStepRunner() {
         dispatch(
           updateStep({
             id: stepId,
-            status: "failed",
+            status: StepStatus.FAILED,
             error: error instanceof Error ? error.message : "Check failed",
             lastCheckedAt: new Date().toISOString(),
           })
         );
         dispatch(
           setError({
-            message: error instanceof Error ? error.message : "An unexpected error occurred",
+            message:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred",
           })
         );
         return { completed: false } as StepCheckResult;
@@ -171,7 +190,9 @@ export function useStepRunner() {
       const current = store.getState().app.steps[step.id];
       if (
         step.automatable &&
-        (!current || current.status === "pending" || current.status === "failed")
+        (!current ||
+          current.status === StepStatus.PENDING ||
+          current.status === StepStatus.FAILED)
       ) {
         await handleExecute(step.id as StepId);
         if (store.getState().app.steps[step.id]?.status === "failed") {

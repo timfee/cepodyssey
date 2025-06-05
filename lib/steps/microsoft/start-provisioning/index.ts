@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkStartProvisioning } from "./check";
 import { executeStartProvisioning } from "./execute";
@@ -13,7 +14,7 @@ export const m5StartProvisioning = defineStep({
     category: "Microsoft",
     activity: "Provisioning",
     provider: "Microsoft",
-    automatability: "supervised",
+    automatability: Automatability.SUPERVISED,
     requires: [STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS],
   },
   io: {

@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkAssignUsers } from "./check";
 import { executeAssignUsers } from "./execute";
@@ -13,7 +14,7 @@ export const m9AssignUsersSso = defineStep({
     category: "Microsoft",
     activity: "SSO",
     provider: "Microsoft",
-    automatability: "manual",
+    automatability: Automatability.MANUAL,
     requires: [STEP_IDS.CREATE_SAML_APP],
   },
   io: {

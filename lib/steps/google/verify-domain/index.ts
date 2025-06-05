@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { checkDomain } from "./check";
 import { executeVerifyDomain } from "./execute";
 
@@ -12,7 +13,7 @@ export const g4VerifyDomain = defineStep({
     category: "Google",
     activity: "Foundation",
     provider: "Google",
-    automatability: "supervised",
+    automatability: Automatability.SUPERVISED,
   },
   io: {
     inputs: [],

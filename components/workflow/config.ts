@@ -15,6 +15,7 @@ import type {
   StepCompletionType,
   StepStatus,
 } from "./workflow-types";
+import { Automatability, StepStatus as StepStatusEnum } from "@/lib/constants/enums";
 
 export interface StatusDisplayConfig {
   icon: LucideIcon;
@@ -107,7 +108,7 @@ export function getStatusDisplayConfig(
   status: StepStatus,
   completionType?: StepCompletionType,
 ): StatusDisplayConfig {
-  if (status === "completed") {
+  if (status === StepStatusEnum.COMPLETED) {
     return completionType === "user-marked"
       ? stateConfigMap["completed-user"]
       : stateConfigMap["completed-verified"];
@@ -118,5 +119,5 @@ export function getStatusDisplayConfig(
 export function getAutomatabilityDisplayConfig(
   automatability?: StepAutomatability,
 ): AutomatabilityDisplayConfig {
-  return automatabilityConfigMap[automatability || "manual"];
+  return automatabilityConfigMap[automatability || Automatability.MANUAL];
 }

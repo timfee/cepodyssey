@@ -1,12 +1,13 @@
-import { APIError, withRetry } from "./utils";
 import { auth } from "@/app/(auth)/auth";
+import { Provider, type ProviderType } from "@/lib/constants/enums";
 import { ApiLogger } from "./api-logger";
+import { APIError, withRetry } from "./utils";
 
 export class AuthenticationError extends APIError {
   constructor(
     message: string,
-    public provider: "google" | "microsoft",
-    public originalError?: unknown,
+    public provider: ProviderType,
+    public originalError?: unknown
   ) {
     super(message, 401, "AUTH_EXPIRED");
     this.name = "AuthenticationError";
@@ -34,7 +35,7 @@ const AUTH_ERROR_PATTERNS = {
 } as const;
 
 export function isAuthenticationError(
-  error: unknown,
+  error: unknown
 ): error is AuthenticationError {
   if (error instanceof AuthenticationError) return true;
 
@@ -53,10 +54,10 @@ export function isAuthenticationError(
       const errorMessage = error.message.toLowerCase();
       return (
         AUTH_ERROR_PATTERNS.google.some((pattern) =>
-          pattern.test(errorMessage),
+          pattern.test(errorMessage)
         ) ||
         AUTH_ERROR_PATTERNS.microsoft.some((pattern) =>
-          pattern.test(errorMessage),
+          pattern.test(errorMessage)
         )
       );
     }
@@ -67,34 +68,35 @@ export function isAuthenticationError(
 
 export function wrapAuthError(
   error: unknown,
-  provider: "google" | "microsoft",
+  provider: ProviderType
 ): AuthenticationError {
   if (error instanceof APIError && error.status === 401) {
     return new AuthenticationError(
-      `${provider === "google" ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,
+      `${provider === Provider.GOOGLE ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,
       provider,
-      error,
+      error
     );
   }
   return new AuthenticationError(
     `Authentication failed for ${provider}. Please sign in again.`,
     provider,
-    error,
+    error
   );
 }
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},
-  provider: "google" | "microsoft",
-  logger?: ApiLogger,
+  provider: ProviderType,
+  logger?: ApiLogger
 ): Promise<Response> {
   const session = await auth();
-  const token = provider === "google" ? session?.googleToken : session?.microsoftToken;
+  const token =
+    provider === "google" ? session?.googleToken : session?.microsoftToken;
 
   if (!token) {
     throw new AuthenticationError(
       `No ${provider} access token found in session.`,
-      provider,
+      provider
     );
   }
 
@@ -110,7 +112,7 @@ export async function fetchWithAuth(
       if (res.status === 401) {
         throw new AuthenticationError(
           `Authentication failed for ${provider}. Token likely expired.`,
-          provider,
+          provider
         );
       }
 
@@ -118,7 +120,10 @@ export async function fetchWithAuth(
     });
 
     if (logger && requestId) {
-      const responseBody = await response.clone().json().catch(() => null);
+      const responseBody = await response
+        .clone()
+        .json()
+        .catch(() => null);
       logger.logResponse(requestId, response, responseBody, Date.now());
     }
 

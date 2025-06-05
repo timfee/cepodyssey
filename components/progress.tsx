@@ -10,6 +10,7 @@ import { allStepDefinitions } from "@/lib/steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/metadata";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep, StepStatusInfo } from "@/lib/types";
+import { StepStatus } from "@/lib/constants/enums";
 import React from "react";
 import { WorkflowStepCard } from "./workflow";
 
@@ -27,17 +28,17 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const managedSteps: ManagedStep[] = React.useMemo(() => {
     return allStepDefinitions.map((definition) => {
       const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || {
-        status: "pending",
+        status: StepStatus.PENDING,
       };
 
       let effectiveStatus = statusInfo.status;
       if (definition.requires && definition.requires.length > 0) {
         const requirementsMet = definition.requires.every((reqId) => {
           const req = stepsStatusMap[reqId];
-          return req && req.status === "completed";
+          return req && req.status === StepStatus.COMPLETED;
         });
-        if (!requirementsMet && statusInfo.status === "pending") {
-          effectiveStatus = "blocked";
+        if (!requirementsMet && statusInfo.status === StepStatus.PENDING) {
+          effectiveStatus = StepStatus.BLOCKED;
         }
       }
 
@@ -65,7 +66,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   ];
 
   const getProgress = (steps: ManagedStep[]) => {
-    const completed = steps.filter((s) => s.status === "completed").length;
+    const completed = steps.filter((s) => s.status === StepStatus.COMPLETED).length;
     return steps.length > 0 ? (completed / steps.length) * 100 : 0;
   };
 
@@ -84,7 +85,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               {cat.label}
               {cat.id !== "all" && (
                 <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                  {cat.steps.filter((s) => s.status === "completed").length}/
+                  {cat.steps.filter((s) => s.status === StepStatus.COMPLETED).length}/
                   {cat.steps.length}
                 </Badge>
               )}
@@ -100,7 +101,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === "completed").length}/
+                  {cat.steps.filter((s) => s.status === StepStatus.COMPLETED).length}/
                   {cat.steps.length} done
                 </span>
               </div>

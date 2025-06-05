@@ -1,10 +1,17 @@
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
+import { StepStatus, type StepStatusType } from "@/lib/constants/enums";
+import {
+  loadProgress,
+  saveProgress,
+  type PersistedProgress,
+} from "@/lib/redux/persistence";
+
+import { addOutputs, initializeSteps } from "@/lib/redux/slices/app-state";
+
+import type { RootState } from "@/lib/redux/store";
+import { allStepDefinitions } from "@/lib/steps";
 import { useEffect } from "react";
 import { useStore } from "react-redux";
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { loadProgress, saveProgress, type PersistedProgress } from "@/lib/redux/persistence";
-import { addOutputs, initializeSteps } from "@/lib/redux/slices/app-state";
-import { allStepDefinitions } from "@/lib/steps";
-import type { RootState } from "@/lib/redux/store";
 
 export function useProgressPersistence() {
   const dispatch = useAppDispatch();
@@ -19,9 +26,9 @@ export function useProgressPersistence() {
         dispatch(initializeSteps(persisted.steps));
         dispatch(addOutputs(persisted.outputs || {}));
       } else {
-        const initialStatuses: Record<string, { status: "pending" }> = {};
+        const initialStatuses: Record<string, { status: StepStatusType }> = {};
         allStepDefinitions.forEach((def) => {
-          initialStatuses[def.id] = { status: "pending" };
+          initialStatuses[def.id] = { status: StepStatus.PENDING };
         });
         dispatch(initializeSteps(initialStatuses));
       }

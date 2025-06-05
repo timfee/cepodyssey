@@ -7,6 +7,7 @@ import { RefreshCw, Loader2Icon, PlayIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
 import { clearAllCheckTimestamps } from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
+import { StepStatus } from "@/lib/constants/enums";
 
 interface ProgressSummaryProps {
   onRunAll: () => Promise<void>;
@@ -20,7 +21,9 @@ export function ProgressSummary({ onRunAll, onRefresh, isRefreshing, canRunAutom
   const stepsStatusMap = useAppSelector((state) => state.app.steps);
 
   const totalSteps = allStepDefinitions.length;
-  const completedSteps = Object.values(stepsStatusMap).filter((s) => s.status === "completed").length;
+  const completedSteps = Object.values(stepsStatusMap).filter(
+    (s) => s.status === StepStatus.COMPLETED,
+  ).length;
   const progressPercent = (completedSteps / totalSteps) * 100;
 
   const refreshChecks = useCallback(async () => {

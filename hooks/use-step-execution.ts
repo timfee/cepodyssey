@@ -1,6 +1,11 @@
 import { executeStepAction } from "@/app/actions/step-actions";
+import { StepStatus } from "@/lib/constants/enums";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
-import { addOutputs, clearCheckTimestamp, updateStep } from "@/lib/redux/slices/app-state";
+import {
+  addOutputs,
+  clearCheckTimestamp,
+  updateStep,
+} from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
@@ -26,10 +31,10 @@ export function useStepExecution() {
       dispatch(
         updateStep({
           id: stepId,
-          status: "in_progress",
+          status: StepStatus.IN_PROGRESS,
           error: null,
           message: undefined,
-        }),
+        })
       );
 
       try {
@@ -49,7 +54,7 @@ export function useStepExecution() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "completed",
+              status: StepStatus.COMPLETED,
               completionType: "server-verified",
               message: result.message,
               metadata: {
@@ -58,7 +63,7 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
         } else {
           const errorMessage =
@@ -67,12 +72,12 @@ export function useStepExecution() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: errorMessage,
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
           ErrorManager.dispatch(new Error(errorMessage), {
             stepId,
@@ -86,10 +91,10 @@ export function useStepExecution() {
         dispatch(
           updateStep({
             id: stepId,
-            status: "failed",
+            status: StepStatus.FAILED,
             error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
-          }),
+          })
         );
         ErrorManager.dispatch(error, {
           stepId,
@@ -97,7 +102,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, domain, tenantId, outputs],
+    [dispatch, domain, tenantId, outputs]
   );
 
   return { executeStep };

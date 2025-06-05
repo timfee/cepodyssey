@@ -3,6 +3,7 @@ import { APIError } from "@/lib/api/utils";
 import { serverLogger } from "@/lib/logging/server-logger";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
+import { Provider } from "@/lib/constants/enums";
 
 export function handleCheckError(
   error: unknown,
@@ -26,7 +27,7 @@ export function handleCheckError(
     void serverLogger.log({
       level: "error",
       category: "auth",
-      provider: error.provider === "google" ? "google" : "microsoft",
+      provider: error.provider === Provider.GOOGLE ? "google" : "microsoft",
       metadata: {
         error: `Authentication Error: ${error.message}`,
       },

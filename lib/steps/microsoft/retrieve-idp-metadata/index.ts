@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkIdpMetadata } from "./check";
 import { executeRetrieveIdpMetadata } from "./execute";
@@ -13,7 +14,7 @@ export const m8RetrieveIdpMetadata = defineStep({
     category: "Microsoft",
     activity: "SSO",
     provider: "Microsoft",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
     requires: [STEP_IDS.CONFIGURE_SAML_APP],
   },
   io: {

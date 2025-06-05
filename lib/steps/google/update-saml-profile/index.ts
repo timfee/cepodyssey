@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkSamlProfileUpdate } from "./check";
 import { executeUpdateSamlProfile } from "./execute";
@@ -13,7 +14,7 @@ export const g6UpdateSamlProfile = defineStep({
     category: "SSO",
     activity: "SSO",
     provider: "Google",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
     requires: [STEP_IDS.INITIATE_SAML_PROFILE, STEP_IDS.RETRIEVE_IDP_METADATA],
   },
   io: {

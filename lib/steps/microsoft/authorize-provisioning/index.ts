@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkAuthorizeProvisioning } from "./check";
 import { executeAuthorizeProvisioning } from "./execute";
@@ -13,7 +14,7 @@ export const m3AuthorizeProvisioning = defineStep({
     category: "Microsoft",
     activity: "Provisioning",
     provider: "Microsoft",
-    automatability: "manual",
+    automatability: Automatability.MANUAL,
     requires: [STEP_IDS.ENABLE_PROVISIONING_SP, STEP_IDS.GRANT_SUPER_ADMIN],
   },
   io: {
