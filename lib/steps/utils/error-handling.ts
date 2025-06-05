@@ -11,27 +11,33 @@ export function handleCheckError(
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
-  void serverLogger.log({
-    level: "error",
-    category: "step",
-    metadata: {
-      error: error instanceof Error ? error.message : String(error),
-      stepId: defaultMessage,
-    },
-  });
+  // eslint-disable-next-line promise/no-promise-in-callback
+  serverLogger
+    .log({
+      level: "error",
+      category: "step",
+      metadata: {
+        error: error instanceof Error ? error.message : String(error),
+        stepId: defaultMessage,
+      },
+    })
+    .catch(() => {});
 
   if (isAuthenticationError(error)) {
     // Dispatch the auth error to the global error handler
     ErrorManager.dispatch(error, { stepTitle: defaultMessage });
 
-    void serverLogger.log({
-      level: "error",
-      category: "auth",
-      provider: error.provider === Provider.GOOGLE ? "google" : "microsoft",
-      metadata: {
-        error: `Authentication Error: ${error.message}`,
-      },
-    });
+    // eslint-disable-next-line promise/no-promise-in-callback
+    serverLogger
+      .log({
+        level: "error",
+        category: "auth",
+        provider: error.provider === Provider.GOOGLE ? "google" : "microsoft",
+        metadata: {
+          error: `Authentication Error: ${error.message}`,
+        },
+      })
+      .catch(() => {});
 
     // Return auth error result
     return {

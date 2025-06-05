@@ -12,16 +12,24 @@ export async function GET() {
   let streamController: ReadableStreamDefaultController;
   const stream = new ReadableStream({
     start(controller) {
-      streamController = controller;
-      serverLogger.subscribe(sessionId, controller);
+        streamController = controller;
+        serverLogger.subscribe(sessionId, controller);
 
-      serverLogger.getRecentLogs().then((logs) => {
-        const encoder = new TextEncoder();
-        logs.forEach((log) => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(log)}\n\n`));
-        });
-      });
-    },
+        return serverLogger
+          .getRecentLogs()
+          .then((logs) => {
+            const encoder = new TextEncoder();
+            logs.forEach((log) => {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(log)}\n\n`),
+              );
+            });
+            return undefined;
+          })
+          .catch((err) => {
+            controller.error(err);
+          });
+      },
     cancel() {
       serverLogger.unsubscribe(sessionId, streamController);
     },

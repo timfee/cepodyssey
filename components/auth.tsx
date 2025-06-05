@@ -58,22 +58,30 @@ export function AuthStatus() {
         <Icon className="h-8 w-8 text-muted-foreground" />
         <div>
           <p className="font-semibold">{providerName}</p>
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2Icon className="h-4 w-4 animate-spin" />
-              <span>Checking...</span>
-            </div>
-          ) : isConnected ? (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle2Icon className="h-4 w-4" />
-              <span>Connected</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <XCircleIcon className="h-4 w-4" />
-              <span>Not Connected</span>
-            </div>
-          )}
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2Icon className="h-4 w-4 animate-spin" />
+                  <span>Checking...</span>
+                </div>
+              );
+            }
+            if (isConnected) {
+              return (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle2Icon className="h-4 w-4" />
+                  <span>Connected</span>
+                </div>
+              );
+            }
+            return (
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <XCircleIcon className="h-4 w-4" />
+                <span>Not Connected</span>
+              </div>
+            );
+          })()}
         </div>
       </div>
       {!isConnected && !isLoading && (

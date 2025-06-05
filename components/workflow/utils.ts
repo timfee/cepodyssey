@@ -18,8 +18,11 @@ export function parseApiAction(
   }
 
   const [, method, rawPath] = match;
-  const path = rawPath.replace(/\{([^}]+)\}/g, (_, key) => {
-    const val = outputs[key];
+  const path = rawPath.replace(/\{([^{}]+)\}/g, (_, key) => {
+    const val = Object.prototype.hasOwnProperty.call(outputs, key)
+      ? // eslint-disable-next-line security/detect-object-injection
+        outputs[key]
+      : undefined;
     return val !== undefined ? String(val) : `{${key}}`;
   });
 

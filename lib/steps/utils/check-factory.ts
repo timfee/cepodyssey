@@ -10,7 +10,9 @@ export function createStepCheck({
   checkLogic,
 }: CreateCheckOptions) {
   return async function (context: StepContext): Promise<StepCheckResult> {
-    const missing = requiredOutputs.filter((key) => !context.outputs[key]);
+    const missing = requiredOutputs.filter(
+      (key) => !Object.prototype.hasOwnProperty.call(context.outputs, key),
+    );
     if (missing.length > 0) {
       return {
         completed: false,

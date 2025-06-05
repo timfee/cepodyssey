@@ -34,7 +34,10 @@ export function useAutoCheck(
         .map((s) => s.id as StepId);
 
       for (const stepId of checkableSteps) {
-        const status = stepsStatus[stepId];
+        const status = Object.prototype.hasOwnProperty.call(stepsStatus, stepId)
+          ? // eslint-disable-next-line security/detect-object-injection
+            stepsStatus[stepId]
+          : undefined;
         const lastChecked = status?.lastCheckedAt
           ? new Date(status.lastCheckedAt).getTime()
           : 0;
@@ -52,7 +55,7 @@ export function useAutoCheck(
           // API logs are streamed via SSE; nothing to handle here
 
           checkedSteps.current.add(stepId);
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
 

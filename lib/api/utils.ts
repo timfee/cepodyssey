@@ -26,7 +26,7 @@ export async function withRetry<T>(
         throw error;
       }
       if (i < retries - 1) {
-        await new Promise((res) => setTimeout(res, 1000 * 2 ** i));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** i));
       }
     }
   }

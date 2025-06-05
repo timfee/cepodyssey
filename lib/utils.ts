@@ -20,7 +20,9 @@ export function validateRequiredOutputs(
   outputs: Record<string, unknown>,
   required: string[],
 ): { valid: boolean; missing: string[] } {
-  const missing = required.filter((k) => !outputs[k]);
+  const missing = required.filter(
+    (k) => !Object.prototype.hasOwnProperty.call(outputs, k),
+  );
   return { valid: missing.length === 0, missing };
 }
 
@@ -50,7 +52,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 
 /**
  * Constructs a Google Admin Console URL for a SAML profile
- * @param profileFullName The full resource name (e.g., "inboundSamlSsoProfiles/12345")
+ * @param profileFullName - The full resource name (e.g., "inboundSamlSsoProfiles/12345")
  * @returns The properly formatted Admin Console URL
  */
 

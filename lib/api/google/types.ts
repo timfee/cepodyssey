@@ -10,7 +10,7 @@ export type GoogleDomain = admin_directory_v1.Schema$Domains & {
 export type GoogleDomains = admin_directory_v1.Schema$Domains;
 
 export interface InboundSamlSsoProfile {
-  /** Output only. Resource name, e.g. inboundSamlSsoProfiles/{profileId} */
+  /** Output only. Resource name, e.g. inboundSamlSsoProfiles\{profileId\} */
   name?: string;
   /** Output only. Customer resource */
   customer?: string;

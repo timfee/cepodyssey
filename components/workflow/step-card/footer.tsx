@@ -92,20 +92,22 @@ export function ExecutionButtons({
           step.automatability === Automatability.MANUAL ? "outline" : "default"
         }
       >
-        {isProcessing ? (
-          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-        ) : step.automatability !== Automatability.MANUAL ? (
-          <Zap className="mr-1.5 h-4 w-4" />
-        ) : (
-          <UserCheck className="mr-1.5 h-4 w-4" />
-        )}
-        {isProcessing
-          ? "Processing..."
-          : step.automatability !== Automatability.MANUAL
-            ? step.status === StepStatus.FAILED
-              ? "Retry"
-              : "Execute"
-            : "Mark as Complete"}
+          {(() => {
+            if (isProcessing) {
+              return <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />;
+            }
+            if (step.automatability !== Automatability.MANUAL) {
+              return <Zap className="mr-1.5 h-4 w-4" />;
+            }
+            return <UserCheck className="mr-1.5 h-4 w-4" />;
+          })()}
+          {(() => {
+            if (isProcessing) return "Processing...";
+            if (step.automatability !== Automatability.MANUAL) {
+              return step.status === StepStatus.FAILED ? "Retry" : "Execute";
+            }
+            return "Mark as Complete";
+          })()}
       </Button>
       {step.automatability !== Automatability.MANUAL &&
         step.status !== StepStatus.FAILED && (

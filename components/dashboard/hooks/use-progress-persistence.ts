@@ -37,12 +37,12 @@ export function useProgressPersistence() {
     }
   }, [domain, dispatch]);
 
-  useEffect(() => {
-    if (domain && domain !== "") {
-      void saveProgress(domain, {
-        steps: stepsStatusMap,
-        outputs: store.getState().app.outputs,
-      });
-    }
-  }, [domain, stepsStatusMap, store]);
+    useEffect(() => {
+      if (domain && domain !== "") {
+        saveProgress(domain, {
+          steps: stepsStatusMap,
+          outputs: store.getState().app.outputs,
+        }).catch(() => {});
+      }
+    }, [domain, stepsStatusMap, store]);
 }

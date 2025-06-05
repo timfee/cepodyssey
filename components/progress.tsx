@@ -41,7 +41,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
       let effectiveStatus = statusInfo.status;
       if (definition.requires && definition.requires.length > 0) {
         const requirementsMet = definition.requires.every((reqId) => {
-          const req = stepsStatusMap[reqId];
+          const req = stepsStatusMap[reqId as keyof typeof stepsStatusMap];
           return req && req.status === StepStatus.COMPLETED;
         });
         if (!requirementsMet && statusInfo.status === StepStatus.PENDING) {
@@ -73,7 +73,9 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   ];
 
   const getProgress = (steps: ManagedStep[]) => {
-    const completed = steps.filter((s) => s.status === StepStatus.COMPLETED).length;
+    const completed = steps.filter(
+      (s) => s.status === StepStatus.COMPLETED,
+    ).length;
     return steps.length > 0 ? (completed / steps.length) * 100 : 0;
   };
 
@@ -92,8 +94,11 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               {cat.label}
               {cat.id !== "all" && (
                 <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                  {cat.steps.filter((s) => s.status === StepStatus.COMPLETED).length}/
-                  {cat.steps.length}
+                  {
+                    cat.steps.filter((s) => s.status === StepStatus.COMPLETED)
+                      .length
+                  }
+                  /{cat.steps.length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -108,8 +113,11 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === StepStatus.COMPLETED).length}/
-                  {cat.steps.length} done
+                  {
+                    cat.steps.filter((s) => s.status === StepStatus.COMPLETED)
+                      .length
+                  }
+                  /{cat.steps.length} done
                 </span>
               </div>
             </CardHeader>

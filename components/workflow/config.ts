@@ -15,7 +15,10 @@ import type {
   StepCompletionType,
   StepStatus,
 } from "./workflow-types";
-import { Automatability, StepStatus as StepStatusEnum } from "@/lib/constants/enums";
+import {
+  Automatability,
+  StepStatus as StepStatusEnum,
+} from "@/lib/constants/enums";
 
 export interface StatusDisplayConfig {
   icon: LucideIcon;
@@ -113,11 +116,17 @@ export function getStatusDisplayConfig(
       ? stateConfigMap["completed-user"]
       : stateConfigMap["completed-verified"];
   }
-  return stateConfigMap[status] || stateConfigMap.pending;
+  return Object.prototype.hasOwnProperty.call(stateConfigMap, status)
+    ? stateConfigMap[status as keyof typeof stateConfigMap]
+    : stateConfigMap.pending;
 }
 
 export function getAutomatabilityDisplayConfig(
   automatability?: StepAutomatability,
 ): AutomatabilityDisplayConfig {
-  return automatabilityConfigMap[automatability || Automatability.MANUAL];
+  const key =
+    automatability !== undefined ? automatability : Automatability.MANUAL;
+  return Object.prototype.hasOwnProperty.call(automatabilityConfigMap, key)
+    ? automatabilityConfigMap[key as keyof typeof automatabilityConfigMap]
+    : automatabilityConfigMap[Automatability.MANUAL];
 }

@@ -13,7 +13,9 @@ export function validateRequiredOutputs(
   requiredKeys: string[],
   stepHint?: string,
 ): ValidationResult {
-  const missing = requiredKeys.filter((k) => !context.outputs[k]);
+  const missing = requiredKeys.filter(
+    (k) => !Object.prototype.hasOwnProperty.call(context.outputs, k),
+  );
   if (missing.length > 0) {
     const hint = stepHint ? ` Ensure ${stepHint} completed successfully.` : "";
     return {

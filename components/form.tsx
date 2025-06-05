@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-const DOMAIN_REGEX =
-  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
+import isFQDN from "validator/lib/isFQDN";
 
 const configFormSchema = z.object({
   domain: z
     .string()
-    .regex(DOMAIN_REGEX, "Invalid domain format.")
+    .refine((d) => (d ? isFQDN(d) : true), {
+      message: "Invalid domain format.",
+    })
     .optional()
     .nullable(),
   tenantId: z.string().uuid("Invalid Tenant ID format.").optional().nullable(),
@@ -51,19 +52,15 @@ export function ConfigForm() {
 
   // Reset form fields when Redux state changes.
   useEffect(() => {
-    console.log(
-      "ConfigForm: Resetting/populating form with Redux state:",
-      { domain, tenantId },
-    );
+    console.log("ConfigForm: Resetting/populating form with Redux state:", {
+      domain,
+      tenantId,
+    });
     reset({
       domain: domain ?? "",
       tenantId: tenantId ?? "",
     });
-  }, [
-    domain,
-    tenantId,
-    reset,
-  ]);
+  }, [domain, tenantId, reset]);
 
   return (
     <Card className="mb-6">
