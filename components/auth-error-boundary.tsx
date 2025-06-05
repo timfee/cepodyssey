@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { isAuthenticationError } from "@/lib/api/auth-errors";
 import { useErrorHandler } from "@/hooks/use-error-handler";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
