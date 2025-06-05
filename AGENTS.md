@@ -1,31 +1,38 @@
-# Project Architecture Guidelines
+# Top-Level AI Agent Instructions
 
-This document outlines the core architectural principles of the Directory Setup Assistant.
+## Overall Goal
 
-## Core Principles
+Your primary goal is to write clean, maintainable code that adheres to the established architectural patterns. Do not introduce new patterns without a compelling reason. Preventing regressions is paramount.
 
-1. **Clear Client/Server Separation**: This project uses the Next.js App Router. **Server Actions are the _only_ way the client communicates with the backend**. Server Actions must never throw exceptions; they always return a serializable result object (`{ success: true, ... }` or `{ success: false, error: {...} }`).
+---
 
-2. **Request-Scoped Logic**: All server-side operations are stateless. For tasks like logging that require context through a call stack, a new `ApiLogger` instance is created at the start of the server action and passed down through all subsequent functions. This avoids race conditions and memory leaks associated with global singletons.
+### ✅ MANDATORY Pre-Submission Workflow ✅
 
-3. **Predictable State Management**: The client-side state is managed by Redux Toolkit and is considered the single source of truth for the UI. The UI is a reactive function of this state. State is only ever updated based on the data returned from Server Actions.
+Before you propose any patch, you **MUST** follow this workflow. Failure to do so will result in your changes being rejected.
 
-4. **Structured and Self-Contained Steps**: All automation logic is broken into discrete steps defined in `lib/steps/`. Each step is a self-contained module with its own definition, `check` function, and `execute` function. A central registry in `lib/steps/registry.ts` orchestrates these steps.
+1. **Generate Code:** Generate all necessary code changes to fulfill the user's request.
+2. **Run Linter:** Run `pnpm lint --fix` and ensure there are no linting errors.
+3. **Run Type-Check (CRITICAL):** Run `pnpm type-check`.
+    * If `tsc` reports any errors, your task is **NOT** complete.
+    * **You MUST resolve all TypeScript errors before proceeding.**
+    * Analyze the `type-check.log` or console output to understand the errors. The type system is the primary defense against regressions.
+4. **Propose Patch:** Only after the type-check passes without errors can you create and propose the patch.
 
-5. **Modal-Based Error Handling**: All user-facing errors are handled by a global error modal, which is triggered by dispatching to a Redux `errors` slice. This provides a consistent and actionable way to inform the user of issues, especially for recoverable errors like session expiry. Toast notifications (`sonner`) have been entirely removed.
+**Do not propose a patch that fails the type-check.**
 
-## Directory Structure
+---
 
-- **/app**: Next.js App Router, routing, pages, and layouts.
-  - **/app/actions**: All Server Actions. The application's backend lives here.
-  - **/app/(auth)**: Authentication-related routes and `next-auth` configuration.
-- **/components**: All React components.
-  - **/components/ui**: Core UI elements from `shadcn/ui`.
-  - **/components/workflow**: Custom components for the automation workflow, like the `WorkflowStepCard`.
-- **/hooks**: Reusable client-side React hooks.
-- **/lib**: Core application logic, shared utilities, and type definitions.
-  - **/lib/api**: API clients for Google and Microsoft. Contains the `ApiLogger`.
-  - **/lib/error-handling**: The global `ErrorManager`.
-  - **/lib/redux**: Redux Toolkit store, slices, and state management.
-  - **/lib/steps**: The heart of the automation logic, containing all step definitions.
-  - **/lib/types.ts**: Central TypeScript definitions.
+### Critical Rules for All Code Changes
+
+1. **Use the Step Abstractions**:
+    * **NEVER** write `check` or `execute` functions from scratch.
+    * **ALWAYS** use the `createStepCheck` factory (`lib/steps/utils/check-factory.ts`) for all `check.ts` files.
+    * **ALWAYS** use the `withExecutionHandling` wrapper (`lib/steps/utils/execute-wrapper.ts`) for all `execute.ts` files.
+
+2. **Pass the Logger**:
+    * The `ApiLogger` instance is critical for debugging. It is available as `context.logger`.
+    * **ALWAYS** pass `context.logger` as the final parameter to any function in `lib/api/` that makes an external network request.
+
+3. **Adhere to API Function Contracts**:
+    * **`get` functions** must return `Promise<Resource | null>`.
+    * **`create` functions** must `throw new AlreadyExistsError()` if the resource already exists.
