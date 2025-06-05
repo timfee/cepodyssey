@@ -1,7 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Loader2, Lock, RefreshCw, UserCheck, Zap } from "lucide-react";
+import {
+  ExternalLink,
+  Loader2,
+  Lock,
+  RefreshCw,
+  UserCheck,
+  Zap,
+} from "lucide-react";
 import type { ManagedStep } from "./workflow-types";
 
 export function BlockedMessage() {
@@ -20,19 +27,35 @@ interface CompletedButtonsProps {
   onMarkIncomplete: () => void;
 }
 
-export function CompletedButtons({ step, isProcessing, onExecute, onMarkIncomplete }: CompletedButtonsProps) {
+export function CompletedButtons({
+  step,
+  isProcessing,
+  onExecute,
+  onMarkIncomplete,
+}: CompletedButtonsProps) {
   return (
     <>
       {step.automatability !== "manual" && (
-        <Button variant="outline" size="sm" onClick={onExecute} disabled={isProcessing}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onExecute}
+          disabled={isProcessing}
+        >
           <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-run
         </Button>
       )}
-      {step.automatability === "manual" && step.completionType === "user-marked" && (
-        <Button variant="outline" size="sm" onClick={onMarkIncomplete} disabled={isProcessing}>
-          Mark as Incomplete
-        </Button>
-      )}
+      {step.automatability === "manual" &&
+        step.completionType === "user-marked" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onMarkIncomplete}
+            disabled={isProcessing}
+          >
+            Mark as Incomplete
+          </Button>
+        )}
     </>
   );
 }
@@ -72,10 +95,10 @@ export function ExecutionButtons({
         {isProcessing
           ? "Processing..."
           : step.automatability !== "manual"
-          ? step.status === "failed"
-            ? "Retry"
-            : "Execute"
-          : "Mark as Complete"}
+            ? step.status === "failed"
+              ? "Retry"
+              : "Execute"
+            : "Mark as Complete"}
       </Button>
       {step.automatability !== "manual" && step.status !== "failed" && (
         <Button

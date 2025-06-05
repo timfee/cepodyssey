@@ -30,7 +30,7 @@ export function StepCardOutputsDisplay({
               "break-all rounded px-1 py-0.5 font-mono text-xs",
               output.currentValue != null
                 ? "bg-slate-100 dark:bg-slate-700"
-                : "italic bg-muted/30 dark:bg-slate-600"
+                : "italic bg-muted/30 dark:bg-slate-600",
             )}
             title={
               typeof output.currentValue === "string"

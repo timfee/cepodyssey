@@ -1,4 +1,4 @@
-import type { StepCheckResult, StepContext } from '@/lib/types';
+import type { StepCheckResult, StepContext } from "@/lib/types";
 
 interface CreateCheckOptions {
   requiredOutputs: string[];
@@ -14,7 +14,7 @@ export function createStepCheck({
     if (missing.length > 0) {
       return {
         completed: false,
-        message: `This step is blocked. Required outputs are missing: ${missing.join(', ')}.`,
+        message: `This step is blocked. Required outputs are missing: ${missing.join(", ")}.`,
       };
     }
     return await checkLogic(context);

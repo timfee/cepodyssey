@@ -1,7 +1,7 @@
-import type { StepExecutionResult, StepContext } from '@/lib/types';
-import { handleExecutionError } from './error-handling';
-import { validateRequiredOutputs } from './validation';
-import type { StepId } from '../step-refs';
+import type { StepExecutionResult, StepContext } from "@/lib/types";
+import { handleExecutionError } from "./error-handling";
+import { validateRequiredOutputs } from "./validation";
+import type { StepId } from "../step-refs";
 
 /**
  * A higher-order function that wraps a step's execution logic,
@@ -16,12 +16,14 @@ export function withExecutionHandling({
   requiredOutputs: string[];
   executeLogic: (context: StepContext) => Promise<StepExecutionResult>;
 }) {
-  return async function (
-    context: StepContext,
-  ): Promise<StepExecutionResult> {
+  return async function (context: StepContext): Promise<StepExecutionResult> {
     try {
       // Handle boilerplate input validation
-      const validation = validateRequiredOutputs(context, requiredOutputs, stepId);
+      const validation = validateRequiredOutputs(
+        context,
+        requiredOutputs,
+        stepId,
+      );
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }

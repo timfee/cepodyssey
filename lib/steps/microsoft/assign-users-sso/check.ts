@@ -1,6 +1,6 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import { createStepCheck } from '../../utils/check-factory';
-import { checkMicrosoftAppAssignments } from '../utils/common-checks';
+import { OUTPUT_KEYS } from "@/lib/types";
+import { createStepCheck } from "../../utils/check-factory";
+import { checkMicrosoftAppAssignments } from "../utils/common-checks";
 
 export const checkAssignUsers = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID],

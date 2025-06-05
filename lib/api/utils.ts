@@ -1,4 +1,4 @@
-import { ApiLogger } from './api-logger';
+import { ApiLogger } from "./api-logger";
 
 export class APIError extends Error {
   constructor(
@@ -7,7 +7,7 @@ export class APIError extends Error {
     public code?: string,
   ) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
@@ -49,7 +49,7 @@ export async function fetchWithAuth(
       headers: {
         ...init?.headers,
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -59,14 +59,19 @@ export async function fetchWithAuth(
         headers: {
           ...init?.headers,
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (logger && logId) {
         const responseClone = response.clone();
         const responseBody = await responseClone.json().catch(() => null);
-        logger.logResponse(logId, response, responseBody, Date.now() - startTime);
+        logger.logResponse(
+          logId,
+          response,
+          responseBody,
+          Date.now() - startTime,
+        );
       }
 
       return response;

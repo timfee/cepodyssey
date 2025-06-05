@@ -105,7 +105,7 @@ export const automatabilityConfigMap: Record<
 
 export function getStatusDisplayConfig(
   status: StepStatus,
-  completionType?: StepCompletionType
+  completionType?: StepCompletionType,
 ): StatusDisplayConfig {
   if (status === "completed") {
     return completionType === "user-marked"
@@ -116,7 +116,7 @@ export function getStatusDisplayConfig(
 }
 
 export function getAutomatabilityDisplayConfig(
-  automatability?: StepAutomatability
+  automatability?: StepAutomatability,
 ): AutomatabilityDisplayConfig {
   return automatabilityConfigMap[automatability || "manual"];
 }

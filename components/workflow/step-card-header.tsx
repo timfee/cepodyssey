@@ -58,7 +58,7 @@ export function StepCardHeader({
                   className={cn(
                     "h-5 w-5 shrink-0",
                     statusDisplay.colorClass,
-                    isProcessing && "animate-spin"
+                    isProcessing && "animate-spin",
                   )}
                 />
               </TooltipTrigger>
@@ -82,7 +82,7 @@ export function StepCardHeader({
                 className={cn(
                   "flex cursor-default items-center gap-1",
                   automatabilityDisplay.badgeClasses ||
-                    automatabilityDisplay.baseColorClass
+                    automatabilityDisplay.baseColorClass,
                 )}
               >
                 <AutoIcon
@@ -90,7 +90,7 @@ export function StepCardHeader({
                     "h-3.5 w-3.5 shrink-0",
                     automatabilityDisplay.badgeClasses
                       ? "text-inherit"
-                      : automatabilityDisplay.baseColorClass
+                      : automatabilityDisplay.baseColorClass,
                   )}
                 />
                 <span className="border-b border-dashed border-muted-foreground/70 pb-px font-medium">

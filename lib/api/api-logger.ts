@@ -15,7 +15,7 @@ export class ApiLogger {
     this.logs.push({
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date().toISOString(),
-      method: 'LOG',
+      method: "LOG",
       url: message,
     });
   }
@@ -57,7 +57,7 @@ export class ApiLogger {
     id: string,
     response: Response,
     responseBody?: unknown,
-    duration?: number
+    duration?: number,
   ) {
     console.log(`[API Response] ${response.status} for ${id} in ${duration}ms`);
     if (!isApiDebugEnabled()) return;
@@ -84,8 +84,12 @@ export class ApiLogger {
   }
 
   private detectProvider(url: string): "google" | "microsoft" | "other" {
-    if (url.includes("googleapis.com")) return "google";
-    if (url.includes("microsoft.com")) return "microsoft";
+    if (
+      url.startsWith(process.env.GOOGLE_API_BASE!) ||
+      url.startsWith(process.env.GOOGLE_IDENTITY_BASE!)
+    )
+      return "google";
+    if (url.startsWith(process.env.GRAPH_API_BASE!)) return "microsoft";
     return "other";
   }
 }

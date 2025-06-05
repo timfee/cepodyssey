@@ -23,14 +23,16 @@ Before you propose any patch, you **MUST** follow this workflow in order.
 ### Critical Rules for All Code Changes
 
 1. **Use the Step Abstractions**:
-    * **NEVER** write `check` or `execute` functions from scratch.
-    * **ALWAYS** use the `createStepCheck` factory (`lib/steps/utils/check-factory.ts`) for all `check.ts` files.
-    * **ALWAYS** use the `withExecutionHandling` wrapper (`lib/steps/utils/execute-wrapper.ts`) for all `execute.ts` files.
+
+   - **NEVER** write `check` or `execute` functions from scratch.
+   - **ALWAYS** use the `createStepCheck` factory (`lib/steps/utils/check-factory.ts`) for all `check.ts` files.
+   - **ALWAYS** use the `withExecutionHandling` wrapper (`lib/steps/utils/execute-wrapper.ts`) for all `execute.ts` files.
 
 2. **Pass the Logger**:
-    * The `ApiLogger` instance is critical for debugging. It is available as `context.logger`.
-    * **ALWAYS** pass `context.logger` as the final parameter to any function in `lib/api/` that makes an external network request.
+
+   - The `ApiLogger` instance is critical for debugging. It is available as `context.logger`.
+   - **ALWAYS** pass `context.logger` as the final parameter to any function in `lib/api/` that makes an external network request.
 
 3. **Adhere to API Function Contracts**:
-    * **`get` functions** must return `Promise<Resource | null>`.
-    * **`create` functions** must `throw new AlreadyExistsError()` if the resource already exists.
+   - **`get` functions** must return `Promise<Resource | null>`.
+   - **`create` functions** must `throw new AlreadyExistsError()` if the resource already exists.

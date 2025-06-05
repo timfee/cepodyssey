@@ -85,14 +85,14 @@ export function wrapAuthError(
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},
-  provider: 'google' | 'microsoft',
+  provider: "google" | "microsoft",
   logger?: ApiLogger,
 ): Promise<Response> {
   const session = await auth();
 
   // Select the correct token based on the provider
   const token =
-    provider === 'google' ? session?.googleToken : session?.microsoftToken;
+    provider === "google" ? session?.googleToken : session?.microsoftToken;
 
   if (!token) {
     throw new AuthenticationError(
@@ -102,7 +102,7 @@ export async function fetchWithAuth(
   }
 
   const headers = new Headers(options.headers);
-  headers.set('Authorization', `Bearer ${token}`);
+  headers.set("Authorization", `Bearer ${token}`);
   const optionsWithAuth: RequestInit = { ...options, headers };
 
   logger?.addLog(`[[Auth]] Making authenticated request to ${url}`);

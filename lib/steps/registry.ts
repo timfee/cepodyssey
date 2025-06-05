@@ -5,9 +5,9 @@ import type {
   StepDefinition,
   StepInput,
   StepOutput,
-} from '@/lib/types';
-import type { StepId } from './step-refs';
-import { ApiLogger } from '@/lib/api/api-logger';
+} from "@/lib/types";
+import type { StepId } from "./step-refs";
+import { ApiLogger } from "@/lib/api/api-logger";
 
 export function getStep(
   allDefs: StepDefinition[],
@@ -40,7 +40,7 @@ export async function checkStep(
     throw new Error(`Step ${stepId} not found in registry`);
   }
   if (!step.check) {
-    return { completed: false, message: 'No check available for this step.' };
+    return { completed: false, message: "No check available for this step." };
   }
   const logger = new ApiLogger();
   const result = await step.check({ ...context, logger });
@@ -63,8 +63,8 @@ export async function executeStep(
     return {
       success: false,
       error: {
-        message: 'No execution available for this step.',
-        code: 'NO_EXECUTE_FUNCTION',
+        message: "No execution available for this step.",
+        code: "NO_EXECUTE_FUNCTION",
       },
     };
   }

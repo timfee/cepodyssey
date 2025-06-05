@@ -1,18 +1,20 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import { createStepCheck } from '../../utils/check-factory';
-import * as google from '@/lib/api/google';
-import { portalUrls } from '@/lib/api/url-builder';
-import { getGoogleToken } from '../../utils/auth';
-import { handleCheckError } from '../../utils/error-handling';
+import { OUTPUT_KEYS } from "@/lib/types";
+import { createStepCheck } from "../../utils/check-factory";
+import * as google from "@/lib/api/google";
+import { portalUrls } from "@/lib/api/url-builder";
+import { getGoogleToken } from "../../utils/auth";
+import { handleCheckError } from "../../utils/error-handling";
 
 export const checkSamlProfile = createStepCheck({
   requiredOutputs: [],
   checkLogic: async (_context) => {
-    const profileDisplayName = 'Azure AD SSO';
+    const profileDisplayName = "Azure AD SSO";
     try {
       const token = await getGoogleToken();
       const profiles = await google.listSamlProfiles(token);
-      const profile = profiles.find((p) => p.displayName === profileDisplayName);
+      const profile = profiles.find(
+        (p) => p.displayName === profileDisplayName,
+      );
       if (!profile?.name) {
         return {
           completed: false,
@@ -26,7 +28,8 @@ export const checkSamlProfile = createStepCheck({
         resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
       };
       if (profile.spConfig?.entityId) {
-        outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] = profile.spConfig.entityId;
+        outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] =
+          profile.spConfig.entityId;
       }
       if (profile.spConfig?.assertionConsumerServiceUri) {
         outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL] =
@@ -38,7 +41,10 @@ export const checkSamlProfile = createStepCheck({
         outputs,
       };
     } catch (e) {
-      return handleCheckError(e, `Couldn't verify SAML Profile '${profileDisplayName}'.`);
+      return handleCheckError(
+        e,
+        `Couldn't verify SAML Profile '${profileDisplayName}'.`,
+      );
     }
   },
 });

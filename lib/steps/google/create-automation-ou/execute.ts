@@ -1,12 +1,12 @@
-import * as google from '@/lib/api/google';
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { AlreadyExistsError } from '@/lib/api/errors';
-import { getGoogleToken } from '../../utils/auth';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
-import { validateRequiredOutputs } from '../../utils/validation';
+import * as google from "@/lib/api/google";
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { AlreadyExistsError } from "@/lib/api/errors";
+import { getGoogleToken } from "../../utils/auth";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 export const executeCreateAutomationOu = withExecutionHandling({
   stepId: STEP_IDS.CREATE_AUTOMATION_OU,
@@ -17,7 +17,7 @@ export const executeCreateAutomationOu = withExecutionHandling({
     const validation = validateRequiredOutputs(
       context,
       [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID],
-      STEP_IDS.VERIFY_DOMAIN
+      STEP_IDS.VERIFY_DOMAIN,
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -62,10 +62,15 @@ export const executeCreateAutomationOu = withExecutionHandling({
               [OUTPUT_KEYS.AUTOMATION_OU_ID]: existing.orgUnitId,
               [OUTPUT_KEYS.AUTOMATION_OU_PATH]: existing.orgUnitPath,
             },
-            resourceUrl: portalUrls.google.orgUnits.details(existing.orgUnitPath),
+            resourceUrl: portalUrls.google.orgUnits.details(
+              existing.orgUnitPath,
+            ),
           };
         }
-        return { success: true, message: `Organizational Unit '${ouName}' already exists.` };
+        return {
+          success: true,
+          message: `Organizational Unit '${ouName}' already exists.`,
+        };
       }
       throw error;
     }
@@ -73,7 +78,7 @@ export const executeCreateAutomationOu = withExecutionHandling({
     if (!created.orgUnitId || !created.orgUnitPath) {
       return {
         success: false,
-        error: { message: 'Failed to create OU.', code: 'API_ERROR' },
+        error: { message: "Failed to create OU.", code: "API_ERROR" },
       };
     }
 

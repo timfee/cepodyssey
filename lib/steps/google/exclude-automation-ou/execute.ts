@@ -1,10 +1,10 @@
-import * as google from '@/lib/api/google';
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { getGoogleToken } from '../../utils/auth';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
+import * as google from "@/lib/api/google";
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { getGoogleToken } from "../../utils/auth";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeExcludeAutomationOu = withExecutionHandling({
   stepId: STEP_IDS.EXCLUDE_AUTOMATION_OU,
@@ -18,7 +18,7 @@ export const executeExcludeAutomationOu = withExecutionHandling({
     await google.assignSamlToOrgUnits(
       token,
       profileFullName,
-      [{ orgUnitId: '/Automation', ssoMode: 'SSO_OFF' }],
+      [{ orgUnitId: "/Automation", ssoMode: "SSO_OFF" }],
       context.logger,
     );
 

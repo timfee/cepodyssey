@@ -30,7 +30,7 @@ export function StepCardApiActionsDisplay({
   if (!actions || actions.length === 0) return null;
 
   const apiActions = actions.filter(
-    (action) => !action.isManual || (action.isManual && action.path)
+    (action) => !action.isManual || (action.isManual && action.path),
   );
 
   if (apiActions.length === 0) return null;
@@ -42,7 +42,7 @@ export function StepCardApiActionsDisplay({
           <span
             className={cn(
               "font-mono text-xs font-semibold",
-              getMethodColor(action.method)
+              getMethodColor(action.method),
             )}
           >
             {action.method || (action.isManual ? "MANUAL" : "ACTION")}

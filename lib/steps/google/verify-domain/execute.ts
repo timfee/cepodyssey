@@ -1,12 +1,12 @@
-import * as google from '@/lib/api/google';
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { AlreadyExistsError } from '@/lib/api/errors';
-import { getGoogleToken } from '../../utils/auth';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
-import { validateRequiredOutputs } from '../../utils/validation';
+import * as google from "@/lib/api/google";
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { AlreadyExistsError } from "@/lib/api/errors";
+import { getGoogleToken } from "../../utils/auth";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { validateRequiredOutputs } from "../../utils/validation";
 
 export const executeVerifyDomain = withExecutionHandling({
   stepId: STEP_IDS.VERIFY_DOMAIN,
@@ -32,7 +32,6 @@ export const executeVerifyDomain = withExecutionHandling({
       }
       throw error;
     }
-
 
     return {
       success: true,

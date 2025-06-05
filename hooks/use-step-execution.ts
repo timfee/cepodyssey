@@ -32,7 +32,7 @@ export function useStepExecution() {
           status: "in_progress",
           error: null,
           message: undefined,
-        })
+        }),
       );
 
       try {
@@ -67,7 +67,7 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
         } else {
           const errorMessage =
@@ -81,7 +81,7 @@ export function useStepExecution() {
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
           ErrorManager.dispatch(new Error(errorMessage), {
             stepId,
@@ -98,7 +98,7 @@ export function useStepExecution() {
             status: "failed",
             error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
-          })
+          }),
         );
         ErrorManager.dispatch(error, {
           stepId,
@@ -106,7 +106,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, appConfig]
+    [dispatch, appConfig],
   );
 
   return { executeStep };

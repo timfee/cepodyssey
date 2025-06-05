@@ -1,6 +1,6 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import { createStepCheck } from '../../utils/check-factory';
-import { checkMicrosoftServicePrincipal } from '../utils/common-checks';
+import { OUTPUT_KEYS } from "@/lib/types";
+import { createStepCheck } from "../../utils/check-factory";
+import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
 
 export const checkProvisioningApp = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.PROVISIONING_APP_ID],

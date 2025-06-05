@@ -480,4 +480,3 @@ export async function cleanupInvalidSession() {
   const userKey = getUserKey();
   accountStore.delete(userKey);
 }
-

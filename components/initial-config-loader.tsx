@@ -9,11 +9,16 @@ interface InitialConfigLoaderProps {
   tenantId: string | null;
 }
 
-export function InitialConfigLoader({ domain, tenantId }: InitialConfigLoaderProps) {
+export function InitialConfigLoader({
+  domain,
+  tenantId,
+}: InitialConfigLoaderProps) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(setInitialConfig({ domain: domain ?? null, tenantId: tenantId ?? null }));
+    dispatch(
+      setInitialConfig({ domain: domain ?? null, tenantId: tenantId ?? null }),
+    );
   }, [dispatch, domain, tenantId]);
 
   return null;

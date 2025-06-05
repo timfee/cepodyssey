@@ -32,7 +32,7 @@ export const executeGrantSuperAdmin = withExecutionHandling({
   executeLogic: async (context) => {
     // ...
     // The customerId is NOT retrieved from context.
-    await google.assignAdminRole(token, email, '3', undefined, context.logger); // ERROR: Passing undefined
+    await google.assignAdminRole(token, email, "3", undefined, context.logger); // ERROR: Passing undefined
     // ...
   },
 });
@@ -51,10 +51,12 @@ export const executeGrantSuperAdmin = withExecutionHandling({
   executeLogic: async (context) => {
     // ...
     // 2. Value is retrieved from context.
-    const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string; 
-    
+    const customerId = context.outputs[
+      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID
+    ] as string;
+
     // 3. Value is passed to the API call.
-    await google.assignAdminRole(token, email, '3', customerId, context.logger); 
+    await google.assignAdminRole(token, email, "3", customerId, context.logger);
     // ...
   },
 });

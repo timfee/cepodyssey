@@ -1,21 +1,24 @@
-import * as microsoft from '@/lib/api/microsoft';
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { AlreadyExistsError } from '@/lib/api/errors';
-import { getTokens } from '../../utils/auth';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
+import * as microsoft from "@/lib/api/microsoft";
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { AlreadyExistsError } from "@/lib/api/errors";
+import { getTokens } from "../../utils/auth";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeCreateProvisioningApp = withExecutionHandling({
   stepId: STEP_IDS.CREATE_PROVISIONING_APP,
   requiredOutputs: [],
   executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
     const { microsoftToken } = await getTokens();
-    const TEMPLATE_ID = '8b1025e4-1dd2-430b-a150-2ef79cd700f5';
-    const appName = 'Google Workspace User Provisioning';
+    const TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
+    const appName = "Google Workspace User Provisioning";
 
-    let result: { application: microsoft.Application; servicePrincipal: microsoft.ServicePrincipal };
+    let result: {
+      application: microsoft.Application;
+      servicePrincipal: microsoft.ServicePrincipal;
+    };
     try {
       result = await microsoft.createEnterpriseApp(
         microsoftToken,

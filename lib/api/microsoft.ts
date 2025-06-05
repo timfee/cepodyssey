@@ -175,7 +175,10 @@ export async function createEnterpriseApp(
         `Enterprise app '${displayName}' already exists`,
       );
     }
-    return data as { application: Application; servicePrincipal: ServicePrincipal };
+    return data as {
+      application: Application;
+      servicePrincipal: ServicePrincipal;
+    };
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -445,7 +448,9 @@ export async function configureAttributeMappings(
       },
       logger,
     );
-    const data = await handleApiResponse<SynchronizationSchema | { alreadyExists: true }>(res);
+    const data = await handleApiResponse<
+      SynchronizationSchema | { alreadyExists: true }
+    >(res);
     if (typeof data === "object" && "alreadyExists" in data) {
       throw new AlreadyExistsError("Attribute mappings already configured");
     }

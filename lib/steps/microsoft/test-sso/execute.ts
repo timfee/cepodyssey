@@ -1,8 +1,8 @@
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeTestSso = withExecutionHandling({
   stepId: STEP_IDS.TEST_SSO,

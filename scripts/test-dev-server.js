@@ -36,12 +36,12 @@ const checkServer = () => {
 
         if (res.statusCode === 200) {
           console.log(
-            "✅ Homepage fetch successful (200 OK). Server test passed."
+            "✅ Homepage fetch successful (200 OK). Server test passed.",
           );
           killServerAndExit(0);
         } else {
           console.error(
-            `❌ Test failed. Server responded with status: ${res.statusCode}`
+            `❌ Test failed. Server responded with status: ${res.statusCode}`,
           );
           killServerAndExit(1);
         }
@@ -53,7 +53,7 @@ const checkServer = () => {
   } else if (retries < MAX_RETRIES) {
     retries++;
     console.log(
-      `... Server not ready yet. Retrying in ${RETRY_INTERVAL}ms... (${retries}/${MAX_RETRIES})`
+      `... Server not ready yet. Retrying in ${RETRY_INTERVAL}ms... (${retries}/${MAX_RETRIES})`,
     );
     setTimeout(checkServer, RETRY_INTERVAL);
   } else {
@@ -70,7 +70,7 @@ function killServerAndExit(exitCode) {
   } catch (e) {
     console.warn(
       `Could not kill server process group (PID: ${server.pid}). It may have already exited.`,
-      e
+      e,
     );
   }
   process.exit(exitCode);

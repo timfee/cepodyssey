@@ -29,7 +29,7 @@ export function StepCardInputsDisplay({ inputs }: StepCardInputsDisplayProps) {
               "break-all rounded px-1 py-0.5 font-mono text-xs",
               input.currentValue != null
                 ? "bg-slate-100 dark:bg-slate-700"
-                : "italic bg-muted/30 dark:bg-slate-600"
+                : "italic bg-muted/30 dark:bg-slate-600",
             )}
             title={
               typeof input.currentValue === "string"

@@ -1,16 +1,24 @@
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeAuthorizeProvisioning = withExecutionHandling({
   stepId: STEP_IDS.AUTHORIZE_PROVISIONING,
-  requiredOutputs: [OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID, OUTPUT_KEYS.PROVISIONING_APP_ID],
+  requiredOutputs: [
+    OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+    OUTPUT_KEYS.PROVISIONING_APP_ID,
+  ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;
+    const spId = context.outputs[
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
+    ] as string;
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
-    const resourceUrl = portalUrls.azure.enterpriseApp.provisioning(spId, appId);
+    const resourceUrl = portalUrls.azure.enterpriseApp.provisioning(
+      spId,
+      appId,
+    );
 
     return {
       success: true,

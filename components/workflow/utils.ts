@@ -2,7 +2,7 @@ import type { DisplayApiAction } from "./workflow-types";
 
 export function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>
+  outputs: Record<string, unknown>,
 ): DisplayApiAction {
   let trimmed = action.trim();
   let isManual = false;

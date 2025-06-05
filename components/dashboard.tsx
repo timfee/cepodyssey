@@ -56,7 +56,9 @@ interface AutomationDashboardProps {
  * Main dashboard component handling setup progress and automation actions.
  */
 
-export function AutomationDashboard({ serverSession }: AutomationDashboardProps) {
+export function AutomationDashboard({
+  serverSession,
+}: AutomationDashboardProps) {
   const { session, status } = useSessionSync();
 
   const dispatch = useAppDispatch();
@@ -68,8 +70,6 @@ export function AutomationDashboard({ serverSession }: AutomationDashboardProps)
 
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
-
-
 
   // Effect: load saved progress from localStorage.
   useEffect(() => {

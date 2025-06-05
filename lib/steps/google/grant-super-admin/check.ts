@@ -1,8 +1,8 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import { createStepCheck } from '../../utils/check-factory';
-import * as google from '@/lib/api/google';
-import { getGoogleToken } from '../../utils/auth';
-import { handleCheckError } from '../../utils/error-handling';
+import { OUTPUT_KEYS } from "@/lib/types";
+import { createStepCheck } from "../../utils/check-factory";
+import * as google from "@/lib/api/google";
+import { getGoogleToken } from "../../utils/auth";
+import { handleCheckError } from "../../utils/error-handling";
 
 export const checkSuperAdmin = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL],
@@ -21,16 +21,20 @@ export const checkSuperAdmin = createStepCheck({
         return {
           completed: true,
           message: `Service account '${email}' has admin privileges.`,
-          outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: '3' },
+          outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
         };
       }
-      const roles = await google.listRoleAssignments(token, email, context.logger);
-      const hasSuperAdmin = roles.some((r) => r.roleId === '3');
+      const roles = await google.listRoleAssignments(
+        token,
+        email,
+        context.logger,
+      );
+      const hasSuperAdmin = roles.some((r) => r.roleId === "3");
       return hasSuperAdmin
         ? {
             completed: true,
             message: `Service account has Super Admin role assigned.`,
-            outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: '3' },
+            outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
           }
         : {
             completed: false,

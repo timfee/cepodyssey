@@ -16,7 +16,7 @@ export interface ManagedError {
 export class ErrorManager {
   static handle(
     error: unknown,
-    _context?: { stepId?: string; stepTitle?: string }
+    _context?: { stepId?: string; stepTitle?: string },
   ): ManagedError {
     if (error instanceof AuthenticationError) {
       return {
@@ -48,7 +48,7 @@ export class ErrorManager {
 
   static dispatch(
     error: unknown,
-    context?: { stepId?: string; stepTitle?: string }
+    context?: { stepId?: string; stepTitle?: string },
   ): void {
     const managed = this.handle(error, context);
     store.dispatch(
@@ -61,7 +61,7 @@ export class ErrorManager {
           provider: managed.provider,
           recoverable: managed.recoverable,
         },
-      })
+      }),
     );
   }
 }

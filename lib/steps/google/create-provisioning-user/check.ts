@@ -1,16 +1,16 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import { createStepCheck } from '../../utils/check-factory';
-import * as google from '@/lib/api/google';
-import { APIError } from '@/lib/api/utils';
-import { getGoogleToken } from '../../utils/auth';
-import { handleCheckError } from '../../utils/error-handling';
-import { portalUrls } from '@/lib/api/url-builder';
+import { OUTPUT_KEYS } from "@/lib/types";
+import { createStepCheck } from "../../utils/check-factory";
+import * as google from "@/lib/api/google";
+import { APIError } from "@/lib/api/utils";
+import { getGoogleToken } from "../../utils/auth";
+import { handleCheckError } from "../../utils/error-handling";
+import { portalUrls } from "@/lib/api/url-builder";
 
 export const checkProvisioningUser = createStepCheck({
   requiredOutputs: [],
   checkLogic: async (context) => {
     if (!context.domain) {
-      return { completed: false, message: 'Domain not configured.' };
+      return { completed: false, message: "Domain not configured." };
     }
     try {
       const token = await getGoogleToken();

@@ -50,11 +50,11 @@ export function WorkflowStepCard({
 
   const statusDisplay = useMemo(
     () => getStatusDisplayConfig(step.status, step.completionType),
-    [step.status, step.completionType]
+    [step.status, step.completionType],
   );
   const automatabilityDisplay = useMemo(
     () => getAutomatabilityDisplayConfig(step.automatability),
-    [step.automatability]
+    [step.automatability],
   );
 
   const isProcessing = step.status === "in_progress";
@@ -85,7 +85,7 @@ export function WorkflowStepCard({
 
   const displayApiActions: DisplayApiAction[] = useMemo(() => {
     return (step.actions ?? []).map((action) =>
-      parseApiAction(action, allOutputs)
+      parseApiAction(action, allOutputs),
     );
   }, [step.actions, allOutputs]);
 
@@ -101,7 +101,7 @@ export function WorkflowStepCard({
       className={cn(
         "w-full transition-all duration-200 ease-in-out shadow-sm hover:shadow-md",
         isProcessing && "animate-pulse",
-        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50"
+        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50",
       )}
     >
       <Accordion
@@ -114,7 +114,7 @@ export function WorkflowStepCard({
           <AccordionTrigger
             className={cn(
               "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-lg",
-              canExecuteStep && isHeaderHovered && "bg-primary/5"
+              canExecuteStep && isHeaderHovered && "bg-primary/5",
             )}
             onMouseEnter={() => setIsHeaderHovered(true)}
             onMouseLeave={() => setIsHeaderHovered(false)}
@@ -202,7 +202,7 @@ export function WorkflowStepCard({
       <CardFooter
         className={cn(
           "flex flex-wrap items-center justify-between gap-2 border-t p-3",
-          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card"
+          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card",
         )}
       >
         <StepCardFooterActions

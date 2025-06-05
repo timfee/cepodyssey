@@ -1,9 +1,9 @@
-import { OUTPUT_KEYS } from '@/lib/types';
-import * as google from '@/lib/api/google';
-import { portalUrls } from '@/lib/api/url-builder';
-import { getGoogleToken } from '../../utils/auth';
-import { createStepCheck } from '../../utils/check-factory';
-import { handleCheckError } from '../../utils/error-handling';
+import { OUTPUT_KEYS } from "@/lib/types";
+import * as google from "@/lib/api/google";
+import { portalUrls } from "@/lib/api/url-builder";
+import { getGoogleToken } from "../../utils/auth";
+import { createStepCheck } from "../../utils/check-factory";
+import { handleCheckError } from "../../utils/error-handling";
 
 export const checkExcludeAutomationOu = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME],
@@ -14,14 +14,21 @@ export const checkExcludeAutomationOu = createStepCheck({
     try {
       const token = await getGoogleToken();
       let profile: google.InboundSamlSsoProfile | null = null;
-      if (profileName.startsWith('inboundSamlSsoProfiles/')) {
-        profile = await google.getSamlProfile(token, profileName, context.logger);
+      if (profileName.startsWith("inboundSamlSsoProfiles/")) {
+        profile = await google.getSamlProfile(
+          token,
+          profileName,
+          context.logger,
+        );
       } else {
         const profiles = await google.listSamlProfiles(token, context.logger);
         profile = profiles.find((p) => p.displayName === profileName) ?? null;
       }
       if (!profile?.name) {
-        return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+        return {
+          completed: false,
+          message: `SAML Profile '${profileName}' not found.`,
+        };
       }
       const outputs: Record<string, unknown> = {
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
@@ -30,17 +37,24 @@ export const checkExcludeAutomationOu = createStepCheck({
         ssoMode: profile.ssoMode,
         resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
       };
-      const idpCreds = await google.listIdpCredentials(token, profile.name, context.logger);
+      const idpCreds = await google.listIdpCredentials(
+        token,
+        profile.name,
+        context.logger,
+      );
       const configured = !!(
         profile.idpConfig?.entityId &&
         profile.idpConfig?.singleSignOnServiceUri &&
         idpCreds.length > 0
       );
       return configured
-        ? { completed: true, message: 'SAML profile configured.', outputs }
-        : { completed: false, message: 'SAML profile not yet configured.' };
+        ? { completed: true, message: "SAML profile configured.", outputs }
+        : { completed: false, message: "SAML profile not yet configured." };
     } catch (e) {
-      return handleCheckError(e, `Couldn't verify SAML Profile '${profileName}'.`);
+      return handleCheckError(
+        e,
+        `Couldn't verify SAML Profile '${profileName}'.`,
+      );
     }
   },
 });

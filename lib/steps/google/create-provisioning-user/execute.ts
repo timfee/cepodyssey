@@ -1,11 +1,11 @@
-import * as google from '@/lib/api/google';
-import type { StepContext, StepExecutionResult } from '@/lib/types';
-import { OUTPUT_KEYS } from '@/lib/types';
-import { portalUrls } from '@/lib/api/url-builder';
-import { AlreadyExistsError } from '@/lib/api/errors';
-import { getGoogleToken } from '../../utils/auth';
-import { STEP_IDS } from '@/lib/steps/step-refs';
-import { withExecutionHandling } from '../../utils/execute-wrapper';
+import * as google from "@/lib/api/google";
+import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
+import { portalUrls } from "@/lib/api/url-builder";
+import { AlreadyExistsError } from "@/lib/api/errors";
+import { getGoogleToken } from "../../utils/auth";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeCreateProvisioningUser = withExecutionHandling({
   stepId: STEP_IDS.CREATE_PROVISIONING_USER,
@@ -19,7 +19,7 @@ export const executeCreateProvisioningUser = withExecutionHandling({
     const tempPassword = `P@${Date.now()}w0rd`;
     const user: google.DirectoryUser = {
       primaryEmail: email,
-      name: { givenName: 'Microsoft Entra ID', familyName: 'Provisioning' },
+      name: { givenName: "Microsoft Entra ID", familyName: "Provisioning" },
       password: tempPassword,
       orgUnitPath: ouPath,
       changePasswordAtNextLogin: false,
@@ -51,8 +51,8 @@ export const executeCreateProvisioningUser = withExecutionHandling({
       return {
         success: false,
         error: {
-          message: 'Failed to create provisioning user.',
-          code: 'API_ERROR',
+          message: "Failed to create provisioning user.",
+          code: "API_ERROR",
         },
       };
     }

@@ -6,8 +6,8 @@ This directory contains all routing, page components, and server-side logic entr
 
 1. **Server Actions**: The primary method for client-server communication. All server actions are defined in `app/actions/`.
 
-    - **Rule #1: NEVER THROW.** Actions must always catch their own errors and return a structured result object (e.g., `{ success: false, error: { ... } }`). This ensures predictable error handling on the client.
-    - **Rule #2: STAY FOCUSED.** Actions are thin wrappers that validate the session and then delegate to the core logic in `/lib/steps/registry.ts`. They should not contain complex business logic themselves.
+   - **Rule #1: NEVER THROW.** Actions must always catch their own errors and return a structured result object (e.g., `{ success: false, error: { ... } }`). This ensures predictable error handling on the client.
+   - **Rule #2: STAY FOCUSED.** Actions are thin wrappers that validate the session and then delegate to the core logic in `/lib/steps/registry.ts`. They should not contain complex business logic themselves.
 
 2. **Route Protection**: The main page (`/app/page.tsx`) is a Server Component that validates the user's session. If the user is not fully authenticated with both providers, it redirects them to the `/login` page.
 
