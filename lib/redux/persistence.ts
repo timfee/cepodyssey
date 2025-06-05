@@ -1,5 +1,4 @@
 import type { AppConfigState, StepStatusInfo } from "@/lib/types";
-import { migrateStepStatus } from "../../scripts/migrate-step-status";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -15,7 +14,7 @@ const getStorageKey = (domain: string) => `automation-progress-${domain}`;
  */
 export function saveProgress(
   domain: string,
-  progress: PersistedProgress,
+  progress: PersistedProgress
 ): void {
   if (typeof window === "undefined" || !domain) return;
   try {
@@ -37,11 +36,7 @@ export function loadProgress(domain: string): PersistedProgress | null {
     const key = getStorageKey(domain);
     const savedData = localStorage.getItem(key);
     if (!savedData) return null;
-    const parsed = JSON.parse(savedData) as PersistedProgress;
-    Object.keys(parsed.steps).forEach((stepId) => {
-      parsed.steps[stepId] = migrateStepStatus(parsed.steps[stepId]);
-    });
-    return parsed;
+    return JSON.parse(savedData) as PersistedProgress;
   } catch (error) {
     console.error("Failed to load or parse progress from localStorage:", error);
     return null;
