@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import type { ReactElement } from "react";
 import { useAppDispatch } from "@/hooks/use-redux";
 import { setError } from "@/lib/redux/slices/ui-state";
 
@@ -10,7 +11,7 @@ export default function RouteError({
 }: {
   error: Error & { digest?: string };
   reset: () => void;
-}): JSX.Element {
+}): ReactElement | null {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
