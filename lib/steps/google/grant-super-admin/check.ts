@@ -1,6 +1,9 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
 import { googleApi } from "@/lib/api/google";
+import {
+  GOOGLE_SUPER_ADMIN_ROLE_ID,
+} from "@/lib/constants/role-ids";
 import { handleCheckError } from "../../utils/error-handling";
 import { getRequiredOutput } from "../../utils/get-output";
 
@@ -24,7 +27,9 @@ export const checkSuperAdmin = createStepCheck({
         return {
           completed: true,
           message: `Service account '${email}' has admin privileges.`,
-          outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+          outputs: {
+            [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: GOOGLE_SUPER_ADMIN_ROLE_ID,
+          },
         };
       }
       const roles = await googleApi.roles.listAssignments(
@@ -32,12 +37,16 @@ export const checkSuperAdmin = createStepCheck({
         undefined,
         context.logger,
       );
-      const hasSuperAdmin = roles.some((r) => r.roleId === "3");
+      const hasSuperAdmin = roles.some(
+        (r) => r.roleId === GOOGLE_SUPER_ADMIN_ROLE_ID,
+      );
       return hasSuperAdmin
         ? {
             completed: true,
             message: `Service account has Super Admin role assigned.`,
-            outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+            outputs: {
+              [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: GOOGLE_SUPER_ADMIN_ROLE_ID,
+            },
           }
         : {
             completed: false,
