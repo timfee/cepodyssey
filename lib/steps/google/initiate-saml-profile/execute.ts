@@ -1,85 +1,45 @@
-"use server";
+import * as google from '@/lib/api/google';
+import type { StepContext, StepExecutionResult } from '@/lib/types';
+import { OUTPUT_KEYS } from '@/lib/types';
+import { portalUrls } from '@/lib/api/url-builder';
+import { getGoogleToken } from '../../utils/auth';
+import { STEP_IDS } from '@/lib/steps/step-refs';
+import { withExecutionHandling } from '../../utils/execute-wrapper';
 
-import * as google from "@/lib/api/google";
-import type { StepContext, StepExecutionResult } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
-import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../utils/auth";
-import { handleExecutionError } from "../../utils/error-handling";
-import { STEP_IDS } from "@/lib/steps/step-refs";
-
-/**
- * Create the initial "Azure AD SSO" SAML profile in Google Workspace.
- */
-export async function executeInitiateSamlProfile(
-  _context: StepContext,
-): Promise<StepExecutionResult> {
-  try {
+export const executeInitiateSamlProfile = withExecutionHandling({
+  stepId: STEP_IDS.INITIATE_SAML_PROFILE,
+  requiredOutputs: [],
+  executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
-    const profileDisplayName = "Azure AD SSO";
+    const profileDisplayName = 'Azure AD SSO';
+
     const result = await google.createSamlProfile(token, profileDisplayName);
 
-    if (typeof result === "object" && "alreadyExists" in result) {
+    if ('alreadyExists' in result) {
       const profiles = await google.listSamlProfiles(token);
-      const existingProfile = profiles.find(
-        (p) => p.displayName === profileDisplayName,
-      );
-      if (
-        !existingProfile?.name ||
-        !existingProfile.spConfig?.entityId ||
-        !existingProfile.spConfig?.assertionConsumerServiceUri
-      ) {
+      const existing = profiles.find((p) => p.displayName === profileDisplayName);
+      if (existing?.name) {
         return {
-          success: false,
-          error: {
-            message: `SAML Profile '${profileDisplayName}' appears to exist but required details could not be retrieved. Remove any partial profile and rerun this step.`,
-            code: "SAML_PROFILE_FETCH_FAILED",
+          success: true,
+          message: `SAML Profile '${profileDisplayName}' already exists.`,
+          outputs: {
+            [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: existing.displayName,
+            [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: existing.name,
           },
+          resourceUrl: portalUrls.google.sso.samlProfile(existing.name!),
         };
       }
-      return {
-        success: true,
-        message: `SAML Profile '${profileDisplayName}' already exists. Using its details.`,
-        resourceUrl: portalUrls.google.sso.samlProfile(existingProfile.name),
-        outputs: {
-          [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: existingProfile.displayName,
-          [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: existingProfile.name,
-          [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]:
-            existingProfile.spConfig.entityId,
-          [OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL]:
-            existingProfile.spConfig.assertionConsumerServiceUri,
-        },
-      };
-    }
-
-    if (
-      !result.name ||
-      !result.spConfig?.entityId ||
-      !result.spConfig?.assertionConsumerServiceUri
-    ) {
-      return {
-        success: false,
-        error: {
-          message:
-            "Google did not return the expected SAML profile details after creation. Delete the profile in the Admin Console and rerun this step.",
-          code: "SAML_PROFILE_MISSING_DETAILS",
-        },
-      };
+      return { success: true, message: `SAML Profile '${profileDisplayName}' already exists.` };
     }
 
     return {
       success: true,
-      message: `SAML Profile '${profileDisplayName}' created in Google Workspace.`,
-      resourceUrl: portalUrls.google.sso.samlProfile(result.name),
+      message: `SAML Profile '${profileDisplayName}' created.`,
       outputs: {
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: result.displayName,
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: result.name,
-        [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: result.spConfig.entityId,
-        [OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL]:
-          result.spConfig.assertionConsumerServiceUri,
       },
+      resourceUrl: portalUrls.google.sso.samlProfile(result.name!),
     };
-  } catch (e) {
-    return handleExecutionError(e, STEP_IDS.INITIATE_SAML_PROFILE);
-  }
-}
+  },
+});

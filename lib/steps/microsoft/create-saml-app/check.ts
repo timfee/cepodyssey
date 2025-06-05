@@ -1,57 +1,26 @@
-"use server";
+import { OUTPUT_KEYS } from '@/lib/types';
+import { STEP_IDS } from '@/lib/steps/step-refs';
+import { createStepCheck } from '../../utils/check-factory';
+import { checkMicrosoftServicePrincipal } from '../utils/common-checks';
 
-/**
- * Check if the Azure SAML SSO application exists.
- */
-
-import type { StepCheckResult, StepContext } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
-import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
-import { STEP_IDS } from "@/lib/steps/step-refs";
-
-export async function checkCreateSamlApp(
-  context: StepContext,
-): Promise<StepCheckResult> {
-  const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-  if (!appId) {
-    return {
-      completed: false,
-      message: "SAML SSO App ID not found.",
-      outputs: {
-        inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP),
-        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP),
-      },
-    };
-  }
-  const result = await checkMicrosoftServicePrincipal(appId);
-  if (result.completed && result.outputs) {
-    const outputs = {
-      [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]: result.outputs.spId,
-      [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.outputs.retrievedAppId,
-      [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.outputs.appObjectId,
-    };
-    return {
-      ...result,
-      outputs: {
-        ...outputs,
-        producedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP).map((o) => ({
-          ...o,
-          value: outputs[o.key as keyof typeof outputs],
-        })),
-        inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP).map((inp) => ({
-          ...inp,
-          data: { ...inp.data, value: context.outputs[inp.data.key!] },
-        })),
-      },
-    };
-  }
-  return {
-    ...result,
-    outputs: {
-      ...(result.outputs || {}),
-      inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP),
-      expectedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP),
-    },
-  };
-}
+export const checkCreateSamlApp = createStepCheck({
+  stepId: STEP_IDS.CREATE_SAML_APP,
+  requiredOutputs: [OUTPUT_KEYS.SAML_SSO_APP_ID],
+  checkLogic: async (context) => {
+    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
+    const result = await checkMicrosoftServicePrincipal(appId);
+    if (result.completed && result.outputs) {
+      return {
+        completed: true,
+        message: result.message,
+        outputs: {
+          [OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID]: result.outputs.spId,
+          [OUTPUT_KEYS.SAML_SSO_APP_ID]: result.outputs.retrievedAppId,
+          [OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID]: result.outputs.appObjectId,
+          resourceUrl: result.outputs.resourceUrl,
+        },
+      };
+    }
+    return result;
+  },
+});
