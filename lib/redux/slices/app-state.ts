@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import type { AppConfigState, StepStatusInfo } from "@/lib/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
@@ -56,12 +57,17 @@ export const appStateSlice = createSlice({
     },
 
     // --- Step actions ---
-    initializeSteps(state, action: PayloadAction<Record<string, StepStatusInfo>>) {
+    initializeSteps(
+      state,
+      action: PayloadAction<Record<string, StepStatusInfo>>,
+    ) {
       state.steps = action.payload;
     },
     updateStep(state, action: PayloadAction<{ id: string } & StepStatusInfo>) {
       const { id, ...statusInfo } = action.payload;
-      const existingStep = state.steps[id] ?? { status: "pending" };
+      const existingStep = Object.prototype.hasOwnProperty.call(state.steps, id)
+        ? state.steps[id]
+        : { status: "pending" };
       state.steps[id] = { ...existingStep, ...statusInfo };
     },
     markStepComplete(
@@ -70,7 +76,9 @@ export const appStateSlice = createSlice({
     ) {
       const { id, isUserMarked } = action.payload;
       state.steps[id] = {
-        ...state.steps[id],
+        ...(Object.prototype.hasOwnProperty.call(state.steps, id)
+          ? state.steps[id]
+          : {}),
         status: "completed",
         completionType: isUserMarked ? "user-marked" : "server-verified",
       };
@@ -81,7 +89,9 @@ export const appStateSlice = createSlice({
     markStepIncomplete(state, action: PayloadAction<string>) {
       const id = action.payload;
       state.steps[id] = {
-        ...state.steps[id],
+        ...(Object.prototype.hasOwnProperty.call(state.steps, id)
+          ? state.steps[id]
+          : {}),
         status: "pending",
         completionType: undefined,
       };
@@ -89,7 +99,7 @@ export const appStateSlice = createSlice({
     },
     clearCheckTimestamp(state, action: PayloadAction<string>) {
       const id = action.payload;
-      if (state.steps[id]) {
+      if (Object.prototype.hasOwnProperty.call(state.steps, id)) {
         state.steps[id].lastCheckedAt = undefined;
       }
     },

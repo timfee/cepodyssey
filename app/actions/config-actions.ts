@@ -3,6 +3,7 @@
 import { auth } from "@/app/(auth)/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import isFQDN from "validator/lib/isFQDN";
 
 export interface ActionResult<TData = Record<string, unknown> | null> {
   success: boolean;
@@ -10,9 +11,6 @@ export interface ActionResult<TData = Record<string, unknown> | null> {
   error?: { message: string; code?: string };
   message?: string;
 }
-
-const DOMAIN_REGEX =
-  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
 interface AppConfig {
   /** Domain and tenant ID mirror the Redux AppConfigState structure. */
@@ -22,7 +20,9 @@ interface AppConfig {
 }
 
 const ConfigSchema = z.object({
-  domain: z.string().regex(DOMAIN_REGEX, "Invalid domain format."),
+  domain: z.string().refine((d) => isFQDN(d), {
+    message: "Invalid domain format.",
+  }),
   tenantId: z.string().uuid("Tenant ID must be a valid UUID."),
   outputs: z.record(z.unknown()).optional(),
 });

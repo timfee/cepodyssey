@@ -5,7 +5,9 @@ import type { StepContext } from "@/lib/types";
  * Throws an error if the value is undefined or null.
  */
 export function getRequiredOutput<T>(context: StepContext, key: string): T {
-  const value = context.outputs[key];
+  const value = Object.prototype.hasOwnProperty.call(context.outputs, key)
+    ? context.outputs[key] // eslint-disable-line security/detect-object-injection
+    : undefined;
   if (value === undefined || value === null) {
     throw new Error(`Required output '${key}' is missing`);
   }

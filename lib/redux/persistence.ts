@@ -21,8 +21,8 @@ function migrateStepStatus(input: StepStatusInfo | string): StepStatusInfo {
 
 /**
  * Saves the current setup progress using SecureStorage.
- * @param domain The primary domain, used as part of the storage key.
- * @param progress The progress data to save.
+ * @param domain - The primary domain, used as part of the storage key.
+ * @param progress - The progress data to save.
  */
 export async function saveProgress(
   domain: string,
@@ -35,7 +35,7 @@ export async function saveProgress(
 
 /**
  * Loads setup progress from storage.
- * @param domain The primary domain, used as part of the storage key.
+ * @param domain - The primary domain, used as part of the storage key.
  * @returns The persisted progress data, or null if not found.
  */
 export function loadProgress(domain: string): PersistedProgress | null {
@@ -56,7 +56,12 @@ export function loadProgress(domain: string): PersistedProgress | null {
         (def: StepDefinition) => def.id === stepId,
       );
       // Only keep status for steps without a check function (non-checkable/manual steps)
-      if (stepDef && !stepDef.check) {
+      if (
+        stepDef &&
+        !stepDef.check &&
+        Object.prototype.hasOwnProperty.call(parsed.steps, stepId)
+      ) {
+        // eslint-disable-next-line security/detect-object-injection
         filteredSteps[stepId] = migrateStepStatus(parsed.steps[stepId]);
       }
     });

@@ -44,24 +44,36 @@ export class SessionManager {
       }
       const googleValid = !!session.googleToken && session.hasGoogleAuth;
       const microsoftValid = !!session.microsoftToken && session.hasMicrosoftAuth;
-      if (!googleValid || !microsoftValid) {
-        const missingProvider = !googleValid ? (!microsoftValid ? "both" : "google") : "microsoft";
-        return {
-          valid: false,
-          googleValid,
-          microsoftValid,
-          error: {
-            provider: missingProvider,
-            message:
-              missingProvider === "both"
-                ? "Both providers authentication required"
-                : missingProvider === "google"
-                  ? "Please sign in with Google"
-                  : "Please sign in with Microsoft",
-            code: "AUTH_MISSING",
-          },
-        };
-      }
+        if (!googleValid || !microsoftValid) {
+          let missingProvider: "google" | "microsoft" | "both";
+          if (!googleValid && !microsoftValid) {
+            missingProvider = "both";
+          } else if (!googleValid) {
+            missingProvider = "google";
+          } else {
+            missingProvider = "microsoft";
+          }
+
+          let message;
+          if (missingProvider === "both") {
+            message = "Both providers authentication required";
+          } else if (missingProvider === "google") {
+            message = "Please sign in with Google";
+          } else {
+            message = "Please sign in with Microsoft";
+          }
+
+          return {
+            valid: false,
+            googleValid,
+            microsoftValid,
+            error: {
+              provider: missingProvider,
+              message,
+              code: "AUTH_MISSING",
+            },
+          };
+        }
       return { valid: true, googleValid: true, microsoftValid: true };
     } catch (error) {
       console.error("Session validation error:", error);

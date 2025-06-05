@@ -62,10 +62,10 @@ export function WorkflowStepCard({
   const isCompleted = step.status === StepStatus.COMPLETED;
   const isBlocked = step.status === StepStatus.BLOCKED;
 
-  const canExecuteStep = useMemo(() => {
-    if (!canRunGlobal || isProcessing || isCompleted || isBlocked) return false;
-    return true;
-  }, [canRunGlobal, isProcessing, isCompleted, isBlocked]);
+  const canExecuteStep = useMemo(
+    () => canRunGlobal && !isProcessing && !isCompleted && !isBlocked,
+    [canRunGlobal, isProcessing, isCompleted, isBlocked],
+  );
 
   const displayInputs: DisplayInput[] = useMemo(() => {
     return stepInputDefs.map((def) => ({

@@ -58,23 +58,59 @@ export function GlobalErrorModal() {
     details?.category === "auth" || details?.code === "AUTH_EXPIRED";
   const isAPIEnablementError = details?.code === "API_NOT_ENABLED";
 
+  let title = "Error";
+  if (isAuthError) {
+    title = "Authentication Required";
+  } else if (isAPIEnablementError) {
+    title = "API Not Enabled";
+  }
+
+  const description = isAuthError
+    ? "Your session has expired or is invalid."
+    : "An error occurred that requires your attention.";
+
+  let footerButtons: React.ReactNode;
+  if (isAuthError) {
+    footerButtons = (
+      <>
+        <Button onClick={handleDismiss} variant="outline">
+          Cancel
+        </Button>
+        <Button onClick={handleSignIn}>
+          <LogInIcon className="mr-2 h-4 w-4" />
+          Sign In Again
+        </Button>
+      </>
+    );
+  } else if (isAPIEnablementError) {
+    footerButtons = (
+      <>
+        <Button onClick={handleDismiss} variant="outline">
+          Dismiss
+        </Button>
+        <Button onClick={handleEnableAPI}>
+          <ExternalLinkIcon className="mr-2 h-4 w-4" />
+          Enable API
+        </Button>
+      </>
+    );
+  } else {
+    footerButtons = (
+      <Button onClick={handleDismiss} className="w-full">
+        Dismiss
+      </Button>
+    );
+  }
+
   return (
     <Dialog open={hasError} onOpenChange={handleDismiss}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangleIcon className="h-5 w-5 text-destructive" />
-            {isAuthError
-              ? "Authentication Required"
-              : isAPIEnablementError
-                ? "API Not Enabled"
-                : "Error"}
+            {title}
           </DialogTitle>
-          <DialogDescription>
-            {isAuthError
-              ? "Your session has expired or is invalid."
-              : "An error occurred that requires your attention."}
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm">{error.message}</p>
@@ -88,31 +124,7 @@ export function GlobalErrorModal() {
           )}
         </div>
         <DialogFooter className="flex gap-2 sm:justify-end">
-          {isAuthError ? (
-            <>
-              <Button onClick={handleDismiss} variant="outline">
-                Cancel
-              </Button>
-              <Button onClick={handleSignIn}>
-                <LogInIcon className="mr-2 h-4 w-4" />
-                Sign In Again
-              </Button>
-            </>
-          ) : isAPIEnablementError ? (
-            <>
-              <Button onClick={handleDismiss} variant="outline">
-                Dismiss
-              </Button>
-              <Button onClick={handleEnableAPI}>
-                <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                Enable API
-              </Button>
-            </>
-          ) : (
-            <Button onClick={handleDismiss} className="w-full">
-              Dismiss
-            </Button>
-          )}
+          {footerButtons}
         </DialogFooter>
       </DialogContent>
     </Dialog>
