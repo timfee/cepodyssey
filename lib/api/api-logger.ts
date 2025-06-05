@@ -1,31 +1,41 @@
-import { store } from "@/lib/redux/store";
-import { addApiLog, updateApiLog, type ApiLogEntry } from "@/lib/redux/slices/debug-panel";
-import { Logger } from "@/lib/utils/logger";
 import { isApiDebugEnabled } from "@/lib/utils";
 import { getLogCollector } from "./log-collector";
+import type { AsyncLocalStorage as AsyncLocalStorageType } from 'async_hooks';
+
+// Resolve AsyncLocalStorage depending on environment
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
+const { AsyncLocalStorage: NodeAsyncLocalStorage } = (() => {
+  try {
+    return require('async_hooks');
+  } catch {
+    return {
+      AsyncLocalStorage: require('./async-local-storage-polyfill').AsyncLocalStorage,
+    };
+  }
+})();
+/* eslint-enable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
+
+const asyncLocalStorage: AsyncLocalStorageType<{ requestId: string }> =
+  new (NodeAsyncLocalStorage as unknown as new () => AsyncLocalStorageType<{ requestId: string }>)();
 
 export class ApiLogger {
-  private static currentRequestId: string | null = null;
-
-  static setRequestId(requestId: string) {
-    this.currentRequestId = requestId;
+  static runWithRequestId<T>(requestId: string, fn: () => T): T {
+    return asyncLocalStorage.run({ requestId }, fn);
   }
 
-  static clearRequestId() {
-    this.currentRequestId = null;
+  static getRequestId(): string | null {
+    const store = asyncLocalStorage.getStore();
+    return store?.requestId || null;
   }
 
   static logRequest(url: string, init?: RequestInit): string {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const provider = this.detectProvider(url);
 
-    const debugEnabled = isApiDebugEnabled();
+    // Always log to console
+    console.log(`[API] ${init?.method || 'GET'} ${url}`);
 
-    if (!debugEnabled) {
-      Logger.debug(
-        "[ApiLogger]",
-        `Request ${init?.method || "GET"} ${url}`,
-      );
+    if (!isApiDebugEnabled()) {
       return id;
     }
 
@@ -34,10 +44,10 @@ export class ApiLogger {
       const h = init.headers;
       if (h instanceof Headers) {
         h.forEach((value, key) => {
-          if (key.toLowerCase() !== "authorization") {
+          if (key.toLowerCase() !== 'authorization') {
             headers[key] = value;
           } else {
-            headers[key] = "Bearer [REDACTED]";
+            headers[key] = 'Bearer [REDACTED]';
           }
         });
       }
@@ -46,35 +56,27 @@ export class ApiLogger {
     let requestBody: unknown = undefined;
     if (init?.body) {
       try {
-        requestBody =
-          typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+        requestBody = typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
       } catch {
         requestBody = init.body;
       }
     }
 
-    const logEntry: ApiLogEntry = {
+    const logEntry = {
       id,
       timestamp: new Date().toISOString(),
-      method: init?.method || "GET",
+      method: init?.method || 'GET',
       url,
       headers,
       requestBody,
       provider,
     };
 
-    if (typeof window === "undefined" && this.currentRequestId) {
-      const collector = getLogCollector(this.currentRequestId);
+    const requestId = this.getRequestId();
+    if (typeof window === 'undefined' && requestId) {
+      const collector = getLogCollector(requestId);
       collector.addLog(logEntry);
-    } else if (typeof window !== "undefined") {
-      store.dispatch(addApiLog(logEntry));
     }
-
-    Logger.debug(
-      "[ApiLogger]",
-      `Request ${init?.method || "GET"} ${url}`,
-      requestBody,
-    );
 
     return id;
   }
@@ -85,14 +87,10 @@ export class ApiLogger {
     responseBody?: unknown,
     duration?: number,
   ) {
-    const debugEnabled = isApiDebugEnabled();
+    // Always log to console
+    console.log(`[API] Response ${response.status} for ${id} (${duration}ms)`);
 
-    if (!debugEnabled) {
-      Logger.debug(
-        "[ApiLogger]",
-        `Response ${response.status} for request ${id}`,
-        responseBody,
-      );
+    if (!isApiDebugEnabled()) {
       return;
     }
 
@@ -103,67 +101,50 @@ export class ApiLogger {
       error: response.ok ? undefined : `HTTP ${response.status}`,
     };
 
-    if (typeof window === "undefined" && this.currentRequestId) {
-      const collector = getLogCollector(this.currentRequestId);
+    const requestId = this.getRequestId();
+    if (typeof window === 'undefined' && requestId) {
+      const collector = getLogCollector(requestId);
       const logs = collector.getLogs();
       const log = logs.find((l) => l.id === id);
       if (log) {
         Object.assign(log, updates);
       }
-    } else if (typeof window !== "undefined") {
-      store.dispatch(updateApiLog({ id, updates }));
     }
-
-    Logger.debug(
-      "[ApiLogger]",
-      `Response ${response.status} for request ${id}`,
-      responseBody,
-    );
   }
 
   static logError(id: string, error: unknown) {
-    const debugEnabled = isApiDebugEnabled();
+    // Always log to console
+    console.error(`[API] Error for request ${id}:`, error);
 
-    if (!debugEnabled) {
-      Logger.error("[ApiLogger]", `Error for request ${id}`, error);
+    if (!isApiDebugEnabled()) {
       return;
     }
 
     const errorMessage = error instanceof Error ? error.message : String(error);
-    if (typeof window === "undefined" && this.currentRequestId) {
-      const collector = getLogCollector(this.currentRequestId);
+    const requestId = this.getRequestId();
+    if (typeof window === 'undefined' && requestId) {
+      const collector = getLogCollector(requestId);
       const logs = collector.getLogs();
       const log = logs.find((l) => l.id === id);
       if (log) {
         log.error = errorMessage;
       }
-    } else if (typeof window !== "undefined") {
-      store.dispatch(
-        updateApiLog({
-          id,
-          updates: {
-            error: errorMessage,
-          },
-        }),
-      );
     }
-
-    Logger.error("[ApiLogger]", `Error for request ${id}`, error);
   }
 
-  private static detectProvider(url: string): "google" | "microsoft" | "other" {
+  private static detectProvider(url: string): 'google' | 'microsoft' | 'other' {
     if (
-      url.includes("googleapis.com") ||
-      url.includes("cloudidentity.googleapis.com")
+      url.includes('googleapis.com') ||
+      url.includes('cloudidentity.googleapis.com')
     ) {
-      return "google";
+      return 'google';
     }
     if (
-      url.includes("graph.microsoft.com") ||
-      url.includes("login.microsoftonline.com")
+      url.includes('graph.microsoft.com') ||
+      url.includes('login.microsoftonline.com')
     ) {
-      return "microsoft";
+      return 'microsoft';
     }
-    return "other";
+    return 'other';
   }
 }

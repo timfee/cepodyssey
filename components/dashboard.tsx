@@ -14,7 +14,6 @@ import { useStepExecution } from "@/hooks/use-step-execution";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useStore } from "react-redux";
-import { toast } from "sonner";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { setError } from "@/lib/redux/slices/errors";
@@ -118,9 +117,7 @@ export function AutomationDashboard({
         dispatch(initializeSteps(persisted.steps));
         // Merge outputs saved for this domain.
         dispatch(addOutputs(persisted.outputs || {}));
-        toast.info("Previous progress restored", {
-          duration: 2000,
-        });
+        console.log("Previous progress restored");
       } else {
         const initialStepStatuses: Record<string, { status: "pending" }> = {};
         allStepDefinitions.forEach((def) => {
@@ -311,14 +308,9 @@ export function AutomationDashboard({
 
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) {
-      // toast.error(
-      //   "Complete setup to run automation",
-      // );
       return;
     }
-    toast.info("Running automation...", {
-      duration: 5000,
-    });
+    console.log("Running automation...");
     let anyStepFailed = false;
     for (const step of allStepDefinitions) {
       const currentStepState = store.getState().setupSteps.steps[step.id];
@@ -330,19 +322,13 @@ export function AutomationDashboard({
       ) {
         await handleExecute(step.id as StepId);
         if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
-          // toast.error("Automation paused", {
-          //   description: `Check the error in ${step.title}`,
-          //   duration: 10000,
-          // });
           anyStepFailed = true;
           break;
         }
       }
     }
     if (!anyStepFailed) {
-      toast.success("All steps completed", {
-        duration: 5000,
-      });
+      console.log("All steps completed");
     }
   }, [handleExecute, store, canRunAutomation]);
 
@@ -358,11 +344,11 @@ export function AutomationDashboard({
         return;
       }
       dispatch(clearAllCheckTimestamps());
-      toast.info("Refreshing step status...", { duration: 2000 });
+      console.log("Refreshing step status...");
 
       await manualRefresh();
 
-      toast.success("Status refreshed", { duration: 2000 });
+      console.log("Status refreshed");
     }, [canRunAutomation, manualRefresh, dispatch]);
 
     return (

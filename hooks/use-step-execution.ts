@@ -6,7 +6,6 @@ import { executeStepAction } from '@/app/actions/step-actions';
 import type { StepId } from '@/lib/steps/step-refs';
 import { ErrorManager } from '@/lib/error-handling/error-manager';
 import { allStepDefinitions } from '@/lib/steps';
-import { toast } from 'sonner';
 import { addApiLog } from '@/lib/redux/slices/debug-panel';
 
 export function useStepExecution() {
@@ -30,8 +29,6 @@ export function useStepExecution() {
           message: undefined,
         })
       );
-
-      const toastId = toast.loading(`Executing: ${definition.title}...`);
 
       try {
         const context = {
@@ -66,7 +63,7 @@ export function useStepExecution() {
               lastCheckedAt: new Date().toISOString(),
             })
           );
-          toast.success(`${definition.title}: Success!`, { id: toastId });
+          console.log(`[useStepExecution] ${definition.title} succeeded`);
         } else {
           dispatch(
             updateStep({
@@ -85,11 +82,13 @@ export function useStepExecution() {
               { stepId, stepTitle: definition.title }
             );
           } else {
-            toast.error(`${definition.title}: ${result.error?.message}`, { id: toastId });
+            console.error(
+              `[useStepExecution] ${definition.title} failed:`,
+              result.error?.message,
+            );
           }
         }
       } catch (error) {
-        toast.dismiss(toastId);
       dispatch(
         updateStep({
           id: stepId,

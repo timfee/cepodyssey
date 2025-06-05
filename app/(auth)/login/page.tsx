@@ -9,7 +9,6 @@ import {
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
 
 import { lookupTenantId } from "@/app/actions/auth-actions";
 import { Button } from "@/components/ui/button";
@@ -73,10 +72,7 @@ function LoginPage() {
         errorMessage =
           "Your previous session was invalid. Please sign in again to both services.";
       }
-      toast.error(errorMessage, {
-        id: `login-error-${error}`,
-        duration: 10000,
-      });
+      console.error(errorMessage);
     }
   }, [searchParams]);
 
@@ -87,15 +83,11 @@ function LoginPage() {
 
     if (authAttempt && !error && sessionStatus === "authenticated") {
       if (authAttempt === "google" && !session?.hasGoogleAuth) {
-        toast.error("Google authentication failed. Please try again.", {
-          id: "google-auth-failed",
-          duration: 10000,
-        });
+        console.error("Google authentication failed. Please try again.");
       } else if (authAttempt === "microsoft" && !session?.hasMicrosoftAuth) {
-        toast.error("Microsoft authentication failed. Please try again.", {
-          id: "microsoft-auth-failed",
-          duration: 10000,
-        });
+        console.error(
+          "Microsoft authentication failed. Please try again.",
+        );
       }
     }
   }, [searchParams, session, sessionStatus]);
@@ -113,7 +105,7 @@ function LoginPage() {
 
   const onLookupTenant = async () => {
     if (!domain) {
-      toast.error("Please enter a domain first to lookup Tenant ID.");
+      console.error("Please enter a domain first to lookup Tenant ID.");
       return;
     }
     setIsLookingUpTenant(true);
@@ -123,17 +115,17 @@ function LoginPage() {
       setTenantId(result.tenantId);
       setIsTenantDiscovered(true);
       setLookupMessage(`Tenant ID found: ${result.tenantId}`);
-      toast.success("Tenant ID discovered!");
+      console.log("Tenant ID discovered!");
     } else {
       setLookupMessage(result.message || "Could not auto-discover Tenant ID.");
-      toast.error(result.message || "Tenant ID lookup failed.");
+      console.error(result.message || "Tenant ID lookup failed.");
     }
     setIsLookingUpTenant(false);
   };
 
   const onGoogleSignIn = () => {
     if (!domain) {
-      toast.error("Please enter your domain first");
+      console.error("Please enter your domain first");
       return;
     }
     startGoogleLoginTransition(async () => {
@@ -148,10 +140,7 @@ function LoginPage() {
       tenantId || process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
     // Domain is optional for MS login but used as hint when provided
     if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
-      toast.info(
-        "No Tenant ID found. Using default Microsoft sign-in.",
-        { duration: 7000 },
-      );
+      console.log("No Tenant ID found. Using default Microsoft sign-in.");
     }
     startMicrosoftLoginTransition(async () => {
       const formData = new FormData();

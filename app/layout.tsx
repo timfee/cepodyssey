@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 
 import { DebugPanel } from "@/components/debug-panel";
@@ -25,7 +24,6 @@ export default function RootLayout({
           <ModalManager />
           <DebugPanelNub />
           <DebugPanel />
-          <Toaster richColors />
         </Providers>
       </body>
     </html>

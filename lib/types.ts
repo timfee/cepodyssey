@@ -165,38 +165,43 @@ export type ManagedStep = StepDefinition & StepStatusInfo;
  */
 export const OUTPUT_KEYS = {
   // Google - G-1: Create 'Automation' Organizational Unit
-  GOOGLE_OU_PATH: "googleOuPath",
-  GOOGLE_OU_ID: "googleOuId",
+  AUTOMATION_OU_PATH: "g1AutomationOuPath",
+  AUTOMATION_OU_ID: "g1AutomationOuId",
   // Google - G-2: Create Provisioning User
-  GOOGLE_USER_EMAIL: "googleUserEmail",
-  GOOGLE_USER_ID: "googleUserId",
-  GOOGLE_USER_PASSWORD: "googleUserPassword",
+  SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
+  SERVICE_ACCOUNT_ID: "g2ServiceAccountId",
+  SERVICE_ACCOUNT_PASSWORD: "g2ServiceAccountPassword",
   // Google - G-3: Grant Admin Privileges to Provisioning User
-  GOOGLE_SUPERADMIN_ROLE_ID: "googleSuperAdminRoleId",
+  SUPER_ADMIN_ROLE_ID: "g3SuperAdminRoleId",
   // Google - G-5: Initiate Google SAML Profile
-  GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
-  GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
+  GOOGLE_SAML_PROFILE_NAME: "g5GoogleSsoProfileName",
+  GOOGLE_SAML_PROFILE_FULL_NAME: "g5GoogleSsoProfileFullName",
   // Google SAML Service Provider config
-  GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
-  GOOGLE_SAML_SP_ACS_URL: "googleSamlAcsUrl",
-  // Microsoft - M-1: Create Enterprise App
-  MS_APP_ID: "msAppId",
-  MS_APP_OBJECT_ID: "msAppObjectId",
-  MS_SP_OBJECT_ID: "msSpObjectId",
-  // Microsoft - M-3: Authorize Enterprise App
-  MS_JOB_ID: "msJobId",
+  GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
+  GOOGLE_SAML_ACS_URL: "g5GoogleSamlAcsUrl",
+
+  // Microsoft - M-1: Create Provisioning App
+  PROVISIONING_APP_ID: "m1ProvisioningAppId",
+  PROVISIONING_APP_OBJECT_ID: "m1ProvisioningAppObjectId",
+  PROVISIONING_SP_OBJECT_ID: "m1ProvisioningSpObjectId",
+
+  // Microsoft - M-3: Authorize Provisioning Connection
+  PROVISIONING_JOB_ID: "m3ProvisioningJobId",
+
   // Microsoft - M-6: Create SAML SSO App
-  MS_SAML_APP_ID: "msSamlAppId",
-  MS_SAML_APP_OBJECT_ID: "msSamlAppObjectId",
-  MS_SAML_SP_OBJECT_ID: "msSamlSpObjectId",
+  SAML_SSO_APP_ID: "m6SamlSsoAppId",
+  SAML_SSO_APP_OBJECT_ID: "m6SamlSsoAppObjectId",
+  SAML_SSO_SP_OBJECT_ID: "m6SamlSsoSpObjectId",
+
   // Microsoft - M-8: Retrieve IdP Metadata
-  MS_IDP_CERT_BASE64: "msIdpCertBase64",
-  MS_IDP_SSO_URL: "msIdpSsoUrl",
-  MS_IDP_ENTITY_ID: "msIdpEntityId",
+  IDP_CERTIFICATE_BASE64: "m8IdpCertificateBase64",
+  IDP_SSO_URL: "m8IdpSsoUrl",
+  IDP_ENTITY_ID: "m8IdpEntityId",
+
   // Flags for configuration steps
-  MS_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
-  MS_CREDS_CONFIGURED: "msCredsConfigured",
-  MS_MAPPINGS_CONFIGURED: "msMappingsConfigured",
-  MS_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
-  MS_SSO_TESTED: "msSsoTested",
+  FLAG_M2_PROV_APP_PROPS_CONFIGURED: "flagM2ProvAppPropsConfigured",
+  FLAG_M3_PROV_CREDS_CONFIGURED: "flagM3ProvCredsConfigured",
+  FLAG_M4_PROV_MAPPINGS_CONFIGURED: "flagM4ProvMappingsConfigured",
+  FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "flagM7SamlAppSettingsConfigured",
+  FLAG_M10_SSO_TESTED: "flagM10SsoTested",
 };
