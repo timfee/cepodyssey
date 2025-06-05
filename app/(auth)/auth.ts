@@ -1,5 +1,6 @@
 import { withRetry } from "@/lib/api/utils";
 import { googleOAuthUrls, microsoftAuthUrls } from "@/lib/api/url-builder";
+import { config } from "@/lib/config";
 import { Logger } from "@/lib/utils/logger";
 import type { User } from "next-auth";
 import NextAuth from "next-auth";
@@ -31,8 +32,8 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        client_id: config.GOOGLE_CLIENT_ID,
+        client_secret: config.GOOGLE_CLIENT_SECRET,
         grant_type: "refresh_token",
         refresh_token: token.googleRefreshToken as string,
       }),
@@ -69,16 +70,16 @@ async function refreshGoogleToken(token: JWT): Promise<JWT> {
 async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   try {
     const tenantForRefresh =
-      token.microsoftTenantId || process.env.MICROSOFT_TENANT_ID || "common";
+      token.microsoftTenantId || config.MICROSOFT_TENANT_ID || "common";
     const response = await fetch(microsoftAuthUrls.token(tenantForRefresh), {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: process.env.MICROSOFT_CLIENT_ID!,
-        client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
+        client_id: config.MICROSOFT_CLIENT_ID,
+        client_secret: config.MICROSOFT_CLIENT_SECRET,
         grant_type: "refresh_token",
         refresh_token: token.microsoftRefreshToken as string,
-        scope: process.env.MICROSOFT_GRAPH_SCOPES!,
+        scope: config.MICROSOFT_GRAPH_SCOPES,
       }),
     });
     const refreshed = await response.json();
@@ -141,7 +142,7 @@ async function checkGoogleAdmin(
     return false;
   }
   const fetchUrl = `${
-    process.env.GOOGLE_API_BASE
+    config.GOOGLE_API_BASE
   }/admin/directory/v1/users/${encodeURIComponent(
     email,
   )}?fields=isAdmin,suspended,primaryEmail`;
@@ -213,7 +214,7 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
     Logger.warn("[Auth]", "checkMicrosoftAdmin: AccessToken missing.");
     return false;
   }
-  const fetchUrl = `${process.env.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
+  const fetchUrl = `${config.GRAPH_API_BASE}/me/memberOf/microsoft.graph.directoryRole?$select=displayName,roleTemplateId`;
   Logger.debug(
     "[Auth]",
     `checkMicrosoftAdmin: Fetching admin roles from ${fetchUrl}`,
@@ -279,14 +280,14 @@ async function checkMicrosoftAdmin(accessToken: string): Promise<boolean> {
  * Includes token refresh logic and admin verification callbacks.
  */
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
+  secret: config.AUTH_SECRET,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: config.GOOGLE_CLIENT_ID,
+      clientSecret: config.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: process.env.GOOGLE_ADMIN_SCOPES!,
+          scope: config.GOOGLE_ADMIN_SCOPES,
           access_type: "offline",
           prompt: "consent",
           include_granted_scopes: true,
@@ -295,14 +296,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     MicrosoftEntraIDProvider({
-      clientId: process.env.MICROSOFT_CLIENT_ID!,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+      clientId: config.MICROSOFT_CLIENT_ID,
+      clientSecret: config.MICROSOFT_CLIENT_SECRET,
       issuer: `https://login.microsoftonline.com/${
-        process.env.MICROSOFT_TENANT_ID ?? "common"
+        config.MICROSOFT_TENANT_ID ?? "common"
       }/v2.0`,
       authorization: {
         params: {
-          scope: `${process.env.MICROSOFT_GRAPH_SCOPES!} offline_access`,
+          scope: `${config.MICROSOFT_GRAPH_SCOPES} offline_access`,
           prompt: "consent",
           response_mode: "query",
         },
@@ -378,7 +379,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (account as { tenantId?: string }).tenantId ||
             token.microsoftTenantId;
           finalToken.microsoftTenantId =
-            accountTenantId || process.env.MICROSOFT_TENANT_ID;
+            accountTenantId || config.MICROSOFT_TENANT_ID;
           if (finalToken.microsoftTenantId) {
             Logger.debug(
               "[Auth]",

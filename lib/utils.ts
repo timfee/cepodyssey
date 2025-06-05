@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { config } from "@/lib/config";
 
 /**
  * Concatenate class names using `clsx` and merge Tailwind overrides.
@@ -58,7 +59,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
  * Defaults to true in development unless explicitly disabled.
  */
 export function isApiDebugEnabled(): boolean {
-  const flag = process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+  const flag = config.NEXT_PUBLIC_ENABLE_API_DEBUG;
   if (flag === "true") return true;
   if (flag === "false") return false;
   return process.env.NODE_ENV !== "production";

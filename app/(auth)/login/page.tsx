@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { config } from "@/lib/config";
 import { cleanupInvalidSession } from "../auth";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
@@ -35,7 +36,7 @@ function LoginPage() {
 
   const [domain, setDomain] = useState("");
   const [tenantId, setTenantId] = useState(
-    process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "",
+    config.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "",
   );
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
   const [isLookingUpTenant, setIsLookingUpTenant] = useState(false);
@@ -132,10 +133,9 @@ function LoginPage() {
   };
 
   const onMicrosoftSignIn = () => {
-    const effectiveTenantId =
-      tenantId || process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
+    const effectiveTenantId = tenantId || config.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
     // Domain is optional for MS login but used as hint when provided
-    if (!effectiveTenantId && !process.env.MICROSOFT_TENANT_ID) {
+    if (!effectiveTenantId && !config.MICROSOFT_TENANT_ID) {
       console.log("No Tenant ID found. Using default Microsoft sign-in.");
     }
     startMicrosoftLoginTransition(async () => {
@@ -153,8 +153,8 @@ function LoginPage() {
   const isMicrosoftButtonDisabled =
     isLoadingOverall ||
     (!tenantId &&
-      !process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID &&
-      !process.env.MICROSOFT_TENANT_ID) ||
+      !config.NEXT_PUBLIC_MICROSOFT_TENANT_ID &&
+      !config.MICROSOFT_TENANT_ID) ||
     (session?.hasMicrosoftAuth ?? false);
 
   return (
@@ -204,7 +204,7 @@ function LoginPage() {
                   }`}
                   disabled={
                     isLoadingOverall ||
-                    !!process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
+                    !!config.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
                     session?.hasMicrosoftAuth
                   }
                 />
@@ -216,7 +216,7 @@ function LoginPage() {
                     isLoadingOverall ||
                     !domain ||
                     isLookingUpTenant ||
-                    !!process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
+                    !!config.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
                     session?.hasMicrosoftAuth
                   }
                   className="shrink-0"
@@ -236,7 +236,7 @@ function LoginPage() {
                   {lookupMessage}
                 </p>
               )}
-              {process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
+              {config.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   Tenant ID is pre-configured.
                 </p>

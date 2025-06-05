@@ -2,25 +2,21 @@
  * Centralized URL builder for all external service URLs.
  * Handles proper encoding and uses environment variables.
  */
+import { config } from "@/lib/config";
 
 // API Base URLs (from env)
 export const API_BASES = {
-  googleDirectory:
-    process.env.GOOGLE_API_BASE || "https://admin.googleapis.com",
-  googleIdentity:
-    process.env.GOOGLE_IDENTITY_BASE || "https://cloudidentity.googleapis.com",
-  microsoftGraph:
-    process.env.GRAPH_API_BASE || "https://graph.microsoft.com/v1.0",
-  googleOAuth: process.env.GOOGLE_OAUTH_BASE || "https://oauth2.googleapis.com",
-  microsoftLogin:
-    process.env.MICROSOFT_LOGIN_BASE || "https://login.microsoftonline.com",
+  googleDirectory: config.GOOGLE_API_BASE,
+  googleIdentity: config.GOOGLE_IDENTITY_BASE,
+  microsoftGraph: config.GRAPH_API_BASE,
+  googleOAuth: config.GOOGLE_OAUTH_BASE,
+  microsoftLogin: config.MICROSOFT_LOGIN_BASE,
 } as const;
 
 // UI/Portal Base URLs (from env)
 export const PORTAL_BASES = {
-  googleAdmin:
-    process.env.GOOGLE_ADMIN_CONSOLE_BASE || "https://admin.google.com",
-  azurePortal: process.env.AZURE_PORTAL_BASE || "https://portal.azure.com",
+  googleAdmin: config.GOOGLE_ADMIN_CONSOLE_BASE,
+  azurePortal: config.AZURE_PORTAL_BASE,
 } as const;
 
 // Google Directory API URLs
