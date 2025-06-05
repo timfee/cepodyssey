@@ -6,8 +6,8 @@ import {
   type PersistedProgress,
 } from "@/lib/redux/persistence";
 
-import { addOutputs } from "@/lib/redux/slices/app-state";
-import { initializeSteps } from "@/lib/redux/slices/setup-steps";
+import { addOutputs, initializeSteps } from "@/lib/redux/slices/app-state";
+
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import { useEffect } from "react";
