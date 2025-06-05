@@ -22,6 +22,9 @@ export function handleCheckError(
   );
 
   if (isAuthenticationError(error)) {
+    // Dispatch the auth error to the global error handler
+    ErrorManager.dispatch(error, { stepTitle: defaultMessage });
+
     store.dispatch(
       addApiLog({
         id: `auth-error-${Date.now()}`,
@@ -32,7 +35,17 @@ export function handleCheckError(
         provider: error.provider === "google" ? "google" : "microsoft",
       }),
     );
-    throw error;
+
+    // Return auth error result
+    return {
+      completed: false,
+      message: error.message,
+      outputs: {
+        errorCode: "AUTH_EXPIRED",
+        errorProvider: error.provider,
+        requiresReauth: true,
+      },
+    };
   }
 
   const managed = ErrorManager.handle(error);
