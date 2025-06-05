@@ -1,17 +1,19 @@
 import { OUTPUT_KEYS } from "@/lib/types";
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getGoogleToken } from "../../utils/auth";
 import { createStepCheck } from "../../utils/check-factory";
 import { handleCheckError } from "../../utils/error-handling";
 import { APIError } from "@/lib/api/utils";
 
 export const checkAutomationOu = createStepCheck({
   requiredOutputs: [],
-  checkLogic: async (_context) => {
+  checkLogic: async (context) => {
     try {
-      const token = await getGoogleToken();
-      const orgUnit = await google.getOrgUnit(token, "/Automation");
+      const orgUnit = await googleApi.orgUnits.get(
+        "/Automation",
+        undefined,
+        context.logger,
+      );
       if (orgUnit?.orgUnitId && orgUnit.orgUnitPath) {
         return {
           completed: true,

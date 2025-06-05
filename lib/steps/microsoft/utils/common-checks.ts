@@ -1,42 +1,29 @@
 "use server";
 
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
+import type { ApiLogger } from "@/lib/api/api-logger";
+import type { SynchronizationJob, SynchronizationRule } from "@/lib/api/microsoft";
+import type * as MicrosoftGraph from "microsoft-graph";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
-import { getMicrosoftToken } from "../../utils/auth";
-import { portalUrls } from "@/lib/api/url-builder";
-
-function createCheckFunction<T, A extends unknown[]>(
-  checkName: string,
-  checkLogic: (token: string, ...args: A) => Promise<T>,
-  resultMapper: (data: T) => StepCheckResult,
-) {
-  return async (...args: A): Promise<StepCheckResult> => {
-    try {
-      const token = await getMicrosoftToken();
-      const result = await checkLogic(token, ...args);
-      return resultMapper(result);
-    } catch (e) {
-      return handleCheckError(e, `Check failed: ${checkName}`);
-    }
-  };
-}
 
 /**
  * Ensure the Azure service principal for the given app client ID exists.
  * Returns basic identifiers if found.
  */
+
 const checkMicrosoftServicePrincipalInner = createCheckFunction(
   "MicrosoftServicePrincipal",
   async (token: string, appClientId: string) => {
     const sp = await microsoft.getServicePrincipalByAppId(token, appClientId);
+
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
-      const apps = await microsoft.listApplications(
-        token,
+      const apps = await microsoftApi.applications.list(
         `appId eq '${appClientId}'`,
+        logger,
       );
       if (apps[0]?.id) {
         appObjectId = apps[0].id;
@@ -70,10 +57,12 @@ export async function checkMicrosoftServicePrincipal(
 /**
  * Determine if the specified service principal is enabled in Azure AD.
  */
+
 const checkMicrosoftServicePrincipalEnabledInner = createCheckFunction(
   "MicrosoftServicePrincipalEnabled",
   async (token: string, spObjectId: string) => {
     const sp = await microsoft.getServicePrincipalDetails(token, spObjectId);
+
     if (sp?.accountEnabled === true) {
       return { completed: true, message: "Service Principal is enabled." } as StepCheckResult;
     }
@@ -96,6 +85,7 @@ export async function checkMicrosoftServicePrincipalEnabled(
 /**
  * Retrieve provisioning job information for an Azure service principal.
  */
+
 const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
   "MicrosoftProvisioningJobDetails",
   async (token: string, spObjectId: string, jobId?: string) => {
@@ -170,6 +160,7 @@ export async function checkMicrosoftProvisioningJobDetails(
 /**
  * Verify the SAML application's identifier URI and reply URL settings.
  */
+
 const checkMicrosoftSamlAppSettingsAppliedInner = createCheckFunction(
   "MicrosoftSamlAppSettingsApplied",
   async (
@@ -179,6 +170,7 @@ const checkMicrosoftSamlAppSettingsAppliedInner = createCheckFunction(
     expectedAcsUrl: string,
   ) => {
     const appDetails = await microsoft.getApplicationDetails(token, appObjectId);
+
     if (!appDetails) {
       return {
         completed: false,
@@ -227,6 +219,7 @@ export async function checkMicrosoftSamlAppSettingsApplied(
 /**
  * Check whether key default attribute mappings are present.
  */
+
 const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
   "MicrosoftAttributeMappingsApplied",
   async (token: string, spObjectId: string, jobId: string) => {
@@ -258,6 +251,7 @@ const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
           am.targetAttributeName === 'emails[type eq "work"].value' &&
           am.source?.expression?.toLowerCase().includes("[mail]"),
       );
+
 
       if (hasUserPrincipalNameToUserName && hasMailToEmail) {
         return {
@@ -325,6 +319,9 @@ const checkMicrosoftAppAssignmentsInner = createCheckFunction(
 
 export async function checkMicrosoftAppAssignments(
   servicePrincipalObjectId: string,
+  logger?: ApiLogger,
 ): Promise<StepCheckResult> {
+
   return checkMicrosoftAppAssignmentsInner(servicePrincipalObjectId);
+
 }

@@ -1,6 +1,5 @@
 import { createStepCheck } from "../../utils/check-factory";
-import * as google from "@/lib/api/google";
-import { getGoogleToken } from "../../utils/auth";
+import { googleApi } from "@/lib/api/google/index";
 import { handleCheckError } from "../../utils/error-handling";
 import { APIError } from "@/lib/api/utils";
 
@@ -11,10 +10,9 @@ export const checkDomain = createStepCheck({
       return { completed: false, message: "Domain not configured." };
     }
     try {
-      const token = await getGoogleToken();
-      const domainDetails = await google.getDomain(
-        token,
+      const domainDetails = await googleApi.domains.get(
         context.domain,
+        undefined,
         context.logger,
       );
       const isVerified = !!(

@@ -1,41 +1,43 @@
-import * as microsoft from "@/lib/api/microsoft";
+import {
+  microsoftApi,
+  type Application,
+  type ServicePrincipal,
+} from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { AlreadyExistsError } from "@/lib/api/errors";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 
 export const executeCreateProvisioningApp = withExecutionHandling({
   stepId: STEP_IDS.CREATE_PROVISIONING_APP,
   requiredOutputs: [],
-  executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
-    const { microsoftToken } = await getTokens();
+  executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
     const appName = "Google Workspace User Provisioning";
 
     let result: {
-      application: microsoft.Application;
-      servicePrincipal: microsoft.ServicePrincipal;
+      application: Application;
+      servicePrincipal: ServicePrincipal;
     };
     try {
-      result = await microsoft.createEnterpriseApp(
-        microsoftToken,
+      result = await microsoftApi.applications.createFromTemplate(
         TEMPLATE_ID,
         appName,
+        context.logger,
       );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const existingApps = await microsoft.listApplications(
-          microsoftToken,
+        const existingApps = await microsoftApi.applications.list(
           `displayName eq '${appName}'`,
+          context.logger,
         );
         const existingApp = existingApps[0];
         if (existingApp?.appId) {
-          const sp = await microsoft.getServicePrincipalByAppId(
-            microsoftToken,
+          const sp = await microsoftApi.servicePrincipals.getByAppId(
             existingApp.appId,
+            context.logger,
           );
           if (existingApp.id && sp?.id) {
             return {

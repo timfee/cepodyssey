@@ -1,4 +1,4 @@
-import { APIError } from "./utils";
+import { APIError, withRetry } from "./utils";
 import { auth } from "@/app/(auth)/auth";
 import { ApiLogger } from "./api-logger";
 
@@ -89,10 +89,7 @@ export async function fetchWithAuth(
   logger?: ApiLogger,
 ): Promise<Response> {
   const session = await auth();
-
-  // Select the correct token based on the provider
-  const token =
-    provider === "google" ? session?.googleToken : session?.microsoftToken;
+  const token = provider === "google" ? session?.googleToken : session?.microsoftToken;
 
   if (!token) {
     throw new AuthenticationError(
@@ -103,20 +100,33 @@ export async function fetchWithAuth(
 
   const headers = new Headers(options.headers);
   headers.set("Authorization", `Bearer ${token}`);
-  const optionsWithAuth: RequestInit = { ...options, headers };
 
-  logger?.addLog(`[[Auth]] Making authenticated request to ${url}`);
-  const response = await fetch(url, optionsWithAuth);
+  const requestId = logger?.logRequest(url, { ...options, headers });
 
-  // If the response is a 401, throw a specific error.
-  // The UI will catch this and prompt for re-authentication.
-  if (response.status === 401) {
-    logger?.addLog(`[[Auth]] Received 401 Unauthorized for ${url}`);
-    throw new AuthenticationError(
-      `Authentication failed for ${provider}. The token is likely expired.`,
-      provider,
-    );
+  try {
+    const response = await withRetry(async () => {
+      const res = await fetch(url, { ...options, headers });
+
+      if (res.status === 401) {
+        throw new AuthenticationError(
+          `Authentication failed for ${provider}. Token likely expired.`,
+          provider,
+        );
+      }
+
+      return res;
+    });
+
+    if (logger && requestId) {
+      const responseBody = await response.clone().json().catch(() => null);
+      logger.logResponse(requestId, response, responseBody, Date.now());
+    }
+
+    return response;
+  } catch (error) {
+    if (logger && requestId) {
+      logger.logError(requestId, error);
+    }
+    throw error;
   }
-
-  return response;
 }

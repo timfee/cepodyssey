@@ -14,7 +14,11 @@ export const checkAuthorizeProvisioning = createStepCheck({
       | string
       | undefined;
     if (jobId) {
-      const result = await checkMicrosoftProvisioningJobDetails(spId, jobId);
+      const result = await checkMicrosoftProvisioningJobDetails(
+        spId,
+        jobId,
+        context.logger,
+      );
       if (result.completed) {
         return {
           completed: true,

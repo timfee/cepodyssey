@@ -1,9 +1,8 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -23,16 +22,16 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
     );
     const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_APP_ID);
     const jobId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_JOB_ID);
-
+    
     const schema: MicrosoftGraph.SynchronizationTemplate = {
       id: "GoogleApps",
     };
 
-    await microsoft.configureAttributeMappings(
-      microsoftToken,
+    await microsoftApi.provisioning.configureMappings(
       spId,
       jobId,
       schema,
+      context.logger,
     );
 
     return {

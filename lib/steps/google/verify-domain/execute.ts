@@ -1,9 +1,8 @@
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { AlreadyExistsError } from "@/lib/api/errors";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { validateRequiredOutputs } from "../../utils/validation";
@@ -12,15 +11,14 @@ export const executeVerifyDomain = withExecutionHandling({
   stepId: STEP_IDS.VERIFY_DOMAIN,
   requiredOutputs: [],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
 
     const validation = validateRequiredOutputs(context, []);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    const user = await google.getLoggedInUser(token);
+    const user = await googleApi.users.getLoggedIn(context.logger);
     try {
-      await google.addDomain(token, context.domain);
+      await googleApi.domains.add(context.domain, undefined, context.logger);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
         return {

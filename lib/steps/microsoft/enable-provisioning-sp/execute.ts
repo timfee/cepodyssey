@@ -1,8 +1,7 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -14,6 +13,7 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_APP_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
+
     const { microsoftToken } = await getTokens();
     const spId = getRequiredOutput<string>(
       context,
@@ -21,9 +21,11 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     );
     const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_APP_ID);
 
-    await microsoft.patchServicePrincipal(microsoftToken, spId, {
-      accountEnabled: true,
-    });
+    await microsoftApi.servicePrincipals.update(
+      spId,
+      { accountEnabled: true },
+      context.logger,
+    );
 
     return {
       success: true,
