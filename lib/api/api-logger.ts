@@ -1,6 +1,6 @@
-import type { ApiLogEntry } from "@/lib/redux/slices/debug-panel";
 import { isApiDebugEnabled } from "@/lib/utils";
 import { config } from "@/lib/config";
+import { serverLogger } from "@/lib/logging/server-logger";
 
 export class ApiLogger {
   /**
@@ -81,6 +81,6 @@ export class ApiLogger {
     )
       return "google";
     if (url.startsWith(config.GRAPH_API_BASE)) return "microsoft";
-    return "other";
+    return undefined;
   }
 }

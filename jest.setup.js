@@ -8,7 +8,7 @@ if (typeof global.TextEncoder === 'undefined') {
 }
 if (typeof global.TransformStream === 'undefined') {
   const { TransformStream } = require('stream/web')
-  // @ts-expect-error stream-web types
+  // @ts-expect-error stream/web types not available in test env
   global.TransformStream = TransformStream
 }
 if (typeof global.BroadcastChannel === 'undefined') {
@@ -19,7 +19,9 @@ if (typeof global.BroadcastChannel === 'undefined') {
     addEventListener() {}
     removeEventListener() {}
   }
-  // @ts-expect-error BroadcastChannel polyfill
+
+  
+  // @ts-expect-error BroadcastChannel not implemented in jsdom
   global.BroadcastChannel = BroadcastChannelMock
 }
 
