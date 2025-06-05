@@ -50,7 +50,7 @@ import { ProgressVisualizer } from "./progress";
 import { SessionWarning } from "./session-warning";
 
 interface AutomationDashboardProps {
-  serverSession: Session;
+  serverSession: Session | null;
 }
 /**
  * Main dashboard component handling setup progress and automation actions.
