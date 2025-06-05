@@ -3,6 +3,7 @@ import type {
   StepStatusInfo,
   StepDefinition,
 } from "@/lib/types";
+import { secureStorage } from "@/lib/storage";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -19,35 +20,30 @@ function migrateStepStatus(input: StepStatusInfo | string): StepStatusInfo {
 }
 
 /**
- * Saves the current setup progress to localStorage.
- * @param domain The primary domain, used as part of the localStorage key.
+ * Saves the current setup progress using SecureStorage.
+ * @param domain The primary domain, used as part of the storage key.
  * @param progress The progress data to save.
  */
-export function saveProgress(
+export async function saveProgress(
   domain: string,
   progress: PersistedProgress,
-): void {
+): Promise<void> {
   if (typeof window === "undefined" || !domain) return;
-  try {
-    const key = getStorageKey(domain);
-    localStorage.setItem(key, JSON.stringify(progress));
-  } catch (error) {
-    console.error("Failed to save progress to localStorage:", error);
-  }
+  const key = getStorageKey(domain);
+  await secureStorage.save(key, progress);
 }
 
 /**
- * Loads setup progress from localStorage.
- * @param domain The primary domain, used as part of the localStorage key.
+ * Loads setup progress from storage.
+ * @param domain The primary domain, used as part of the storage key.
  * @returns The persisted progress data, or null if not found.
  */
 export function loadProgress(domain: string): PersistedProgress | null {
   if (typeof window === "undefined" || !domain) return null;
   try {
     const key = getStorageKey(domain);
-    const savedData = localStorage.getItem(key);
-    if (!savedData) return null;
-    const parsed = JSON.parse(savedData) as PersistedProgress;
+    const parsed = secureStorage.load<PersistedProgress>(key);
+    if (!parsed) return null;
 
     // Import step definitions to check which steps are checkable
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -70,7 +66,7 @@ export function loadProgress(domain: string): PersistedProgress | null {
       outputs: parsed.outputs || {},
     };
   } catch (error) {
-    console.error("Failed to load or parse progress from localStorage:", error);
+    console.error("Failed to load or parse progress from storage:", error);
     return null;
   }
 }

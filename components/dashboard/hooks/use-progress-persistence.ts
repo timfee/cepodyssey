@@ -30,7 +30,7 @@ export function useProgressPersistence() {
 
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
-      saveProgress(appConfig.domain, {
+      void saveProgress(appConfig.domain, {
         steps: stepsStatusMap,
         outputs: store.getState().app.outputs,
       });
