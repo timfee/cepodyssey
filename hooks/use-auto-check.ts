@@ -45,7 +45,7 @@ export function useAutoCheck(
 
         if (shouldCheck && !recentlyChecked) {
           console.log(`[AutoCheck] Checking step ${stepId}`);
-          const checkResult = await executeCheck(stepId);
+          await executeCheck(stepId);
 
           // API logs are streamed via SSE; nothing to handle here
 
