@@ -17,16 +17,17 @@ export async function executeCreateAutomationOu(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
-    const validation = validateRequiredOutputs(context, []);
+    const validation = validateRequiredOutputs(
+      context,
+      [OUTPUT_KEYS.GWS_CUSTOMER_ID],
+      STEP_IDS.VERIFY_DOMAIN,
+    );
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
     const ouName = "Automation";
     const parentPath = "/";
-    const customerId = (context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string })?.customerId;
-    if (!customerId) {
-      return { success: false, error: { message: "Customer ID not found" } };
-    }
+    const customerId = context.outputs[OUTPUT_KEYS.GWS_CUSTOMER_ID] as string;
 
     const result = await google.createOrgUnit(token, ouName, parentPath, customerId);
 

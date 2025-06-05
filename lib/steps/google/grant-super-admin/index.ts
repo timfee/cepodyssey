@@ -40,7 +40,7 @@ export const g3GrantSuperAdmin: StepDefinition = {
 
   inputs: G3_INPUTS,
   outputs: G3_OUTPUTS,
-  requires: [STEP_IDS.CREATE_PROVISIONING_USER],
+  requires: [STEP_IDS.CREATE_PROVISIONING_USER, STEP_IDS.VERIFY_DOMAIN],
   nextStep: { id: STEP_IDS.VERIFY_DOMAIN, description: "Verify your domain for federation" },
 
   actions: ["POST /admin/directory/v1/customer/{customerId}/roleassignments"],
