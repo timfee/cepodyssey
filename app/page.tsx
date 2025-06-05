@@ -1,8 +1,8 @@
 import { auth } from "@/app/(auth)/auth";
 import { AutomationDashboard } from "@/components/dashboard";
 import { InitialConfigLoader } from "@/components/initial-config-loader";
-import { redirect } from "next/navigation";
 import { RouteGuard } from "@/components/route-guard";
+import { redirect } from "next/navigation";
 
 /**
  * Server component that renders the automation dashboard once both providers
@@ -12,7 +12,9 @@ export default async function Page() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/login?reason=unauthenticated");
+    // Client-side RouteGuard will handle the redirect and display a loading
+    // spinner while the authentication state resolves.
+    return <RouteGuard>{null}</RouteGuard>;
   }
 
   // Redirect if either provider is missing.
