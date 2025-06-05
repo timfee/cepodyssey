@@ -13,7 +13,9 @@ import { useAppDispatch, useAppSelector } from "./use-redux";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.appConfig.domain);
+  const tenantId = useAppSelector((state) => state.appConfig.tenantId);
+  const outputs = useAppSelector((state) => state.appConfig.outputs);
 
   const executeStep = useCallback(
     async (stepId: StepId) => {
@@ -37,9 +39,9 @@ export function useStepExecution() {
 
       try {
         const context = {
-          domain: appConfig.domain!,
-          tenantId: appConfig.tenantId!,
-          outputs: appConfig.outputs,
+          domain: domain!,
+          tenantId: tenantId!,
+          outputs,
         };
 
         const result = await executeStepAction(stepId, context);
@@ -106,7 +108,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, appConfig],
+    [dispatch, domain, tenantId, outputs],
   );
 
   return { executeStep };

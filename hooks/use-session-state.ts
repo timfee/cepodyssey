@@ -18,23 +18,21 @@ interface SessionState {
 export function useSessionState(): SessionState {
   const { data: session, status, update } = useSession();
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.appConfig.domain);
+  const tenantId = useAppSelector((state) => state.appConfig.tenantId);
   const lastValidation = useRef<number>(Date.now());
 
   useEffect(() => {
-    if (
-      session?.authFlowDomain &&
-      session.authFlowDomain !== appConfig.domain
-    ) {
+    if (session?.authFlowDomain && session.authFlowDomain !== domain) {
       dispatch(setDomain(session.authFlowDomain));
     }
     if (
       session?.microsoftTenantId &&
-      session.microsoftTenantId !== appConfig.tenantId
+      session.microsoftTenantId !== tenantId
     ) {
       dispatch(setTenantId(session.microsoftTenantId));
     }
-  }, [session, dispatch, appConfig.domain, appConfig.tenantId]);
+  }, [session, dispatch, domain, tenantId]);
 
   useEffect(() => {
     const interval = setInterval(async () => {

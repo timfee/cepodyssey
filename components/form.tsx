@@ -34,9 +34,8 @@ type ConfigFormData = z.infer<typeof configFormSchema>;
  */
 
 export function ConfigForm() {
-  const currentAppConfig = useAppSelector(
-    (state: RootState) => state.appConfig,
-  );
+  const domain = useAppSelector((state: RootState) => state.appConfig.domain);
+  const tenantId = useAppSelector((state: RootState) => state.appConfig.tenantId);
 
   const {
     register,
@@ -45,8 +44,8 @@ export function ConfigForm() {
   } = useForm<ConfigFormData>({
     resolver: zodResolver(configFormSchema),
     defaultValues: {
-      domain: currentAppConfig.domain ?? "",
-      tenantId: currentAppConfig.tenantId ?? "",
+      domain: domain ?? "",
+      tenantId: tenantId ?? "",
     },
   });
 
@@ -54,18 +53,13 @@ export function ConfigForm() {
   useEffect(() => {
     console.log(
       "ConfigForm: Resetting/populating form with Redux state:",
-      currentAppConfig,
+      { domain, tenantId },
     );
     reset({
-      domain: currentAppConfig.domain ?? "",
-      tenantId: currentAppConfig.tenantId ?? "",
+      domain: domain ?? "",
+      tenantId: tenantId ?? "",
     });
-  }, [
-    currentAppConfig,
-    currentAppConfig.domain,
-    currentAppConfig.tenantId,
-    reset,
-  ]);
+  }, [domain, tenantId, reset]);
 
   return (
     <Card className="mb-6">

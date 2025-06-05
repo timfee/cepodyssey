@@ -63,7 +63,9 @@ export function AutomationDashboard({
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.appConfig);
+  const domain = useAppSelector((state: RootState) => state.appConfig.domain);
+  const tenantId = useAppSelector((state: RootState) => state.appConfig.tenantId);
+  const outputs = useAppSelector((state: RootState) => state.appConfig.outputs);
   const stepsStatusMap = useAppSelector(
     (state: RootState) => state.setupSteps.steps,
   );
@@ -73,10 +75,8 @@ export function AutomationDashboard({
 
   // Effect: load saved progress from localStorage.
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain,
-      );
+    if (domain && domain !== "") {
+      const persisted: PersistedProgress | null = loadProgress(domain);
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
         // Merge outputs saved for this domain.
@@ -90,31 +90,31 @@ export function AutomationDashboard({
         dispatch(initializeSteps(initialStepStatuses));
       }
     }
-  }, [appConfig.domain, dispatch]);
+  }, [domain, dispatch]);
 
   // Effect: persist Redux state for this domain.
   useEffect(() => {
-    if (appConfig.domain && appConfig.domain !== "") {
-      saveProgress(appConfig.domain, {
+    if (domain && domain !== "") {
+      saveProgress(domain, {
         steps: stepsStatusMap,
-        outputs: appConfig.outputs,
+        outputs,
       });
     }
-  }, [appConfig.domain, appConfig.outputs, stepsStatusMap]);
+  }, [domain, outputs, stepsStatusMap]);
 
   const canRunAutomation = useMemo(
     () =>
       !!(
         currentSession?.hasGoogleAuth &&
         currentSession?.hasMicrosoftAuth &&
-        appConfig.domain &&
-        appConfig.tenantId
+        domain &&
+        tenantId
       ),
     [
       currentSession?.hasGoogleAuth,
       currentSession?.hasMicrosoftAuth,
-      appConfig.domain,
-      appConfig.tenantId,
+      domain,
+      tenantId,
     ],
   );
 
@@ -137,7 +137,7 @@ export function AutomationDashboard({
 
   const executeCheck = useCallback(
     async (stepId: StepId): Promise<StepCheckResult> => {
-      if (!appConfig.domain || !appConfig.tenantId) {
+      if (!domain || !tenantId) {
         return { completed: false } as StepCheckResult;
       }
 
@@ -151,8 +151,8 @@ export function AutomationDashboard({
       );
 
       const context: StepContext = {
-        domain: appConfig.domain,
-        tenantId: appConfig.tenantId,
+        domain,
+        tenantId,
         outputs: store.getState().appConfig.outputs,
       };
 
@@ -271,7 +271,7 @@ export function AutomationDashboard({
         return { completed: false } as StepCheckResult;
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store],
+    [domain, tenantId, dispatch, store],
   );
 
   const { manualRefresh, isChecking } = useAutoCheck(executeCheck);
@@ -372,8 +372,8 @@ export function AutomationDashboard({
   }
 
   const showActionRequired =
-    (!appConfig.domain ||
-      !appConfig.tenantId ||
+    (!domain ||
+      !tenantId ||
       !currentSession?.hasGoogleAuth ||
       !currentSession?.hasMicrosoftAuth) &&
     !isLoadingSession;
@@ -384,7 +384,7 @@ export function AutomationDashboard({
       !session?.hasMicrosoftAuth ||
       (session?.error as unknown as string) === "MissingTokens" ||
       session?.error === "RefreshTokenError") &&
-    (appConfig.domain || appConfig.tenantId)
+    (domain || tenantId)
   ) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">
@@ -434,19 +434,19 @@ export function AutomationDashboard({
             <AlertTitle className="font-semibold">Action Required</AlertTitle>
             <AlertDescription>
               <ul className="list-disc space-y-1 pl-5 mt-1">
-                {!appConfig.domain && !session?.authFlowDomain && (
+                {!domain && !session?.authFlowDomain && (
                   <li>Sign in with Google to detect your domain</li>
                 )}
-                {!appConfig.tenantId && !session?.microsoftTenantId && (
+                {!tenantId && !session?.microsoftTenantId && (
                   <li>Sign in with Microsoft to detect your Tenant ID</li>
                 )}
-                {(appConfig.domain || session?.authFlowDomain) &&
-                  (appConfig.tenantId || session?.microsoftTenantId) &&
+                {(domain || session?.authFlowDomain) &&
+                  (tenantId || session?.microsoftTenantId) &&
                   !currentSession?.hasGoogleAuth && (
                     <li>Connect to Google Workspace.</li>
                   )}
-                {(appConfig.domain || session?.authFlowDomain) &&
-                  (appConfig.tenantId || session?.microsoftTenantId) &&
+                {(domain || session?.authFlowDomain) &&
+                  (tenantId || session?.microsoftTenantId) &&
                   !currentSession?.hasMicrosoftAuth && (
                     <li>Connect to Microsoft Entra ID.</li>
                   )}
