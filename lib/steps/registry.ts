@@ -7,7 +7,6 @@ import type {
   StepOutput,
 } from "@/lib/types";
 import type { StepId } from "./step-refs";
-import { ApiLogger } from "@/lib/api/api-logger";
 
 export function getStep(
   allDefs: StepDefinition[],
@@ -42,12 +41,10 @@ export async function checkStep(
   if (!step.check) {
     return { completed: false, message: "No check available for this step." };
   }
+  const { ApiLogger } = await import("@/lib/api/api-logger");
   const logger = new ApiLogger();
   const result = await step.check({ ...context, logger });
-  return {
-    ...result,
-    apiLogs: logger.getLogs(),
-  };
+  return result;
 }
 
 export async function executeStep(
@@ -68,10 +65,8 @@ export async function executeStep(
       },
     };
   }
+  const { ApiLogger } = await import("@/lib/api/api-logger");
   const logger = new ApiLogger();
   const result = await step.execute({ ...context, logger });
-  return {
-    ...result,
-    apiLogs: logger.getLogs(),
-  };
+  return result;
 }

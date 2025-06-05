@@ -56,7 +56,6 @@ export async function executeStepCheck(
         inputs: step.inputs ?? [],
         expectedOutputs: step.outputs ?? [],
       },
-      apiLogs: logger.getLogs(),
     };
     return enrichedResult;
   } catch (error) {
@@ -98,7 +97,6 @@ export async function executeStepAction(
           code: "AUTH_EXPIRED",
         },
         outputs: sessionValidation.error.outputs,
-        apiLogs: logger.getLogs(),
       };
     }
 
@@ -110,12 +108,10 @@ export async function executeStepAction(
           message: "No execution logic for this step.",
           code: "NO_EXECUTE_FUNCTION",
         },
-        apiLogs: logger.getLogs(),
       };
     }
 
     const result = await step.execute(context);
-    result.apiLogs = logger.getLogs();
     return result;
   } catch (error) {
     logger.addLog(
@@ -134,7 +130,6 @@ export async function executeStepAction(
         errorMessage: String(error),
         errorProvider: isAuthError ? error.provider : undefined,
       },
-      apiLogs: logger.getLogs(),
     };
   }
 }

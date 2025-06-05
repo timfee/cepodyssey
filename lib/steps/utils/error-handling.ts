@@ -1,7 +1,6 @@
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
-import { store } from "@/lib/redux/store";
-import { addAppError, addApiLog } from "@/lib/redux/slices/debug-panel";
+import { serverLogger } from "@/lib/logging/server-logger";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 
@@ -11,30 +10,27 @@ export function handleCheckError(
 ): StepCheckResult {
   console.error(`Check Action Error - ${defaultMessage}:`, error);
 
-  store.dispatch(
-    addAppError({
-      timestamp: new Date().toISOString(),
-      category: "Check Error",
-      message: defaultMessage,
+  void serverLogger.log({
+    level: "error",
+    category: "step",
+    metadata: {
       error: error instanceof Error ? error.message : String(error),
-      stackTrace: error instanceof Error ? error.stack : undefined,
-    }),
-  );
+      stepId: defaultMessage,
+    },
+  });
 
   if (isAuthenticationError(error)) {
     // Dispatch the auth error to the global error handler
     ErrorManager.dispatch(error, { stepTitle: defaultMessage });
 
-    store.dispatch(
-      addApiLog({
-        id: `auth-error-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        method: "AUTH_ERROR",
-        url: error.provider || "unknown",
+    void serverLogger.log({
+      level: "error",
+      category: "auth",
+      provider: error.provider === "google" ? "google" : "microsoft",
+      metadata: {
         error: `Authentication Error: ${error.message}`,
-        provider: error.provider === "google" ? "google" : "microsoft",
-      }),
-    );
+      },
+    });
 
     // Return auth error result
     return {

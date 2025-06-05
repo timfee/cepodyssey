@@ -1,7 +1,6 @@
 import { executeStepAction } from "@/app/actions/step-actions";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 import { addOutputs } from "@/lib/redux/slices/app-config";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
 import {
   clearCheckTimestamp,
   updateStep,
@@ -43,12 +42,6 @@ export function useStepExecution() {
         };
 
         const result = await executeStepAction(stepId, context);
-
-        if (result.apiLogs && result.apiLogs.length > 0) {
-          result.apiLogs.forEach((log) => {
-            dispatch(addApiLog(log));
-          });
-        }
 
         if (result.outputs) {
           dispatch(addOutputs(result.outputs));
