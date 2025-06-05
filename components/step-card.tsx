@@ -20,6 +20,7 @@ import {
   markStepIncomplete,
 } from "@/lib/redux/slices/setup-steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -138,7 +139,6 @@ const getProviderColorClass = (provider: string): string => {
   }
 };
 
-
 // Parse action string and substitute parameters using available outputs
 function parseApiAction(
   action: string,
@@ -217,11 +217,11 @@ export function StepCard({
 
   const requiredInputs = useMemo(
     () => getStepInputs(step.id as StepId),
-    [step.id]
+    [step.id],
   );
   const producedOutputs = useMemo(
     () => getStepOutputs(step.id as StepId),
-    [step.id]
+    [step.id],
   );
 
   const parsedActions = useMemo(() => {
@@ -233,7 +233,8 @@ export function StepCard({
 
   const canExecute = useMemo(() => {
     if (!canRunGlobal) return false;
-    if (step.status === "in_progress" || step.status === "completed") return false;
+    if (step.status === "in_progress" || step.status === "completed")
+      return false;
     if (step.status === "blocked") return false;
     return true;
   }, [canRunGlobal, step.status]);
@@ -248,7 +249,9 @@ export function StepCard({
         className={cn(
           "w-full transition-all duration-200 ease-in-out shadow-google-card hover:shadow-google-card-hover",
           step.status === "in_progress" && "animate-pulse",
-          isBlocked || isProcessing ? "opacity-70 border-border" : "hover:border-primary/50"
+          isBlocked || isProcessing
+            ? "opacity-70 border-border"
+            : "hover:border-primary/50",
         )}
       >
         <Accordion
@@ -261,7 +264,7 @@ export function StepCard({
             <AccordionTrigger
               className={cn(
                 "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-md",
-                canExecute && isHeaderHovered && "bg-primary/5"
+                canExecute && isHeaderHovered && "bg-primary/5",
               )}
               onMouseEnter={() => setIsHeaderHovered(true)}
               onMouseLeave={() => setIsHeaderHovered(false)}
@@ -275,7 +278,7 @@ export function StepCard({
                           className={cn(
                             "h-5 w-5",
                             statusInfo.colorClass,
-                            step.status === "in_progress" && "animate-spin"
+                            step.status === "in_progress" && "animate-spin",
                           )}
                         />
                       </TooltipTrigger>
@@ -286,7 +289,9 @@ export function StepCard({
                     <h3 className="font-semibold text-lg text-foreground">
                       {step.title}
                     </h3>
-                    <span className="text-xs text-muted-foreground">{step.id}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {step.id}
+                    </span>
                     {step.status === "in_progress" && (
                       <span className="text-xs text-blue-500 font-medium">
                         • Checking...
@@ -312,7 +317,7 @@ export function StepCard({
                           "flex items-center gap-1 cursor-default",
                           autoInfo.badgeClasses
                             ? autoInfo.badgeClasses
-                            : autoInfo.baseColorClass
+                            : autoInfo.baseColorClass,
                         )}
                       >
                         <AutoIcon
@@ -320,7 +325,7 @@ export function StepCard({
                             "h-3.5 w-3.5",
                             autoInfo.badgeClasses
                               ? "text-warning-foreground"
-                              : autoInfo.baseColorClass
+                              : autoInfo.baseColorClass,
                           )}
                         />
                         <span className="font-medium border-b border-dashed border-muted-foreground/70 pb-px">
@@ -340,7 +345,7 @@ export function StepCard({
                       <span
                         className={cn(
                           "font-medium border-b border-dashed border-muted-foreground/70 pb-px",
-                          statusInfo.colorClass
+                          statusInfo.colorClass,
                         )}
                       >
                         {statusInfo.label}
@@ -373,7 +378,9 @@ export function StepCard({
                 </div>
                 {requiredInputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Inputs</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Inputs
+                    </h4>
                     <div className="grid text-sm border border-border rounded">
                       <div className="grid grid-cols-3 bg-muted text-muted-foreground font-medium px-2 py-1">
                         <div>Variable</div>
@@ -381,18 +388,23 @@ export function StepCard({
                         <div>From Step</div>
                       </div>
                       {requiredInputs.map((input, index) => {
-                        const val = input.data.key ? outputs[input.data.key] : undefined;
-                        const display = formatValue(val) || "(Not collected yet)";
+                        const val = input.data.key
+                          ? outputs[input.data.key]
+                          : undefined;
+                        const display =
+                          formatValue(val) || "(Not collected yet)";
                         return (
                           <div
                             key={index}
                             className="grid grid-cols-3 items-start gap-2 px-2 py-1 border-t border-border"
                           >
-                            <code className="font-mono text-xs break-all">{input.data.key}</code>
+                            <code className="font-mono text-xs break-all">
+                              {input.data.key}
+                            </code>
                             <code
                               className={cn(
                                 "font-mono text-xs rounded px-1 py-0.5 break-all",
-                                val != null ? "bg-slate-100" : "bg-muted"
+                                val != null ? "bg-slate-100" : "bg-muted",
                               )}
                               title={typeof val === "string" ? val : undefined}
                             >
@@ -407,7 +419,9 @@ export function StepCard({
                 )}
                 {producedOutputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Outputs</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Outputs
+                    </h4>
                     <div className="grid text-sm border border-border rounded">
                       <div className="grid grid-cols-2 bg-muted text-muted-foreground font-medium px-2 py-1">
                         <div>Variable</div>
@@ -415,17 +429,20 @@ export function StepCard({
                       </div>
                       {producedOutputs.map((output, index) => {
                         const val = outputs[output.key];
-                        const display = formatValue(val) || "<will be generated>";
+                        const display =
+                          formatValue(val) || "<will be generated>";
                         return (
                           <div
                             key={index}
                             className="grid grid-cols-2 items-start gap-2 px-2 py-1 border-t border-border"
                           >
-                            <code className="font-mono text-xs break-all">{output.key}</code>
+                            <code className="font-mono text-xs break-all">
+                              {output.key}
+                            </code>
                             <code
                               className={cn(
                                 "font-mono text-xs rounded px-1 py-0.5 break-all",
-                                val != null ? "bg-slate-100" : "bg-muted"
+                                val != null ? "bg-slate-100" : "bg-muted",
                               )}
                               title={typeof val === "string" ? val : undefined}
                             >
@@ -439,12 +456,23 @@ export function StepCard({
                 )}
                 {parsedActions.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">API Endpoints</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      API Endpoints
+                    </h4>
                     <ul className="space-y-1 text-sm">
                       {parsedActions.map((action, index) => (
                         <li key={index} className="flex gap-2 items-baseline">
-                          <span className={cn("font-mono text-xs", getMethodColor(action.method))}>{action.method}</span>
-                          <code className="font-mono text-xs break-all">{action.path}</code>
+                          <span
+                            className={cn(
+                              "font-mono text-xs",
+                              getMethodColor(action.method),
+                            )}
+                          >
+                            {action.method}
+                          </span>
+                          <code className="font-mono text-xs break-all">
+                            {action.path}
+                          </code>
                         </li>
                       ))}
                     </ul>
@@ -494,7 +522,7 @@ export function StepCard({
         <CardFooter
           className={cn(
             "p-4 border-t flex flex-wrap gap-2 items-center",
-            isBlocked ? "bg-slate-50" : "bg-card"
+            isBlocked ? "bg-slate-50" : "bg-card",
           )}
         >
           {isBlocked ? (
@@ -539,30 +567,40 @@ export function StepCard({
           ) : (
             <>
               {step.automatability !== "manual" ? (
-                <Button
-                  size="sm"
-                  onClick={() => onExecute(step.id as StepId)}
-                  disabled={!canExecute || step.status === "in_progress"}
-                >
-                  {step.status === "in_progress" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-4 w-4 mr-2" />
-                      Execute
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => onExecute(step.id as StepId)}
+                    disabled={!canExecute || step.status === "in_progress"}
+                  >
+                    {step.status === "in_progress" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Execute
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => dispatch(openAskAdminModal({ step }))}
+                  >
+                    Request from Admin
+                  </Button>
+                </>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() =>
                     dispatch(
-                      markStepComplete({ id: step.id, isUserMarked: true })
+                      markStepComplete({ id: step.id, isUserMarked: true }),
                     )
                   }
                   disabled={isProcessing}
