@@ -1,6 +1,7 @@
 "use server";
 
 import { signIn } from "@/app/(auth)/auth";
+import { config } from "@/lib/config";
 import { SignInOptions } from "next-auth/react";
 
 /**
@@ -16,7 +17,7 @@ export async function handleGoogleLogin(formData: FormData): Promise<void> {
 
   await signIn("google", signInOptions, {
     hd: domain ?? "",
-    scope: process.env.GOOGLE_ADMIN_SCOPES,
+    scope: config.GOOGLE_ADMIN_SCOPES,
     access_type: "offline",
     prompt: "consent",
   });
@@ -41,7 +42,7 @@ export async function handleMicrosoftLogin(formData: FormData): Promise<void> {
   if (tenantId) signInOptions.tenant = tenantId;
 
   await signIn("microsoft-entra-id", signInOptions, {
-    scope: process.env.MICROSOFT_GRAPH_SCOPES,
+    scope: config.MICROSOFT_GRAPH_SCOPES,
     prompt: "consent",
   });
 }
