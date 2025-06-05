@@ -7,8 +7,14 @@ interface StepDetailsModalState {
   outputs: Record<string, unknown>;
 }
 
+interface AskAdminModalState {
+  isOpen: boolean;
+  step: ManagedStep | null;
+}
+
 interface ModalsState {
   stepDetails: StepDetailsModalState;
+  askAdmin: AskAdminModalState;
 }
 
 const initialState: ModalsState = {
@@ -16,6 +22,10 @@ const initialState: ModalsState = {
     isOpen: false,
     step: null,
     outputs: {},
+  },
+  askAdmin: {
+    isOpen: false,
+    step: null,
   },
 };
 
@@ -40,11 +50,20 @@ export const modalsSlice = createSlice({
       state.stepDetails.step = null;
       state.stepDetails.outputs = {};
     },
-
+    // Ask Admin Modal
+    openAskAdminModal(state, action: PayloadAction<{ step: ManagedStep }>) {
+      state.askAdmin.isOpen = true;
+      state.askAdmin.step = action.payload.step;
+    },
+    closeAskAdminModal(state) {
+      state.askAdmin.isOpen = false;
+      state.askAdmin.step = null;
+    },
 
     // Close all modals (useful for cleanup)
     closeAllModals(state) {
       state.stepDetails.isOpen = false;
+      state.askAdmin.isOpen = false;
     },
   },
 });
@@ -53,6 +72,8 @@ export const {
   openStepDetailsModal,
   closeStepDetailsModal,
   closeAllModals,
+  openAskAdminModal,
+  closeAskAdminModal,
 } = modalsSlice.actions;
 
 export default modalsSlice.reducer;
@@ -60,3 +81,5 @@ export default modalsSlice.reducer;
 // Selectors
 export const selectStepDetailsModal = (state: { modals: ModalsState }) =>
   state.modals.stepDetails;
+export const selectAskAdminModal = (state: { modals: ModalsState }) =>
+  state.modals.askAdmin;
