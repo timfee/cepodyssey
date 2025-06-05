@@ -2,16 +2,15 @@ import { useEffect } from "react";
 import { useStore } from "react-redux";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { loadProgress, saveProgress, type PersistedProgress } from "@/lib/redux/persistence";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { initializeSteps } from "@/lib/redux/slices/setup-steps";
+import { addOutputs, initializeSteps } from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 import type { RootState } from "@/lib/redux/store";
 
 export function useProgressPersistence() {
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.appConfig);
-  const stepsStatusMap = useAppSelector((state: RootState) => state.setupSteps.steps);
+  const appConfig = useAppSelector((state: RootState) => state.app);
+  const stepsStatusMap = useAppSelector((state: RootState) => state.app.steps);
 
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
@@ -33,7 +32,7 @@ export function useProgressPersistence() {
     if (appConfig.domain && appConfig.domain !== "") {
       void saveProgress(appConfig.domain, {
         steps: stepsStatusMap,
-        outputs: store.getState().appConfig.outputs,
+        outputs: store.getState().app.outputs,
       });
     }
   }, [appConfig.domain, stepsStatusMap, store]);

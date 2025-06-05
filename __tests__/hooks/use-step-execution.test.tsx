@@ -27,7 +27,7 @@ describe('useStepExecution', () => {
     })
 
     const state = store.getState()
-    expect(state.setupSteps.steps['G-1'].status).toBe('completed')
-    expect((state.appConfig.outputs as Record<string, unknown>).testOutput).toBe('value')
+    expect(state.app.steps['G-1'].status).toBe('completed')
+    expect((state.app.outputs as Record<string, unknown>).testOutput).toBe('value')
   })
 })

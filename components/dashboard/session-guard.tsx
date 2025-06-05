@@ -15,7 +15,7 @@ interface SessionGuardProps {
 
 export function SessionGuard({ serverSession, children }: SessionGuardProps) {
   const { session, status } = useSessionSync();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const appConfig = useAppSelector((state) => state.app);
   const isLoading = status === "loading";
   const currentSession = session ?? serverSession;
 

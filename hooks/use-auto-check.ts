@@ -12,8 +12,8 @@ import { debounce } from "@/lib/utils";
 export function useAutoCheck(
   executeCheck: (stepId: StepId) => Promise<StepCheckResult>,
 ) {
-  const appConfig = useAppSelector((state) => state.appConfig);
-  const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
+  const appConfig = useAppSelector((state) => state.app);
+  const stepsStatus = useAppSelector((state) => state.app.steps);
 
   const checkedSteps = useRef(new Set<StepId>());
   const isCheckingRef = useRef(false);

@@ -6,7 +6,7 @@ import {
   setDomain,
   setTenantId,
   resetAuthState,
-} from "@/lib/redux/slices/app-config";
+} from "@/lib/redux/slices/app-state";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 
 interface SessionState {
@@ -19,7 +19,7 @@ interface SessionState {
 export function useSessionState(): SessionState {
   const { data: session, status, update } = useSession();
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const appConfig = useAppSelector((state) => state.app);
   const lastValidation = useRef<number>(Date.now());
 
   useEffect(() => {

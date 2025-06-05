@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppDispatch } from "@/hooks/use-redux";
-import { setInitialConfig } from "@/lib/redux/slices/app-config";
+import { setInitialConfig } from "@/lib/redux/slices/app-state";
 
 interface InitialConfigLoaderProps {
   domain: string | null;

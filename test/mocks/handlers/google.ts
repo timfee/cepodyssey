@@ -25,7 +25,7 @@ export const googleHandlers = [
 
   http.post('https://admin.googleapis.com/admin/directory/v1/customer/:customerId/orgunits', async ({ request }) => {
 
-    const body = (await request.json()) as Record<string, unknown>
+  const body = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({
       orgUnitId: 'mock-ou-id',
       orgUnitPath: `/${body.name}`,

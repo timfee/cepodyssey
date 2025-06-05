@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { RefreshCw, Loader2Icon, PlayIcon } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
-import { clearAllCheckTimestamps } from "@/lib/redux/slices/setup-steps";
+import { clearAllCheckTimestamps } from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 
 interface ProgressSummaryProps {
@@ -17,7 +17,7 @@ interface ProgressSummaryProps {
 
 export function ProgressSummary({ onRunAll, onRefresh, isRefreshing, canRunAutomation }: ProgressSummaryProps) {
   const dispatch = useAppDispatch();
-  const stepsStatusMap = useAppSelector((state) => state.setupSteps.steps);
+  const stepsStatusMap = useAppSelector((state) => state.app.steps);
 
   const totalSteps = allStepDefinitions.length;
   const completedSteps = Object.values(stepsStatusMap).filter((s) => s.status === "completed").length;

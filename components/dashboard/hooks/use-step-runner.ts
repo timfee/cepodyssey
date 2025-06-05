@@ -5,9 +5,8 @@ import { useStepExecution } from "@/hooks/use-step-execution";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { setError } from "@/lib/redux/slices/errors";
-import { updateStep } from "@/lib/redux/slices/setup-steps";
+import { addOutputs, updateStep } from "@/lib/redux/slices/app-state";
+import { setError } from "@/lib/redux/slices/ui-state";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
@@ -17,7 +16,7 @@ export function useStepRunner() {
   const { session, status } = useSessionSync();
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.appConfig);
+  const appConfig = useAppSelector((state: RootState) => state.app);
 
   const currentSession = session;
   const canRunAutomation = useMemo(
@@ -59,7 +58,7 @@ export function useStepRunner() {
       const context: StepContext = {
         domain: appConfig.domain,
         tenantId: appConfig.tenantId,
-        outputs: store.getState().appConfig.outputs,
+        outputs: store.getState().app.outputs,
       };
 
       try {
@@ -168,13 +167,13 @@ export function useStepRunner() {
     if (!canRunAutomation) return;
     let anyStepFailed = false;
     for (const step of allStepDefinitions) {
-      const current = store.getState().setupSteps.steps[step.id];
+      const current = store.getState().app.steps[step.id];
       if (
         step.automatable &&
         (!current || current.status === "pending" || current.status === "failed")
       ) {
         await handleExecute(step.id as StepId);
-        if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
+        if (store.getState().app.steps[step.id]?.status === "failed") {
           anyStepFailed = true;
           break;
         }
