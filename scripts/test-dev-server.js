@@ -1,90 +1,85 @@
-#!/usr/bin/env node
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { spawn } = require("child_process");
 const http = require("http");
 
-let serverReady = false;
-let hasErrors = false;
-const errors = [];
+const PORT = 3000;
+const RETRY_INTERVAL = 1000;
+const MAX_RETRIES = 20; // 20 seconds total
 
-// Start the dev server
-const devServer = spawn("pnpm", ["dev", "--turbopack"], {
-  stdio: ["inherit", "pipe", "pipe"],
-  shell: true,
+// Start the Next.js dev server
+const server = spawn("pnpm", ["dev"], {
+  stdio: "pipe", // Use pipe to capture stdout/stderr
+  detached: true, // Allows us to kill the process group
 });
 
-// Capture stdout
-devServer.stdout.on("data", (data) => {
-  const output = data.toString();
-  process.stdout.write(output);
+console.log(`🚀 Starting Next.js dev server with PID: ${server.pid}...`);
 
-  if (output.includes("Ready in")) {
-    serverReady = true;
-  }
+let output = "";
+server.stdout.on("data", (data) => {
+  const dataStr = data.toString();
+  console.log(dataStr); // Log server output for debugging
+  output += dataStr;
 });
 
-// Capture stderr and look for errors
-devServer.stderr.on("data", (data) => {
-  const output = data.toString();
-  process.stderr.write(output);
-
-  // Check for various error patterns
-  if (
-    output.includes("TypeError:") ||
-    output.includes("ReferenceError:") ||
-    output.includes("Error:") ||
-    output.includes("⨯")
-  ) {
-    hasErrors = true;
-    errors.push(output);
-  }
+server.stderr.on("data", (data) => {
+  console.error(`SERVER_ERROR: ${data.toString()}`);
 });
 
-// Wait for server to be ready, then make a test request
-const checkServer = setInterval(() => {
-  if (serverReady) {
-    clearInterval(checkServer);
+let retries = 0;
+const checkServer = () => {
+  if (output.includes("✓ Ready in")) {
+    console.log("✅ Server is ready. Attempting to fetch homepage...");
 
-    // Make a request to trigger rendering
     http
-      .get("http://localhost:3000", (res) => {
-        let body = "";
-        res.on("data", (chunk) => (body += chunk));
-        res.on("end", () => {
-          // Wait a bit more to catch any async errors
-          setTimeout(() => {
-            if (hasErrors) {
-              console.error("\n\n❌ Runtime errors detected:\n");
-              errors.forEach((err) => console.error(err));
-              devServer.kill();
-              process.exit(1);
-            } else if (res.statusCode >= 500) {
-              console.error(
-                `\n\n❌ Server returned error status: ${res.statusCode}`,
-              );
-              devServer.kill();
-              process.exit(1);
-            } else {
-              console.log(
-                "\n\n✅ Dev server is running without runtime errors!",
-              );
-              devServer.kill();
-              process.exit(0);
-            }
-          }, 8000);
-        });
+      .get(`http://localhost:${PORT}`, (res) => {
+        console.log(`Received status code: ${res.statusCode}`);
+
+        if (res.statusCode === 200) {
+          console.log(
+            "✅ Homepage fetch successful (200 OK). Server test passed."
+          );
+          killServerAndExit(0);
+        } else {
+          console.error(
+            `❌ Test failed. Server responded with status: ${res.statusCode}`
+          );
+          killServerAndExit(1);
+        }
       })
       .on("error", (err) => {
-        console.error("\n\n❌ Could not connect to dev server:", err.message);
-        devServer.kill();
-        process.exit(1);
+        console.error("❌ Fetch error:", err.message);
+        killServerAndExit(1);
       });
+  } else if (retries < MAX_RETRIES) {
+    retries++;
+    console.log(
+      `... Server not ready yet. Retrying in ${RETRY_INTERVAL}ms... (${retries}/${MAX_RETRIES})`
+    );
+    setTimeout(checkServer, RETRY_INTERVAL);
+  } else {
+    console.error("❌ Server failed to start within the timeout period.");
+    killServerAndExit(1);
   }
-}, 1000);
+};
 
-// Timeout after 30 seconds
-setTimeout(() => {
-  console.error("\n\n❌ Timeout: Dev server did not start within 30 seconds");
-  devServer.kill();
-  process.exit(1);
-}, 30000);
+function killServerAndExit(exitCode) {
+  console.log("Shutting down dev server...");
+  // Kill the entire process group to ensure the Next.js server also terminates
+  try {
+    process.kill(-server.pid, "SIGKILL");
+  } catch (e) {
+    console.warn(
+      `Could not kill server process group (PID: ${server.pid}). It may have already exited.`,
+      e
+    );
+  }
+  process.exit(exitCode);
+}
+
+// Start the checking loop
+setTimeout(checkServer, RETRY_INTERVAL);
+
+// Ensure we clean up the server on script exit
+process.on("exit", () => killServerAndExit(0));
+process.on("SIGINT", () => killServerAndExit(0));
+process.on("SIGTERM", () => killServerAndExit(0));
