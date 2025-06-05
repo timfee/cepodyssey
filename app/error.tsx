@@ -1,27 +1,17 @@
-"use client";
-
-import { useEffect } from "react";
-import type { ReactElement } from "react";
-import { useAppDispatch } from "@/hooks/use-redux";
-import { setError } from "@/lib/redux/slices/ui-state";
+import { ErrorDisplay } from "./error-client";
 import { Logger } from "@/lib/utils/logger";
+import type { ReactElement } from "react";
 
-export default function RouteError({
+/**
+ * Server boundary for route errors.
+ */
+export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: Error;
   reset: () => void;
-}): ReactElement | null {
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    Logger.error('[RouteError]', 'Route error:', error);
-
-    const message = error.message || "An unexpected error occurred";
-    dispatch(setError({ message, details: { digest: error.digest } }));
-  }, [error, dispatch, reset]);
-
-  // Return null since error dialog will show
-  return null;
+}): ReactElement {
+  Logger.error('[RouteError]', 'Route error:', error);
+  return <ErrorDisplay error={error} reset={reset} />;
 }

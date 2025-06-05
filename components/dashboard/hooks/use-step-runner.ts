@@ -9,18 +9,19 @@ import { setError } from "@/lib/redux/slices/ui-state";
 import type { RootState } from "@/lib/redux/store";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult, StepContext } from "@/lib/types";
+import type { Session } from "next-auth";
 import { useCallback, useMemo } from "react";
 import { useStore } from "react-redux";
 import { Logger } from "@/lib/utils/logger";
 
-export function useStepRunner() {
+export function useStepRunner(initialSession?: Session) {
   const { session, status } = useSessionSync();
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
   const domain = useAppSelector((state: RootState) => state.app.domain);
   const tenantId = useAppSelector((state: RootState) => state.app.tenantId);
 
-  const currentSession = session;
+  const currentSession = session ?? initialSession;
   const canRunAutomation = useMemo(
     () =>
       !!(
