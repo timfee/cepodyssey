@@ -1,7 +1,14 @@
 // This file contains the enhanced descriptions, details, and metadata for all steps
 import { STEP_IDS } from "@/lib/steps/step-refs";
+import type { StepId } from "./step-refs";
 
-export const stepContentEnhancements = {
+export interface StepContent {
+  details: string;
+  actions: string[];
+  nextStep?: { id: StepId; description: string };
+}
+
+export const stepContentEnhancements: Record<StepId, StepContent> = {
   [STEP_IDS.CREATE_AUTOMATION_OU]: {
     details:
       "Creates an organizational unit at the root level of your Google Workspace directory. This OU will contain service accounts and other automation-related users, keeping them separate from regular users for security and organization.",

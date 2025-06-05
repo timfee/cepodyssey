@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 export const googleHandlers = [
   http.post('https://admin.googleapis.com/admin/directory/v1/users', async ({ request }) => {
-    const body: any = await request.json()
+    const body: Record<string, unknown> = await request.json()
     return HttpResponse.json({
       id: 'mock-user-id',
       primaryEmail: body.primaryEmail,
@@ -24,7 +24,7 @@ export const googleHandlers = [
   }),
 
   http.post('https://admin.googleapis.com/admin/directory/v1/customer/:customerId/orgunits', async ({ request }) => {
-    const body: any = await request.json()
+    const body: Record<string, unknown> = await request.json()
     return HttpResponse.json({
       orgUnitId: 'mock-ou-id',
       orgUnitPath: `/${body.name}`,
