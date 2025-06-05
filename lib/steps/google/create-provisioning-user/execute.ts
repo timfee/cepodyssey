@@ -6,6 +6,7 @@ import { AlreadyExistsError } from "@/lib/api/errors";
 import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeCreateProvisioningUser = withExecutionHandling({
   stepId: STEP_IDS.CREATE_PROVISIONING_USER,
@@ -13,7 +14,10 @@ export const executeCreateProvisioningUser = withExecutionHandling({
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
     const domain = context.domain;
-    const ouPath = context.outputs[OUTPUT_KEYS.AUTOMATION_OU_PATH] as string;
+    const ouPath = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.AUTOMATION_OU_PATH,
+    );
 
     const email = `azuread-provisioning@${domain}`;
     const tempPassword = `P@${Date.now()}w0rd`;

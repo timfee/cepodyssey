@@ -7,6 +7,7 @@ import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { validateRequiredOutputs } from "../../utils/validation";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeCreateAutomationOu = withExecutionHandling({
   stepId: STEP_IDS.CREATE_AUTOMATION_OU,
@@ -25,7 +26,7 @@ export const executeCreateAutomationOu = withExecutionHandling({
     const ouName = "Automation";
     const parentPath = "/";
     const customerId = (
-      context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string }
+      getRequiredOutput<{ customerId?: string }>(context, STEP_IDS.VERIFY_DOMAIN)
     )?.customerId;
     if (!customerId) {
       return {

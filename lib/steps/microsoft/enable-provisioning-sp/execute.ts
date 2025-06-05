@@ -5,6 +5,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeEnableProvisioningSp = withExecutionHandling({
   stepId: STEP_IDS.ENABLE_PROVISIONING_SP,
@@ -14,10 +15,11 @@ export const executeEnableProvisioningSp = withExecutionHandling({
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const { microsoftToken } = await getTokens();
-    const spId = context.outputs[
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-    ] as string;
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+    const spId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+    );
+    const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_APP_ID);
 
     await microsoft.patchServicePrincipal(microsoftToken, spId, {
       accountEnabled: true,

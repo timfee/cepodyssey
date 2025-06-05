@@ -5,6 +5,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeConfigureSamlApp = withExecutionHandling({
   stepId: STEP_IDS.CONFIGURE_SAML_APP,
@@ -17,20 +18,24 @@ export const executeConfigureSamlApp = withExecutionHandling({
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const { microsoftToken } = await getTokens();
-    const appObjectId = context.outputs[
-      OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID
-    ] as string;
-    const spObjectId = context.outputs[
-      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID
-    ] as string;
-    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    const googleSpEntityId = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
-    ] as string;
-    const googleAcsUrl = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL
-    ] as string;
-    const primaryDomain = context.domain as string;
+    const appObjectId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID,
+    );
+    const spObjectId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+    );
+    const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
+    const googleSpEntityId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,
+    );
+    const googleAcsUrl = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL,
+    );
+    const primaryDomain = context.domain;
 
     const appPatchPayload: Partial<microsoft.Application> = {
       identifierUris: [googleSpEntityId, `https://${primaryDomain}`],
