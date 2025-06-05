@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppSelector } from "@/hooks/use-redux";
 import { allStepDefinitions } from "@/lib/steps";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/metadata";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import React from "react";

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { DebugPanel } from "@/components/debug-panel";
-import { DebugPanelNub } from "@/components/debug-panel-nub";
 import { ModalManager } from "@/components/modal-manager";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -22,7 +21,6 @@ export default function RootLayout({
         <Providers>
           {children}
           <ModalManager />
-          <DebugPanelNub />
           <DebugPanel />
         </Providers>
       </body>

@@ -3,21 +3,15 @@ import { isApiDebugEnabled } from "@/lib/utils";
 import { config } from "@/lib/config";
 
 export class ApiLogger {
-  private logs: ApiLogEntry[] = [];
-
-  getLogs(): ApiLogEntry[] {
-    return [...this.logs];
-  }
-
   /**
-   * Add a plain text log entry for debugging purposes.
+   * Add an arbitrary log message.
    */
   addLog(message: string) {
-    this.logs.push({
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      method: "LOG",
-      url: message,
+    if (!isApiDebugEnabled()) return;
+    void serverLogger.log({
+      level: 'info',
+      category: 'system',
+      metadata: { error: message },
     });
   }
 
@@ -25,66 +19,62 @@ export class ApiLogger {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const provider = this.detectProvider(url);
 
-    console.log(`[API Request] ${init?.method || "GET"} ${url}`);
+    console.log(`[API Request] ${init?.method || 'GET'} ${url}`);
     if (!isApiDebugEnabled()) return id;
 
-    const headers: Record<string, string> = {};
-    if (init?.headers) {
-      if (init.headers instanceof Headers) {
-        init.headers.forEach((value, key) => {
-          headers[key.toLowerCase()] =
-            key.toLowerCase() === "authorization" ? "Bearer [REDACTED]" : value;
-        });
-      }
-    }
-
-    const logEntry: ApiLogEntry = {
-      id,
-      timestamp: new Date().toISOString(),
-      method: init?.method || "GET",
-      url,
-      headers,
-      requestBody:
-        init?.body && typeof init.body === "string"
-          ? JSON.parse(init.body)
-          : undefined,
+    void serverLogger.log({
+      level: 'info',
+      category: 'api',
       provider,
-    };
-    this.logs.push(logEntry);
+      metadata: {
+        method: init?.method || 'GET',
+        url,
+        requestBody:
+          init?.body && typeof init.body === 'string'
+            ? JSON.parse(init.body)
+            : undefined,
+      },
+    });
+
     return id;
   }
 
   logResponse(
-    id: string,
+    _id: string,
     response: Response,
     responseBody?: unknown,
-    duration?: number,
+    duration?: number
   ) {
-    console.log(`[API Response] ${response.status} for ${id} in ${duration}ms`);
+    console.log(`[API Response] ${response.status} in ${duration}ms`);
     if (!isApiDebugEnabled()) return;
 
-    const log = this.logs.find((l) => l.id === id);
-    if (log) {
-      Object.assign(log, {
-        responseStatus: response.status,
+    void serverLogger.log({
+      level: response.ok ? 'info' : 'error',
+      category: 'api',
+      metadata: {
+        url: response.url,
+        status: response.status,
         responseBody,
         duration,
-        error: response.ok ? undefined : `HTTP Error ${response.status}`,
-      });
-    }
+        error: response.ok ? undefined : `HTTP ${response.status}`,
+      },
+    });
   }
 
-  logError(id: string, error: unknown) {
-    console.error(`[API Error] for request ${id}:`, error);
+  logError(_id: string, error: unknown) {
+    console.error(`[API Error]`, error);
     if (!isApiDebugEnabled()) return;
 
-    const log = this.logs.find((l) => l.id === id);
-    if (log) {
-      log.error = error instanceof Error ? error.message : String(error);
-    }
+    void serverLogger.log({
+      level: 'error',
+      category: 'api',
+      metadata: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
   }
 
-  private detectProvider(url: string): "google" | "microsoft" | "other" {
+  private detectProvider(url: string): 'google' | 'microsoft' | undefined {
     if (
       url.startsWith(config.GOOGLE_API_BASE) ||
       url.startsWith(config.GOOGLE_IDENTITY_BASE)

@@ -4,8 +4,6 @@ import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
-import { store } from "@/lib/redux/store";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
 
 /**
  * Automatically checks step status when configuration is available.
@@ -49,14 +47,7 @@ export function useAutoCheck(
           console.log(`[AutoCheck] Checking step ${stepId}`);
           const checkResult = await executeCheck(stepId);
 
-          if (checkResult && "apiLogs" in checkResult && checkResult.apiLogs) {
-            console.log(
-              `[AutoCheck] Adding ${checkResult.apiLogs.length} API logs for step ${stepId}`,
-            );
-            checkResult.apiLogs.forEach((log) => {
-              store.dispatch(addApiLog(log));
-            });
-          }
+          // API logs are streamed via SSE; nothing to handle here
 
           checkedSteps.current.add(stepId);
           await new Promise((r) => setTimeout(r, 300));
