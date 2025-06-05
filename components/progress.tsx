@@ -19,9 +19,11 @@ interface ProgressVisualizerProps {
 }
 
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
-  const stepsStatusMap = useAppSelector((state) => state.setupSteps.steps);
-  const appConfig = useAppSelector((state) => state.appConfig);
-  const canRunGlobalSteps = !!(appConfig.domain && appConfig.tenantId);
+  const stepsStatusMap = useAppSelector((state) => state.app.steps);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
+  const outputs = useAppSelector((state) => state.app.outputs);
+  const canRunGlobalSteps = !!(domain && tenantId);
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {
     return allStepDefinitions.map((definition) => {
@@ -115,7 +117,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
                 <WorkflowStepCard
                   key={step.id}
                   step={step}
-                  allOutputs={appConfig.outputs}
+                  allOutputs={outputs}
                   onExecute={onExecuteStep}
                   canRunGlobal={canRunGlobalSteps}
                   stepInputDefs={getStepInputs(

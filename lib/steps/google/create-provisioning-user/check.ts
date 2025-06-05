@@ -1,8 +1,7 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import * as google from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google/index";
 import { APIError } from "@/lib/api/utils";
-import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
 import { portalUrls } from "@/lib/api/url-builder";
 
@@ -13,9 +12,8 @@ export const checkProvisioningUser = createStepCheck({
       return { completed: false, message: "Domain not configured." };
     }
     try {
-      const token = await getGoogleToken();
       const email = `azuread-provisioning@${context.domain}`;
-      const user = await google.getUser(token, email, context.logger);
+      const user = await googleApi.users.get(email, context.logger);
       if (user?.primaryEmail) {
         return {
           completed: true,

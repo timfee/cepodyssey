@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppDispatch } from "@/hooks/use-redux";
-import { setError } from "@/lib/redux/slices/errors";
+import { setError } from "@/lib/redux/slices/ui-state";
 
 export default function Error({
   error,

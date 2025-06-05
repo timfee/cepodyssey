@@ -16,7 +16,7 @@ import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
 import {
   selectStepDetailsModal,
   closeStepDetailsModal,
-} from "@/lib/redux/slices/modals";
+} from "@/lib/redux/slices/ui-state";
 
 export function StepDetailsModal() {
   const dispatch = useAppDispatch();

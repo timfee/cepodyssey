@@ -19,7 +19,9 @@ export function RouteGuard({ children, requireAuth = true }: RouteGuardProps) {
     }
   }, [requireAuth, status, router]);
 
-  if (requireAuth && status === "loading") {
+  if (requireAuth && (status === "loading" || status === "unauthenticated")) {
+    // Display a full-screen spinner while the auth status resolves or during
+    // client-side redirects to avoid flashing the protected content.
     return <LoadingSpinner fullScreen />;
   }
 

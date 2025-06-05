@@ -1,11 +1,11 @@
 import { executeStepAction } from "@/app/actions/step-actions";
+import { StepStatus } from "@/lib/constants/enums";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
-import { addOutputs } from "@/lib/redux/slices/app-config";
 import {
+  addOutputs,
   clearCheckTimestamp,
   updateStep,
-} from "@/lib/redux/slices/setup-steps";
-import { StepStatus } from "@/lib/constants/enums";
+} from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
@@ -13,7 +13,9 @@ import { useAppDispatch, useAppSelector } from "./use-redux";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
+  const outputs = useAppSelector((state) => state.app.outputs);
 
   const executeStep = useCallback(
     async (stepId: StepId) => {
@@ -32,14 +34,14 @@ export function useStepExecution() {
           status: StepStatus.IN_PROGRESS,
           error: null,
           message: undefined,
-        }),
+        })
       );
 
       try {
         const context = {
-          domain: appConfig.domain!,
-          tenantId: appConfig.tenantId!,
-          outputs: appConfig.outputs,
+          domain: domain!,
+          tenantId: tenantId!,
+          outputs,
         };
 
         const result = await executeStepAction(stepId, context);
@@ -61,7 +63,7 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
         } else {
           const errorMessage =
@@ -75,7 +77,7 @@ export function useStepExecution() {
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
           ErrorManager.dispatch(new Error(errorMessage), {
             stepId,
@@ -92,7 +94,7 @@ export function useStepExecution() {
             status: StepStatus.FAILED,
             error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
-          }),
+          })
         );
         ErrorManager.dispatch(error, {
           stepId,
@@ -100,7 +102,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, appConfig],
+    [dispatch, domain, tenantId, outputs]
   );
 
   return { executeStep };

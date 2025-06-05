@@ -1,6 +1,6 @@
 import { AuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
-import { setError } from "@/lib/redux/slices/errors";
+import { setError } from "@/lib/redux/slices/ui-state";
 import { store } from "@/lib/redux/store";
 import type { ProviderType } from "@/lib/constants/enums";
 

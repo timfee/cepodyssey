@@ -8,6 +8,8 @@ export const checkCreateSamlApp = createStepCheck({
   checkLogic: async (context) => {
     const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
     const result = await checkMicrosoftServicePrincipal(appId);
+
+    
     if (result.completed && result.outputs) {
       return {
         completed: true,

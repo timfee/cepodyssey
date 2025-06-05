@@ -1,8 +1,7 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi, type Application } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -17,6 +16,7 @@ export const executeConfigureSamlApp = withExecutionHandling({
     OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
+
     const { microsoftToken } = await getTokens();
     const appObjectId = getRequiredOutput<string>(
       context,
@@ -37,7 +37,7 @@ export const executeConfigureSamlApp = withExecutionHandling({
     );
     const primaryDomain = context.domain;
 
-    const appPatchPayload: Partial<microsoft.Application> = {
+    const appPatchPayload: Partial<Application> = {
       identifierUris: [googleSpEntityId, `https://${primaryDomain}`],
       web: {
         redirectUris: [googleAcsUrl],
@@ -48,10 +48,10 @@ export const executeConfigureSamlApp = withExecutionHandling({
       },
     };
 
-    await microsoft.updateApplication(
-      microsoftToken,
+    await microsoftApi.applications.update(
       appObjectId,
       appPatchPayload,
+      context.logger,
     );
 
     return {

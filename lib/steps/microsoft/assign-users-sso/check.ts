@@ -11,6 +11,7 @@ export const checkAssignUsers = createStepCheck({
       OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
     );
     const result = await checkMicrosoftAppAssignments(spId);
+
     return result;
   },
 });

@@ -15,6 +15,7 @@ export const checkAttributeMappings = createStepCheck({
     );
     const jobId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_JOB_ID);
     const result = await checkMicrosoftAttributeMappingsApplied(spId, jobId);
+
     return result;
   },
 });

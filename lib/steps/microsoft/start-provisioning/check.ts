@@ -15,6 +15,7 @@ export const checkStartProvisioning = createStepCheck({
     );
     const jobId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_JOB_ID);
     const result = await checkMicrosoftProvisioningJobDetails(spId, jobId);
+
     if (result.completed && result.outputs?.provisioningJobState === "Active") {
       return { completed: true, message: "Provisioning job is active." };
     }

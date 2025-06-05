@@ -14,10 +14,11 @@ interface ActionToolbarProps {
 }
 
 export function ActionToolbar({ session, isLoadingSession }: ActionToolbarProps) {
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
   const showActionRequired =
-    (!appConfig.domain ||
-      !appConfig.tenantId ||
+    (!domain ||
+      !tenantId ||
       !session?.hasGoogleAuth ||
       !session?.hasMicrosoftAuth) &&
     !isLoadingSession;
@@ -36,17 +37,17 @@ export function ActionToolbar({ session, isLoadingSession }: ActionToolbarProps)
           <AlertTitle className="font-semibold">Action Required</AlertTitle>
           <AlertDescription>
             <ul className="mt-1 space-y-1 list-disc pl-5">
-              {!appConfig.domain && !session?.authFlowDomain && (
+              {!domain && !session?.authFlowDomain && (
                 <li>Sign in with Google to detect your domain</li>
               )}
-              {!appConfig.tenantId && !session?.microsoftTenantId && (
+              {!tenantId && !session?.microsoftTenantId && (
                 <li>Sign in with Microsoft to detect your Tenant ID</li>
               )}
-              {(appConfig.domain || session?.authFlowDomain) &&
-                (appConfig.tenantId || session?.microsoftTenantId) &&
+              {(domain || session?.authFlowDomain) &&
+                (tenantId || session?.microsoftTenantId) &&
                 !session?.hasGoogleAuth && <li>Connect to Google Workspace.</li>}
-              {(appConfig.domain || session?.authFlowDomain) &&
-                (appConfig.tenantId || session?.microsoftTenantId) &&
+              {(domain || session?.authFlowDomain) &&
+                (tenantId || session?.microsoftTenantId) &&
                 !session?.hasMicrosoftAuth && <li>Connect to Microsoft Entra ID.</li>}
             </ul>
             <p className="mt-2">Complete all requirements to continue</p>
