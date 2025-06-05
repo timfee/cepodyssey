@@ -171,6 +171,15 @@ export function AutomationDashboard({
     async (stepId: StepId) => {
       if (!appConfig.domain || !appConfig.tenantId) return;
 
+      // Set the step to in_progress state before checking
+      dispatch(
+        updateStep({
+          id: stepId,
+          status: "in_progress",
+          message: "Checking status...",
+        }),
+      );
+
       const context: StepContext = {
         domain: appConfig.domain,
         tenantId: appConfig.tenantId,
@@ -247,6 +256,17 @@ export function AutomationDashboard({
                 checkedAt: new Date().toISOString(),
                 ...(checkResult.outputs || {}),
               },
+            }),
+          );
+        } else {
+          // Reset to pending if check shows it's not completed
+          dispatch(
+            updateStep({
+              id: stepId,
+              status: "pending",
+              message: checkResult.message || "Not completed",
+              error: null,
+              metadata: checkResult.outputs || {},
             }),
           );
         }

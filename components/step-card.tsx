@@ -70,9 +70,9 @@ const stateConfig: Record<
   },
   in_progress: {
     icon: Loader2,
-    colorClass: "text-blue-500",
-    label: "In Progress",
-    tooltip: "This step is currently being executed.",
+    colorClass: "text-blue-500 animate-spin",
+    label: "Checking...",
+    tooltip: "Verifying current status with the server.",
   },
   failed: {
     icon: AlertTriangle,
@@ -231,11 +231,12 @@ export function StepCard({
       .filter((a) => !a.isManual);
   }, [step.actions, outputs]);
 
-  const canExecutePrimary = !(
-    step.status === "in_progress" ||
-    step.status === "completed" ||
-    !canRunGlobal
-  );
+  const canExecute = useMemo(() => {
+    if (!canRunGlobal) return false;
+    if (step.status === "in_progress" || step.status === "completed") return false;
+    if (step.status === "blocked") return false;
+    return true;
+  }, [canRunGlobal, step.status]);
 
   const isCompleted = step.status === "completed";
   const isBlocked = step.status === "blocked";
@@ -245,10 +246,9 @@ export function StepCard({
     <TooltipProvider delayDuration={100}>
       <Card
         className={cn(
-          "w-full transition-all duration-200 ease-in-out",
-          isBlocked || isProcessing
-            ? "opacity-70 border-border"
-            : "hover:shadow-google-card-hover hover:border-primary/50"
+          "w-full transition-all duration-200 ease-in-out shadow-google-card hover:shadow-google-card-hover",
+          step.status === "in_progress" && "animate-pulse",
+          isBlocked || isProcessing ? "opacity-70 border-border" : "hover:border-primary/50"
         )}
       >
         <Accordion
@@ -261,7 +261,7 @@ export function StepCard({
             <AccordionTrigger
               className={cn(
                 "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-md",
-                canExecutePrimary && isHeaderHovered && "bg-primary/5"
+                canExecute && isHeaderHovered && "bg-primary/5"
               )}
               onMouseEnter={() => setIsHeaderHovered(true)}
               onMouseLeave={() => setIsHeaderHovered(false)}
@@ -273,9 +273,9 @@ export function StepCard({
                       <TooltipTrigger asChild>
                         <StatusIcon
                           className={cn(
-                            "h-6 w-6 shrink-0",
+                            "h-5 w-5",
                             statusInfo.colorClass,
-                            isProcessing && "animate-spin"
+                            step.status === "in_progress" && "animate-spin"
                           )}
                         />
                       </TooltipTrigger>
@@ -286,6 +286,12 @@ export function StepCard({
                     <h3 className="font-semibold text-lg text-foreground">
                       {step.title}
                     </h3>
+                    <span className="text-xs text-muted-foreground">{step.id}</span>
+                    {step.status === "in_progress" && (
+                      <span className="text-xs text-blue-500 font-medium">
+                        • Checking...
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs ml-2 shrink-0 pt-1">
                     <span className={getProviderColorClass(step.provider)}>
@@ -534,15 +540,21 @@ export function StepCard({
             <>
               {step.automatability !== "manual" ? (
                 <Button
-                  onClick={() => onExecute(step.id as StepId)}
-                  disabled={!canExecutePrimary}
                   size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => onExecute(step.id as StepId)}
+                  disabled={!canExecute || step.status === "in_progress"}
                 >
-                  {isProcessing && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {step.status === "in_progress" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Execute
+                    </>
                   )}
-                  Execute
                 </Button>
               ) : (
                 <Button
