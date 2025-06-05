@@ -1,18 +1,23 @@
-import { APIError } from "@/lib/api/utils"
-import "@/lib/api/microsoft/client"
-import { wrapAuthError } from '@/lib/api/auth-interceptor'
+import { APIError } from "@/lib/api/utils";
+import "@/lib/api/microsoft/client";
+import { wrapAuthError } from "@/lib/api/auth-errors";
 
 // eslint-disable-next-line no-var
-var passedConfig: unknown
-jest.mock('@/lib/api/base/api-client', () => ({
-  createApiClient: jest.fn((cfg) => { passedConfig = cfg; return { get: jest.fn() } })
-}))
-jest.mock('@/lib/api/auth-interceptor', () => ({ wrapAuthError: jest.fn() }))
+var passedConfig: unknown;
+jest.mock("@/lib/api/base/api-client", () => ({
+  createApiClient: jest.fn((cfg) => {
+    passedConfig = cfg;
+    return { get: jest.fn() };
+  }),
+}));
+jest.mock("@/lib/api/auth-errors", () => ({ wrapAuthError: jest.fn() }));
 
-describe('microsoftApiClient', () => {
+describe("microsoftApiClient", () => {
   it("configures handleProviderError that wraps auth errors", () => {
-    const err = new APIError("bad", 401)
-    try { passedConfig.handleProviderError(err) } catch {}
-    expect(wrapAuthError).toHaveBeenCalledWith(err, "microsoft")
-  })
-})
+    const err = new APIError("bad", 401);
+    try {
+      passedConfig.handleProviderError(err);
+    } catch {}
+    expect(wrapAuthError).toHaveBeenCalledWith(err, "microsoft");
+  });
+});
