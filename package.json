@@ -12,8 +12,7 @@
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md}'",
-    "type-check": "tsc --noEmit",
-    "dev:test": "node scripts/test-dev-server.js"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
