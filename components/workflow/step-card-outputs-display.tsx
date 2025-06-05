@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
-import type { DisplayOutput } from './workflow-types';
-import { formatValue } from './utils';
+import { cn } from "@/lib/utils";
+import { formatValue } from "./utils";
+import type { DisplayOutput } from "./workflow-types";
 
 interface StepCardOutputsDisplayProps {
   outputs: DisplayOutput[];
@@ -27,18 +27,18 @@ export function StepCardOutputsDisplay({
           <code className="break-all font-mono text-xs">{output.key}</code>
           <code
             className={cn(
-              'break-all rounded px-1 py-0.5 font-mono text-xs',
+              "break-all rounded px-1 py-0.5 font-mono text-xs",
               output.currentValue != null
-                ? 'bg-slate-100 dark:bg-slate-700'
-                : 'italic bg-muted/30 dark:bg-slate-600',
+                ? "bg-slate-100 dark:bg-slate-700"
+                : "italic bg-muted/30 dark:bg-slate-600"
             )}
             title={
-              typeof output.currentValue === 'string'
+              typeof output.currentValue === "string"
                 ? output.currentValue
                 : undefined
             }
           >
-            {formatValue(output.currentValue) || '<will be generated>'}
+            {formatValue(output.currentValue) || "<will be generated>"}
           </code>
         </div>
       ))}

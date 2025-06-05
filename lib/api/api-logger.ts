@@ -1,5 +1,5 @@
-import { isApiDebugEnabled } from '@/lib/utils';
-import type { ApiLogEntry } from '@/lib/redux/slices/debug-panel';
+import type { ApiLogEntry } from "@/lib/redux/slices/debug-panel";
+import { isApiDebugEnabled } from "@/lib/utils";
 
 export class ApiLogger {
   private logs: ApiLogEntry[] = [];
@@ -12,7 +12,7 @@ export class ApiLogger {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const provider = this.detectProvider(url);
 
-    console.log(`[API Request] ${init?.method || 'GET'} ${url}`);
+    console.log(`[API Request] ${init?.method || "GET"} ${url}`);
     if (!isApiDebugEnabled()) return id;
 
     const headers: Record<string, string> = {};
@@ -20,7 +20,7 @@ export class ApiLogger {
       if (init.headers instanceof Headers) {
         init.headers.forEach((value, key) => {
           headers[key.toLowerCase()] =
-            key.toLowerCase() === 'authorization' ? 'Bearer [REDACTED]' : value;
+            key.toLowerCase() === "authorization" ? "Bearer [REDACTED]" : value;
         });
       }
     }
@@ -28,11 +28,11 @@ export class ApiLogger {
     const logEntry: ApiLogEntry = {
       id,
       timestamp: new Date().toISOString(),
-      method: init?.method || 'GET',
+      method: init?.method || "GET",
       url,
       headers,
       requestBody:
-        init?.body && typeof init.body === 'string'
+        init?.body && typeof init.body === "string"
           ? JSON.parse(init.body)
           : undefined,
       provider,
@@ -45,7 +45,7 @@ export class ApiLogger {
     id: string,
     response: Response,
     responseBody?: unknown,
-    duration?: number,
+    duration?: number
   ) {
     console.log(`[API Response] ${response.status} for ${id} in ${duration}ms`);
     if (!isApiDebugEnabled()) return;
@@ -71,9 +71,9 @@ export class ApiLogger {
     }
   }
 
-  private detectProvider(url: string): 'google' | 'microsoft' | 'other' {
-    if (url.includes('googleapis.com')) return 'google';
-    if (url.includes('microsoft.com')) return 'microsoft';
-    return 'other';
+  private detectProvider(url: string): "google" | "microsoft" | "other" {
+    if (url.includes("googleapis.com")) return "google";
+    if (url.includes("microsoft.com")) return "microsoft";
+    return "other";
   }
 }

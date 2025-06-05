@@ -1,5 +1,3 @@
-import type React from 'react';
-
 interface StepCardDetailsSectionProps {
   title: string;
   children: React.ReactNode;

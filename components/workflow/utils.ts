@@ -1,20 +1,20 @@
-import type { DisplayApiAction } from './workflow-types';
+import type { DisplayApiAction } from "./workflow-types";
 
 export function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>,
+  outputs: Record<string, unknown>
 ): DisplayApiAction {
   let trimmed = action.trim();
   let isManual = false;
 
   if (/^manual:/i.test(trimmed)) {
     isManual = true;
-    trimmed = trimmed.replace(/^manual:\s*/i, '');
+    trimmed = trimmed.replace(/^manual:\s*/i, "");
   }
 
   const match = trimmed.match(/^([A-Z]+)\s+(.+)/);
   if (!match) {
-    return { method: '', path: trimmed, isManual: true };
+    return { method: "", path: trimmed, isManual: true };
   }
 
   const [, method, rawPath] = match;
@@ -27,16 +27,16 @@ export function parseApiAction(
 }
 
 export function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") {
     return value.length > 50 ? `${value.slice(0, 47)}...` : value;
   }
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     try {
       const str = JSON.stringify(value);
       return str.length > 50 ? `${str.slice(0, 47)}...` : str;
-    } catch (e) {
-      return '[object]';
+    } catch {
+      return "[object]";
     }
   }
   return String(value);

@@ -12,10 +12,10 @@ import { g7AssignSamlProfile } from "./assign-saml-profile";
 import { g8ExcludeAutomationOu } from "./exclude-automation-ou";
 
 export const googleSteps: StepDefinition[] = [
+  g4VerifyDomain,
   g1CreateAutomationOu,
   g2CreateProvisioningUser,
   g3GrantSuperAdmin,
-  g4VerifyDomain,
   g5InitiateSamlProfile,
   g6UpdateSamlProfile,
   g7AssignSamlProfile,

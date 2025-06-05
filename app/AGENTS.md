@@ -1,149 +1,18 @@
-# App Router Guidelines
+# App Router (`app/`) Guidelines
 
-## Structure Overview
+This directory contains all routing, page components, and server-side logic entry points for the application.
 
-This follows Next.js 14 App Router conventions with a clear separation between authentication routes and the main application.
+## Core Concepts
 
-```
-app/
-├── (auth)/           # Authentication group route
-│   ├── auth.ts      # NextAuth configuration
-│   ├── api/auth/    # NextAuth API routes
-│   └── login/       # Login page and actions
-├── actions/         # Server actions (backend logic)
-├── globals.css      # Global styles with Tailwind
-├── layout.tsx       # Root layout with providers
-├── page.tsx         # Main dashboard (protected)
-└── providers.tsx    # Client-side providers wrapper
-```
+1.  **Server Actions**: The primary method for client-server communication. All server actions are defined in `app/actions/`.
 
-## Server Actions Pattern
+    - **Rule #1: NEVER THROW.** Actions must always catch their own errors and return a structured result object (e.g., `{ success: false, error: { ... } }`). This ensures predictable error handling on the client.
+    - **Rule #2: STAY FOCUSED.** Actions are thin wrappers that validate the session and then delegate to the core logic in `/lib/steps/registry.ts`. They should not contain complex business logic themselves.
 
-### File Organization
+2.  **Route Protection**: The main page (`/app/page.tsx`) is a Server Component that validates the user's session. If the user is not fully authenticated with both providers, it redirects them to the `/login` page.
 
-- `auth-actions.ts`: Authentication utilities (tenant lookup)
-- `config-actions.ts`: Configuration persistence
-- `step-actions.ts`: Thin wrappers that delegate to the step registry
+3.  **Client-Side Entry Point**: `components/dashboard.tsx` is the main client component (`"use client"`) that orchestrates all user interactions, dispatches actions to Redux, and calls Server Actions.
 
-### Server Action Standards
+4.  **Providers**: `app/providers.tsx` wraps the application in all necessary client-side contexts, primarily `SessionProvider` for NextAuth and `ReduxProvider` for Redux. The `GlobalErrorModal` is also rendered here to catch errors from any part of the app.
 
-```typescript
-"use server";
-
-import { auth } from "@/app/(auth)/auth";
-
-// Always include error handling
-async function handleExecutionError(
-  error: unknown,
-  stepId?: string,
-): Promise<StepExecutionResult> {
-  console.error(
-    `Execution Action Failed (Step ${stepId || "Unknown"}):`,
-    error,
-  );
-  if (error instanceof APIError) {
-    return {
-      success: false,
-      error: { message: error.message, code: error.code },
-    };
-  }
-  const message = error instanceof Error ? error.message : "Unknown error";
-  return { success: false, error: { message } };
-}
-
-// Use consistent token retrieval
-async function getTokens(): Promise<{
-  googleToken: string;
-  microsoftToken: string;
-  tenantId: string;
-}> {
-  const session = await auth();
-  if (!session?.googleToken) throw new APIError("Google auth required", 401);
-  if (!session?.microsoftToken)
-    throw new APIError("Microsoft auth required", 401);
-  return {
-    googleToken: session.googleToken,
-    microsoftToken: session.microsoftToken,
-    tenantId: session.microsoftTenantId,
-  };
-}
-```
-
-### Authentication Integration
-
-- Use `auth()` from NextAuth for session access in Server Actions
-- Validate required tokens before API calls
-- Return standardized error codes for missing authentication
-- Never access tokens directly in Client Components
-
-## Route Protection
-
-- Main page (`/`) requires both Google and Microsoft authentication
-- Login page handles missing authentication states
-- Automatic redirects based on authentication status
-- Use `redirect()` from `next/navigation` for navigation
-
-## App Router Specifics
-
-- Server Components are default (no "use client" needed)
-- Client Components must have "use client" directive
-- Use `useRouter` from `next/navigation` (not `next/router`)
-- Forms use Server Actions, not traditional form submission
-
-## Key Patterns
-
-- Server actions handle all external API calls
-- Client components focus on UI state and user interaction
-- Configuration flows from session → Redux → server actions
-- Error boundaries catch and display React errors appropriately
-- Manual steps like M-3 still use the same pattern: the server action only verifies completion while the admin performs OAuth in the Azure portal.
-
-## URL Construction in Server Actions
-
-### Using the URL Builder
-
-All server actions should import and use the centralized URL builder:
-
-```typescript
-import {
-  googleDirectoryUrls,
-  microsoftGraphUrls,
-  portalUrls,
-} from "@/lib/api/url-builder";
-
-// In execution actions
-const res = await fetchWithAuth(googleDirectoryUrls.users.create(), token, {
-  method: "POST",
-  body: JSON.stringify(user),
-});
-
-// Return portal URLs for resources
-return {
-  success: true,
-  message: "Resource created",
-  resourceUrl: portalUrls.google.users.details(result.primaryEmail),
-};
-```
-
-### Error Response Pattern
-
-Server actions now return structured error information in outputs:
-
-```typescript
-catch (error) {
-  if (isAuthenticationError(error)) {
-    return {
-      completed: false,
-      message: error.message,
-      outputs: {
-        errorCode: "AUTH_EXPIRED",
-        errorProvider: error.provider,
-        errorMessage: error.message,
-      },
-    };
-  }
-  // Handle other error types...
-}
-```
-
-This allows the UI to properly display and handle different error types without throwing exceptions to the client.
+5.  **Authentication Flow**: The `app/(auth)` route group contains all logic for NextAuth, including the configuration in `auth.ts` and the login page UI in `login/page.tsx`. Admin role verification happens in the `signIn` callback of the NextAuth configuration.

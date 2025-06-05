@@ -1,8 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
@@ -15,12 +21,13 @@ import {
   type ApiLogEntry,
 } from "@/lib/redux/slices/debug-panel";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
-import { Bug, Trash2, X } from "lucide-react";
+import { Bug, Trash2, X, ChevronDown, ChevronUp } from "lucide-react";
 
 export function DebugPanel() {
   const dispatch = useAppDispatch();
   const { isOpen, filter } = useAppSelector(selectDebugPanel);
   const logs = useAppSelector(selectFilteredLogs);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   const debugDisabled = !isApiDebugEnabled();
 
@@ -45,6 +52,10 @@ export function DebugPanel() {
   const handleCopyLog = (log: ApiLogEntry) => {
     navigator.clipboard.writeText(JSON.stringify(log, null, 2));
     console.log("Log copied to clipboard");
+  };
+
+  const toggleLogExpansion = (logId: string) => {
+    setExpandedLogId((prev) => (prev === logId ? null : logId));
   };
 
   return (
@@ -106,68 +117,107 @@ export function DebugPanel() {
               .
             </div>
           ) : (
-            <div className="space-y-2 text-xs font-mono">
+            <div className="space-y-1 text-xs font-mono">
               {logs.map((log) => {
                 const isError =
                   log.error ||
                   (log.responseStatus && log.responseStatus >= 400);
                 return (
-                  <div
+                  <Collapsible
                     key={log.id}
+                    open={expandedLogId === log.id}
+                    onOpenChange={() => toggleLogExpansion(log.id)}
                     className={cn(
-                      "p-2 rounded-sm border cursor-pointer hover:bg-accent/50",
+                      "border rounded-sm",
                       isError
-                        ? "border-destructive/50 bg-destructive/5"
-                        : "border-border bg-slate-50/50"
+                        ? "border-destructive/30 bg-destructive/5 dark:border-destructive/50 dark:bg-destructive/10"
+                        : "border-border bg-slate-50/50 dark:bg-slate-800/30"
                     )}
-                    onClick={() => handleCopyLog(log)}
                   >
-                    <div className="flex justify-between items-center mb-1">
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          isError ? "text-destructive" : "text-primary"
-                        )}
-                      >
-                        {log.method} {log.url}
-                      </span>
-                      <span className="text-muted-foreground text-[11px]">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <div className="flex gap-x-3 items-center text-muted-foreground text-[11px]">
-                      <span>
-                        Provider:{" "}
-                        <span className="text-foreground/80 capitalize">
-                          {log.provider || "unknown"}
-                        </span>
-                      </span>
-                      {log.responseStatus && (
+                    <CollapsibleTrigger className="w-full p-2 text-left group">
+                      <div className="flex justify-between items-center mb-1">
                         <span
                           className={cn(
-                            log.responseStatus >= 400
-                              ? "text-destructive"
-                              : "text-success"
+                            "font-semibold",
+                            isError ? "text-destructive" : "text-primary"
                           )}
                         >
-                          Status: {log.responseStatus}
+                          {log.method} {log.url}
                         </span>
-                      )}
-                      {log.duration && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground text-[11px]">
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </span>
+                          {expandedLogId === log.id ? (
+                            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-x-3 items-center text-muted-foreground text-[11px]">
                         <span>
-                          Duration:{" "}
-                          <span className="text-foreground/80">
-                            {log.duration}ms
+                          Provider:{" "}
+                          <span className="text-foreground/80 capitalize">
+                            {log.provider || "unknown"}
                           </span>
                         </span>
-                      )}
-                    </div>
-                    {log.error && (
-                      <div className="mt-1 text-destructive text-[11px]">
-                        Error: {log.error}
+                        {log.responseStatus && (
+                          <span
+                            className={cn(
+                              log.responseStatus >= 400
+                                ? "text-destructive"
+                                : "text-success"
+                            )}
+                          >
+                            Status: {log.responseStatus}
+                          </span>
+                        )}
+                        {log.duration && (
+                          <span>
+                            Duration:{" "}
+                            <span className="text-foreground/80">
+                              {log.duration}ms
+                            </span>
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      {log.error && (
+                        <div className="mt-1 text-destructive text-[11px]">
+                          Error: {log.error}
+                        </div>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="px-2 pb-2 text-xs">
+                      <div className="mt-1 pt-1 border-t border-dashed border-muted-foreground/30">
+                        {log.requestBody ? (
+                          <div className="mt-1">
+                            <p className="font-medium text-foreground/90 dark:text-foreground/80 mb-0.5">
+                              Request Payload:
+                            </p>
+                            <pre className="p-1.5 bg-slate-200 dark:bg-slate-700/50 rounded text-[10px] overflow-x-auto max-h-32">
+                              {JSON.stringify(log.requestBody, null, 2) ?? ""}
+                            </pre>
+                          </div>
+                        ) : null}
+                        {log.responseBody ? (
+                          <div className="mt-1.5">
+                            <p className="font-medium text-foreground/90 dark:text-foreground/80 mb-0.5">
+                              Response Payload:
+                            </p>
+                            <pre className="p-1.5 bg-slate-200 dark:bg-slate-700/50 rounded text-[10px] overflow-x-auto max-h-32">
+                              {JSON.stringify(log.responseBody, null, 2) ?? ""}
+                            </pre>
+                          </div>
+                        ) : null}
+                        {!log.requestBody && !log.responseBody && (
+                          <p className="italic text-muted-foreground text-[10px] mt-1">
+                            No payload data for this entry.
+                          </p>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 );
               })}
             </div>

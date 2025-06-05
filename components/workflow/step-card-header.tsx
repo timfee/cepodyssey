@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import type {
-  StatusDisplayConfig,
   AutomatabilityDisplayConfig,
-} from './config';
+  StatusDisplayConfig,
+} from "./config";
 
 interface StepCardHeaderProps {
   stepId: string;
@@ -24,15 +24,15 @@ interface StepCardHeaderProps {
 }
 
 const getProviderColorClass = (provider: string): string => {
-    switch (provider?.toLowerCase()) {
-        case "google":
-        return "text-blue-600 font-medium";
-        case "microsoft":
-        return "text-teal-600 font-medium";
-        default:
-        return "text-muted-foreground/90 font-medium";
-    }
-}
+  switch (provider?.toLowerCase()) {
+    case "google":
+      return "text-blue-600 font-medium";
+    case "microsoft":
+      return "text-teal-600 font-medium";
+    default:
+      return "text-muted-foreground/90 font-medium";
+  }
+};
 
 export function StepCardHeader({
   stepId,
@@ -56,9 +56,9 @@ export function StepCardHeader({
               <TooltipTrigger asChild>
                 <StatusIcon
                   className={cn(
-                    'h-5 w-5 shrink-0',
+                    "h-5 w-5 shrink-0",
                     statusDisplay.colorClass,
-                    isProcessing && 'animate-spin',
+                    isProcessing && "animate-spin"
                   )}
                 />
               </TooltipTrigger>
@@ -80,17 +80,17 @@ export function StepCardHeader({
             <TooltipTrigger asChild>
               <span
                 className={cn(
-                  'flex cursor-default items-center gap-1',
+                  "flex cursor-default items-center gap-1",
                   automatabilityDisplay.badgeClasses ||
-                    automatabilityDisplay.baseColorClass,
+                    automatabilityDisplay.baseColorClass
                 )}
               >
                 <AutoIcon
                   className={cn(
-                    'h-3.5 w-3.5 shrink-0',
+                    "h-3.5 w-3.5 shrink-0",
                     automatabilityDisplay.badgeClasses
-                      ? 'text-inherit'
-                      : automatabilityDisplay.baseColorClass,
+                      ? "text-inherit"
+                      : automatabilityDisplay.baseColorClass
                   )}
                 />
                 <span className="border-b border-dashed border-muted-foreground/70 pb-px font-medium">

@@ -1,6 +1,7 @@
 "use server";
 import * as google from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
@@ -26,14 +27,14 @@ export async function executeVerifyDomain(
         success: true,
         message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
         resourceUrl: portalUrls.google.domains.manage(context.domain),
-        outputs: { customerId: user.customerId },
+        outputs: { [OUTPUT_KEYS.GWS_CUSTOMER_ID]: user.customerId },
       };
     }
     return {
       success: true,
       message: `Domain '${context.domain}' added. Please ensure it is verified in your Google Workspace Admin console for SAML SSO.`,
       resourceUrl: portalUrls.google.domains.manage(context.domain),
-      outputs: { customerId: user.customerId },
+      outputs: { [OUTPUT_KEYS.GWS_CUSTOMER_ID]: user.customerId },
     };
   } catch (e) {
     return handleExecutionError(e, STEP_IDS.VERIFY_DOMAIN);

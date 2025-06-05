@@ -1,7 +1,6 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import type { ManagedStep } from './workflow-types';
+import { Button } from "@/components/ui/button";
 import {
   ExternalLink,
   Loader2,
@@ -9,8 +8,9 @@ import {
   RefreshCw,
   UserCheck,
   Zap,
-} from 'lucide-react';
-import { useMemo } from 'react';
+} from "lucide-react";
+import { useMemo } from "react";
+import type { ManagedStep } from "./workflow-types";
 
 interface StepCardFooterActionsProps {
   step: ManagedStep;
@@ -39,8 +39,8 @@ export function StepCardFooterActions({
 }: StepCardFooterActionsProps) {
   const configureUrl = useMemo(() => {
     if (!step.adminUrls?.configure) return undefined;
-    if (typeof step.adminUrls.configure === 'function') {
-      return step.adminUrls.configure(allOutputs) || '#';
+    if (typeof step.adminUrls.configure === "function") {
+      return step.adminUrls.configure(allOutputs) || "#";
     }
     return step.adminUrls.configure;
   }, [step.adminUrls, allOutputs]);
@@ -59,14 +59,24 @@ export function StepCardFooterActions({
       <div className="flex flex-wrap items-center gap-2">
         {isCompleted ? (
           <>
-            {step.automatability !== 'manual' && (
-              <Button variant="outline" size="sm" onClick={onExecute} disabled={isProcessing}>
+            {step.automatability !== "manual" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onExecute}
+                disabled={isProcessing}
+              >
                 <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-run
               </Button>
             )}
-            {step.automatability === 'manual' &&
-              step.completionType === 'user-marked' && (
-                <Button variant="outline" size="sm" onClick={onMarkIncomplete} disabled={isProcessing}>
+            {step.automatability === "manual" &&
+              step.completionType === "user-marked" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onMarkIncomplete}
+                  disabled={isProcessing}
+                >
                   Mark as Incomplete
                 </Button>
               )}
@@ -75,26 +85,28 @@ export function StepCardFooterActions({
           <>
             <Button
               size="sm"
-              onClick={step.automatability !== 'manual' ? onExecute : onMarkComplete}
+              onClick={
+                step.automatability !== "manual" ? onExecute : onMarkComplete
+              }
               disabled={!canExecute || isProcessing}
-              variant={step.automatability === 'manual' ? 'outline' : 'default'}
+              variant={step.automatability === "manual" ? "outline" : "default"}
             >
               {isProcessing ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : step.automatability !== 'manual' ? (
+              ) : step.automatability !== "manual" ? (
                 <Zap className="mr-1.5 h-4 w-4" />
               ) : (
                 <UserCheck className="mr-1.5 h-4 w-4" />
               )}
               {isProcessing
-                ? 'Processing...'
-                : step.automatability !== 'manual'
-                  ? step.status === 'failed'
-                    ? 'Retry'
-                    : 'Execute'
-                  : 'Mark as Complete'}
+                ? "Processing..."
+                : step.automatability !== "manual"
+                  ? step.status === "failed"
+                    ? "Retry"
+                    : "Execute"
+                  : "Mark as Complete"}
             </Button>
-            {step.automatability !== 'manual' && step.status !== 'failed' && (
+            {step.automatability !== "manual" && step.status !== "failed" && (
               <Button
                 variant="link"
                 size="sm"
