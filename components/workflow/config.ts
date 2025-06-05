@@ -10,7 +10,11 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { StepStatusInfo, StepDefinition } from "@/lib/types";
+import type {
+  StepAutomatability,
+  StepCompletionType,
+  StepStatus,
+} from "./workflow-types";
 
 export interface StatusDisplayConfig {
   icon: LucideIcon;
@@ -27,7 +31,7 @@ export interface AutomatabilityDisplayConfig {
   tooltip: string;
 }
 
-const stateConfigMap: Record<string, StatusDisplayConfig> = {
+export const stateConfigMap: Record<string, StatusDisplayConfig> = {
   "completed-verified": {
     icon: CheckCircle2,
     colorClass: "text-green-600",
@@ -44,13 +48,13 @@ const stateConfigMap: Record<string, StatusDisplayConfig> = {
     icon: Info,
     colorClass: "text-muted-foreground",
     label: "Pending",
-    tooltip: "This step is ready or pending prerequisites.",
+    tooltip: "This step has not been started yet.",
   },
   in_progress: {
     icon: Loader2,
     colorClass: "text-blue-500",
-    label: "Processing...",
-    tooltip: "This step is currently being executed or checked.",
+    label: "Checking...",
+    tooltip: "Verifying current status with the server.",
   },
   failed: {
     icon: AlertTriangle,
@@ -58,16 +62,22 @@ const stateConfigMap: Record<string, StatusDisplayConfig> = {
     label: "Failed",
     tooltip: "This step encountered an error.",
   },
+  available: {
+    icon: Info,
+    colorClass: "text-primary",
+    label: "Available",
+    tooltip: "This step is ready to be actioned.",
+  },
   blocked: {
     icon: Lock,
     colorClass: "text-muted-foreground",
     label: "Blocked",
-    tooltip: "Prerequisite steps must be completed first.",
+    tooltip: "Prerequisites must be completed first.",
   },
 };
 
 export const automatabilityConfigMap: Record<
-  StepDefinition["automatability"],
+  StepAutomatability,
   AutomatabilityDisplayConfig
 > = {
   automated: {
@@ -94,8 +104,8 @@ export const automatabilityConfigMap: Record<
 };
 
 export function getStatusDisplayConfig(
-  status: StepStatusInfo["status"],
-  completionType?: StepStatusInfo["completionType"],
+  status: StepStatus,
+  completionType?: StepCompletionType
 ): StatusDisplayConfig {
   if (status === "completed") {
     return completionType === "user-marked"
@@ -106,35 +116,7 @@ export function getStatusDisplayConfig(
 }
 
 export function getAutomatabilityDisplayConfig(
-  automatability: StepDefinition["automatability"],
+  automatability?: StepAutomatability
 ): AutomatabilityDisplayConfig {
   return automatabilityConfigMap[automatability || "manual"];
-}
-
-export const getProviderColorClass = (provider: string): string => {
-  switch (provider?.toLowerCase()) {
-    case "google":
-      return "text-blue-600 dark:text-blue-400 font-medium";
-    case "microsoft":
-      return "text-teal-600 dark:text-teal-400 font-medium";
-    default:
-      return "text-muted-foreground/90 font-medium";
-  }
-};
-
-export function getMethodColor(method: string): string {
-  switch (method?.toUpperCase()) {
-    case "GET":
-      return "text-blue-600 dark:text-blue-400";
-    case "POST":
-      return "text-green-600 dark:text-green-400";
-    case "PATCH":
-      return "text-orange-500 dark:text-orange-400";
-    case "PUT":
-      return "text-purple-600 dark:text-purple-400";
-    case "DELETE":
-      return "text-red-600 dark:text-red-400";
-    default:
-      return "text-muted-foreground";
-  }
 }

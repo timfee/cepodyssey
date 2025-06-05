@@ -1,4 +1,4 @@
-import { allStepDefinitions } from "./index";
+import { allStepDefinitions } from './index';
 import type {
   StepCheckResult,
   StepContext,
@@ -6,8 +6,9 @@ import type {
   StepDefinition,
   StepInput,
   StepOutput,
-} from "@/lib/types";
-import type { StepId } from "./step-refs";
+} from '@/lib/types';
+import type { StepId } from './step-refs';
+import { ApiLogger } from '@/lib/api/api-logger';
 
 export const STEPS: Record<StepId, StepDefinition> = {} as Record<
   StepId,
@@ -39,9 +40,14 @@ export async function checkStep(
 ): Promise<StepCheckResult> {
   const step = getStep(stepId);
   if (!step.check) {
-    return { completed: false, message: "No check available for this step." };
+    return { completed: false, message: 'No check available for this step.' };
   }
-  return step.check(context);
+  const logger = new ApiLogger();
+  const result = await step.check({ ...context, logger });
+  return {
+    ...result,
+    apiLogs: logger.getLogs(),
+  };
 }
 
 export async function executeStep(
@@ -53,10 +59,15 @@ export async function executeStep(
     return {
       success: false,
       error: {
-        message: "No execution available for this step.",
-        code: "UNKNOWN_ERROR",
+        message: 'No execution available for this step.',
+        code: 'NO_EXECUTE_FUNCTION',
       },
     };
   }
-  return step.execute(context);
+  const logger = new ApiLogger();
+  const result = await step.execute({ ...context, logger });
+  return {
+    ...result,
+    apiLogs: logger.getLogs(),
+  };
 }

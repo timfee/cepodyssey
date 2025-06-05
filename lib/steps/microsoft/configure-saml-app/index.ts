@@ -52,7 +52,7 @@ export const M7_INPUTS: StepInput[] = [
   {
     type: "keyValue",
     data: {
-      key: OUTPUT_KEYS.GOOGLE_SAML_ACS_URL,
+      key: OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL,
       description: "Google ACS URL",
       producedBy: STEP_IDS.INITIATE_SAML_PROFILE,
     },

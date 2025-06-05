@@ -1,7 +1,9 @@
+import type { DisplayApiAction } from "./workflow-types";
+
 export function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>,
-): { method: string; path: string; isManual: boolean } {
+  outputs: Record<string, unknown>
+): DisplayApiAction {
   let trimmed = action.trim();
   let isManual = false;
 

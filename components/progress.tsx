@@ -1,17 +1,17 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppSelector } from "@/hooks/use-redux";
 import { allStepDefinitions } from "@/lib/steps";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import React from "react";
-import { StepCard } from "./step-card";
-
-import type { StepId } from "@/lib/steps/step-refs";
+import { WorkflowStepCard } from "./workflow";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: StepId) => void;
@@ -69,7 +69,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
 
   return (
     <Tabs defaultValue="all" className="w-full">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Progress</h2>
           <p className="text-muted-foreground">
@@ -111,12 +111,14 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
           <ScrollArea className="h-[calc(100vh-24rem)]">
             <div className="flex flex-col gap-4 pr-4">
               {cat.steps.map((step) => (
-                <StepCard
+                <WorkflowStepCard
                   key={step.id}
                   step={step}
-                  outputs={appConfig.outputs}
+                  allOutputs={appConfig.outputs}
                   onExecute={onExecuteStep}
                   canRunGlobal={canRunGlobalSteps}
+                  stepInputDefs={getStepInputs(step.id as StepId)}
+                  stepOutputDefs={getStepOutputs(step.id as StepId)}
                 />
               ))}
             </div>

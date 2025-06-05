@@ -1,21 +1,21 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
   clearError,
   selectError,
   selectHasError,
 } from "@/lib/redux/slices/errors";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { AlertTriangleIcon, LogInIcon, ExternalLinkIcon } from "lucide-react";
+import { AlertTriangleIcon, ExternalLinkIcon, LogInIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -30,16 +30,15 @@ export function GlobalErrorModal() {
   };
 
   const handleSignIn = async () => {
-    // Sign out first to clear any stale tokens
     await signOut({ redirect: false });
     router.push("/login");
     handleDismiss();
   };
 
   const handleEnableAPI = () => {
-    const details = error.details as { apiUrl?: string } | undefined;
-    if (details?.apiUrl) {
-      window.open(details.apiUrl, "_blank");
+    const urlMatch = error.message.match(/https:\/\/[^\s]+/);
+    if (urlMatch) {
+      window.open(urlMatch[0], "_blank");
     }
     handleDismiss();
   };
@@ -48,12 +47,9 @@ export function GlobalErrorModal() {
 
   const details = error.details as
     | {
-        recoverable?: boolean;
-        action?: { label: string; handler: () => void };
         category?: string;
         code?: string;
         provider?: "google" | "microsoft";
-        apiUrl?: string;
       }
     | undefined;
 
@@ -67,21 +63,22 @@ export function GlobalErrorModal() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangleIcon className="h-5 w-5 text-destructive" />
-            {isAuthError ? "Authentication Required" : "Error"}
+            {isAuthError
+              ? "Authentication Required"
+              : isAPIEnablementError
+                ? "API Not Enabled"
+                : "Error"}
           </DialogTitle>
-          {details?.category && (
-            <DialogDescription>
-              {details.category === "auth" && "Your session has expired"}
-              {details.category === "api" && "API Error"}
-              {details.category === "validation" && "Validation Error"}
-              {details.category === "system" && "System Error"}
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            {isAuthError
+              ? "Your session has expired or is invalid."
+              : "An error occurred that requires your attention."}
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm">{error.message}</p>
           {isAuthError && details?.provider && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mt-2 text-sm text-muted-foreground">
               Provider:{" "}
               {details.provider === "google"
                 ? "Google Workspace"
@@ -89,33 +86,25 @@ export function GlobalErrorModal() {
             </p>
           )}
         </div>
-        <DialogFooter className="flex gap-2 sm:justify-between">
+        <DialogFooter className="flex gap-2 sm:justify-end">
           {isAuthError ? (
             <>
-              <Button onClick={handleSignIn} className="flex-1">
-                <LogInIcon className="h-4 w-4 mr-2" />
+              <Button onClick={handleDismiss} variant="outline">
+                Cancel
+              </Button>
+              <Button onClick={handleSignIn}>
+                <LogInIcon className="mr-2 h-4 w-4" />
                 Sign In Again
               </Button>
-              <Button
-                onClick={handleDismiss}
-                variant="outline"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
             </>
-          ) : isAPIEnablementError && details?.apiUrl ? (
+          ) : isAPIEnablementError ? (
             <>
-              <Button onClick={handleEnableAPI} className="flex-1">
-                <ExternalLinkIcon className="h-4 w-4 mr-2" />
-                Enable API
+              <Button onClick={handleDismiss} variant="outline">
+                Dismiss
               </Button>
-              <Button
-                onClick={handleDismiss}
-                variant="outline"
-                className="flex-1"
-              >
-                Cancel
+              <Button onClick={handleEnableAPI}>
+                <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                Enable API
               </Button>
             </>
           ) : (

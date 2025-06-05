@@ -21,7 +21,7 @@ export async function executeConfigureSamlApp(
       OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
       OUTPUT_KEYS.SAML_SSO_APP_ID,
       OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,
-      OUTPUT_KEYS.GOOGLE_SAML_ACS_URL,
+      OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL,
     ].filter((k) => !context.outputs[k]);
     if (validation.length > 0 || !context.domain) {
       const missing = [...validation];
@@ -45,7 +45,7 @@ export async function executeConfigureSamlApp(
       OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
     ] as string;
     const googleAcsUrl = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_ACS_URL
+      OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL
     ] as string;
     const primaryDomain = context.domain as string;
 

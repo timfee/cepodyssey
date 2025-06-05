@@ -11,7 +11,6 @@ import type {
   AutomatabilityDisplayConfig,
   StatusDisplayConfig,
 } from "./config";
-import { getProviderColorClass } from "./config";
 
 interface StepCardHeaderProps {
   stepId: string;
@@ -23,6 +22,17 @@ interface StepCardHeaderProps {
   automatabilityDisplay: AutomatabilityDisplayConfig;
   isProcessing: boolean;
 }
+
+const getProviderColorClass = (provider: string): string => {
+  switch (provider?.toLowerCase()) {
+    case "google":
+      return "text-blue-600 font-medium";
+    case "microsoft":
+      return "text-teal-600 font-medium";
+    default:
+      return "text-muted-foreground/90 font-medium";
+  }
+};
 
 export function StepCardHeader({
   stepId,
@@ -39,9 +49,8 @@ export function StepCardHeader({
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="flex flex-col w-full text-left">
-        {/* Header: Icon, Title, Provider */}
-        <div className="flex items-start justify-between w-full">
+      <div className="flex w-full flex-col text-left">
+        <div className="flex w-full items-start justify-between">
           <div className="flex items-center gap-3">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -49,7 +58,7 @@ export function StepCardHeader({
                   className={cn(
                     "h-5 w-5 shrink-0",
                     statusDisplay.colorClass,
-                    isProcessing && "animate-spin",
+                    isProcessing && "animate-spin"
                   )}
                 />
               </TooltipTrigger>
@@ -57,35 +66,34 @@ export function StepCardHeader({
                 <p>{statusDisplay.tooltip}</p>
               </TooltipContent>
             </Tooltip>
-            <h3 className="font-semibold text-lg text-foreground">{title}</h3>
-            <span className="text-xs text-muted-foreground pt-1">{stepId}</span>
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            <span className="pt-1 text-xs text-muted-foreground">{stepId}</span>
           </div>
-          <div className="text-xs ml-2 shrink-0 pt-1">
+          <div className="ml-2 shrink-0 pt-1 text-xs">
             <span className={getProviderColorClass(provider)}>{provider}</span>
             <span className="text-muted-foreground/80"> / {activity}</span>
           </div>
         </div>
 
-        {/* Sub-header: Tags and Status Label */}
-        <div className="flex items-center gap-2 mt-1.5 text-xs pl-8">
+        <div className="mt-1.5 flex items-center gap-2 pl-8 text-xs">
           <Tooltip>
             <TooltipTrigger asChild>
               <span
                 className={cn(
-                  "flex items-center gap-1 cursor-default",
+                  "flex cursor-default items-center gap-1",
                   automatabilityDisplay.badgeClasses ||
-                    automatabilityDisplay.baseColorClass,
+                    automatabilityDisplay.baseColorClass
                 )}
               >
                 <AutoIcon
                   className={cn(
                     "h-3.5 w-3.5 shrink-0",
                     automatabilityDisplay.badgeClasses
-                      ? ""
-                      : automatabilityDisplay.baseColorClass,
+                      ? "text-inherit"
+                      : automatabilityDisplay.baseColorClass
                   )}
                 />
-                <span className="font-medium border-b border-dashed border-muted-foreground/70 pb-px">
+                <span className="border-b border-dashed border-muted-foreground/70 pb-px font-medium">
                   {automatabilityDisplay.label}
                 </span>
               </span>
@@ -94,26 +102,9 @@ export function StepCardHeader({
               <p>{automatabilityDisplay.tooltip}</p>
             </TooltipContent>
           </Tooltip>
-          <span className="mx-1 text-muted-foreground/50">|</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className={cn(
-                  "font-medium border-b border-dashed border-muted-foreground/70 pb-px",
-                  statusDisplay.colorClass.replace("animate-spin", "").trim(),
-                )}
-              >
-                {statusDisplay.label}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{statusDisplay.tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground mt-2 pl-8 group-data-[state=closed]:truncate group-data-[state=closed]:max-w-[90%]">
+        <p className="mt-2 pl-8 text-sm text-muted-foreground group-data-[state=closed]:max-w-[90%] group-data-[state=closed]:truncate">
           {description}
         </p>
       </div>

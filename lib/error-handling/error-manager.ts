@@ -1,7 +1,7 @@
-import { store } from "@/lib/redux/store";
-import { setError } from "@/lib/redux/slices/errors";
 import { AuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
+import { setError } from "@/lib/redux/slices/errors";
+import { store } from "@/lib/redux/store";
 
 export type ErrorCategory = "auth" | "api" | "validation" | "system";
 
@@ -11,16 +11,12 @@ export interface ManagedError {
   code?: string;
   provider?: "google" | "microsoft";
   recoverable: boolean;
-  action?: {
-    label: string;
-    handler: () => void;
-  };
 }
 
 export class ErrorManager {
   static handle(
     error: unknown,
-    _context?: { stepId?: string; stepTitle?: string },
+    _context?: { stepId?: string; stepTitle?: string }
   ): ManagedError {
     if (error instanceof AuthenticationError) {
       return {
@@ -29,12 +25,6 @@ export class ErrorManager {
         code: "AUTH_EXPIRED",
         provider: error.provider,
         recoverable: true,
-        action: {
-          label: "Sign In",
-          handler: () => {
-            window.location.href = "/login";
-          },
-        },
       };
     }
 
@@ -45,15 +35,6 @@ export class ErrorManager {
         message: error.message,
         code: error.code,
         recoverable: isApiEnablement,
-        action: isApiEnablement
-          ? {
-              label: "Enable API",
-              handler: () => {
-                const match = error.message.match(/https:\/\/[^\s]+/);
-                if (match) window.open(match[0], "_blank");
-              },
-            }
-          : undefined,
       };
     }
 
@@ -67,7 +48,7 @@ export class ErrorManager {
 
   static dispatch(
     error: unknown,
-    context?: { stepId?: string; stepTitle?: string },
+    context?: { stepId?: string; stepTitle?: string }
   ): void {
     const managed = this.handle(error, context);
     store.dispatch(
@@ -79,9 +60,8 @@ export class ErrorManager {
           code: managed.code,
           provider: managed.provider,
           recoverable: managed.recoverable,
-          action: managed.action, // Make sure action is included here
         },
-      }),
+      })
     );
   }
 }

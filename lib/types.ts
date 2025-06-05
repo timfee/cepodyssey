@@ -1,6 +1,7 @@
 /**
  * Defines the dynamic status and metadata of a step, typically stored in Redux.
  */
+import type { ApiLogger } from "./api/api-logger";
 export interface StepStatusInfo {
   status: "pending" | "in_progress" | "completed" | "failed" | "blocked";
   completionType?: "server-verified" | "user-marked";
@@ -102,6 +103,8 @@ export interface StepContext {
   domain: string;
   tenantId: string;
   outputs: Record<string, unknown>;
+  /** Logger instance for capturing API logs during this step */
+  logger?: ApiLogger;
   inputs?: StepInput[];
   producedOutputs?: StepOutput[];
 }
@@ -164,63 +167,43 @@ export type ManagedStep = StepDefinition & StepStatusInfo;
  * that typically produces this output.
  */
 export const OUTPUT_KEYS = {
-  // Google - G-1: Create 'Automation' Organizational Unit
-  GOOGLE_OU_PATH: "googleOuPath",
-  GOOGLE_OU_ID: "googleOuId",
+  // --- Google Workspace Outputs ---
+  // G-1: Create 'Automation' OU
   AUTOMATION_OU_PATH: "googleOuPath",
   AUTOMATION_OU_ID: "googleOuId",
-  // Google - G-2: Create Provisioning User
-  GOOGLE_USER_EMAIL: "googleUserEmail",
-  GOOGLE_USER_ID: "googleUserId",
-  GOOGLE_USER_PASSWORD: "googleUserPassword",
+  // G-2: Create Provisioning User
   SERVICE_ACCOUNT_EMAIL: "googleUserEmail",
   SERVICE_ACCOUNT_ID: "googleUserId",
-  SERVICE_ACCOUNT_PASSWORD: "googleUserPassword",
-  // Google - G-3: Grant Admin Privileges to Provisioning User
-  GOOGLE_SUPERADMIN_ROLE_ID: "googleSuperAdminRoleId",
+  // G-3: Grant Super Admin
   SUPER_ADMIN_ROLE_ID: "googleSuperAdminRoleId",
-  // Google - G-4: Verify Domain
-  GWS_CUSTOMER_ID: "g4GwsCustomerId",
-  // Google - G-5: Initiate Google SAML Profile
+  // G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
-  // Google SAML Service Provider config
   GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
   GOOGLE_SAML_SP_ACS_URL: "googleSamlAcsUrl",
-  // Microsoft - M-1: Create Enterprise App
-  MS_APP_ID: "msAppId",
-  MS_APP_OBJECT_ID: "msAppObjectId",
-  MS_SP_OBJECT_ID: "msSpObjectId",
-  PROVISIONING_APP_ID: "msAppId",
-  PROVISIONING_APP_OBJECT_ID: "msAppObjectId",
-  PROVISIONING_SP_OBJECT_ID: "msSpObjectId",
-  // Microsoft - M-3: Authorize Enterprise App
-  MS_JOB_ID: "msJobId",
-  PROVISIONING_JOB_ID: "msJobId",
-  // Microsoft - M-6: Create SAML SSO App
-  MS_SAML_APP_ID: "msSamlAppId",
-  MS_SAML_APP_OBJECT_ID: "msSamlAppObjectId",
-  MS_SAML_SP_OBJECT_ID: "msSamlSpObjectId",
+
+  // --- Microsoft Entra ID Outputs ---
+  // M-1: Create Provisioning App
+  PROVISIONING_APP_ID: "msProvAppId",
+  PROVISIONING_APP_OBJECT_ID: "msProvAppObjectId",
+  PROVISIONING_SP_OBJECT_ID: "msProvSpObjectId",
+  // M-2: Enable Provisioning App
+  FLAG_M2_PROV_APP_PROPS_CONFIGURED: "msProvAppPropsConfigured",
+  // M-3: Authorize Provisioning
+  PROVISIONING_JOB_ID: "msProvJobId",
+  FLAG_M3_PROV_CREDS_CONFIGURED: "msProvCredsConfigured",
+  // M-4: Configure Attribute Mappings
+  FLAG_M4_PROV_MAPPINGS_CONFIGURED: "msProvMappingsConfigured",
+  // M-6: Create SAML SSO App
   SAML_SSO_APP_ID: "msSamlAppId",
   SAML_SSO_APP_OBJECT_ID: "msSamlAppObjectId",
   SAML_SSO_SP_OBJECT_ID: "msSamlSpObjectId",
-  // Microsoft - M-8: Retrieve IdP Metadata
-  MS_IDP_CERT_BASE64: "msIdpCertBase64",
-  MS_IDP_SSO_URL: "msIdpSsoUrl",
-  MS_IDP_ENTITY_ID: "msIdpEntityId",
+  // M-7: Configure SAML App
+  FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
+  // M-8: Retrieve IdP Metadata (from Microsoft, for Google)
   IDP_CERTIFICATE_BASE64: "msIdpCertBase64",
   IDP_SSO_URL: "msIdpSsoUrl",
   IDP_ENTITY_ID: "msIdpEntityId",
-  // Flags for configuration steps
-  MS_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
-  MS_CREDS_CONFIGURED: "msCredsConfigured",
-  MS_MAPPINGS_CONFIGURED: "msMappingsConfigured",
-  MS_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
-  MS_SSO_TESTED: "msSsoTested",
-  FLAG_M2_PROV_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
-  FLAG_M3_PROV_CREDS_CONFIGURED: "msCredsConfigured",
-  FLAG_M4_PROV_MAPPINGS_CONFIGURED: "msMappingsConfigured",
-  FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
+  // M-10: Test SSO
   FLAG_M10_SSO_TESTED: "msSsoTested",
-  GOOGLE_SAML_ACS_URL: "googleSamlAcsUrl",
 };

@@ -1,5 +1,6 @@
 import type * as MicrosoftGraph from "microsoft-graph";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import type { ApiLogger } from "./api-logger";
 import { wrapAuthError } from "./auth-interceptor";
 import { microsoftGraphUrls, microsoftAuthUrls } from "./url-builder";
 
@@ -39,10 +40,11 @@ export type SynchronizationRule = MicrosoftGraph.SynchronizationRule;
 export async function listApplications(
   token: string,
   filter?: string,
+  logger?: ApiLogger,
 ): Promise<Application[]> {
   try {
     const url = microsoftGraphUrls.applications.list(filter);
-    const res = await fetchWithAuth(url, token);
+    const res = await fetchWithAuth(url, token, undefined, logger);
     const result = await handleApiResponse<{ value: Application[] }>(res);
     if (
       typeof result === "object" &&
@@ -64,11 +66,14 @@ export async function listApplications(
 export async function getServicePrincipalByAppId(
   token: string,
   appId: string,
+  logger?: ApiLogger,
 ): Promise<ServicePrincipal | null> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.servicePrincipals.list(`appId eq '${appId}'`),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const result = await handleApiResponse<{ value: ServicePrincipal[] }>(res);
@@ -91,11 +96,14 @@ export async function getServicePrincipalByAppId(
 export async function getServicePrincipalDetails(
   token: string,
   spObjectId: string,
+  logger?: ApiLogger,
 ): Promise<ServicePrincipal | null> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.servicePrincipals.get(spObjectId),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const result = await handleApiResponse<ServicePrincipal>(res);
@@ -116,11 +124,14 @@ export async function getServicePrincipalDetails(
 export async function getApplicationDetails(
   token: string,
   applicationObjectId: string,
+  logger?: ApiLogger,
 ): Promise<Application | null> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.applications.get(applicationObjectId),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const result = await handleApiResponse<Application>(res);
@@ -142,6 +153,7 @@ export async function createEnterpriseApp(
   token: string,
   templateId: string,
   displayName: string,
+  logger?: ApiLogger,
 ): Promise<
   | { application: Application; servicePrincipal: ServicePrincipal }
   | { alreadyExists: true }
@@ -154,6 +166,7 @@ export async function createEnterpriseApp(
         method: "POST",
         body: JSON.stringify({ displayName }),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -170,6 +183,7 @@ export async function patchServicePrincipal(
   token: string,
   servicePrincipalId: string,
   body: Partial<ServicePrincipal>,
+  logger?: ApiLogger,
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -179,6 +193,7 @@ export async function patchServicePrincipal(
         method: "PATCH",
         body: JSON.stringify(body),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -194,6 +209,7 @@ export async function updateApplication(
   token: string,
   applicationObjectId: string,
   body: Partial<Application>,
+  logger?: ApiLogger,
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -203,6 +219,7 @@ export async function updateApplication(
         method: "PATCH",
         body: JSON.stringify(body),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -218,6 +235,7 @@ export async function updateApplication(
 export async function createProvisioningJob(
   token: string,
   servicePrincipalId: string,
+  logger?: ApiLogger,
 ): Promise<SynchronizationJob | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -229,6 +247,7 @@ export async function createProvisioningJob(
         method: "POST",
         body: JSON.stringify({ templateId: "GoogleApps" }),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -243,6 +262,7 @@ export async function createProvisioningJob(
 export async function listSynchronizationJobs(
   token: string,
   servicePrincipalId: string,
+  logger?: ApiLogger,
 ): Promise<SynchronizationJob[]> {
   try {
     const res = await fetchWithAuth(
@@ -250,6 +270,8 @@ export async function listSynchronizationJobs(
         servicePrincipalId,
       ),
       token,
+      undefined,
+      logger,
     );
     const result = await handleApiResponse<{ value: SynchronizationJob[] }>(
       res,
@@ -275,6 +297,7 @@ export async function getProvisioningJob(
   token: string,
   servicePrincipalId: string,
   jobId: string,
+  logger?: ApiLogger,
 ): Promise<SynchronizationJob | null> {
   try {
     const res = await fetchWithAuth(
@@ -283,6 +306,8 @@ export async function getProvisioningJob(
         jobId,
       ),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const result = await handleApiResponse<SynchronizationJob>(res);
@@ -304,6 +329,7 @@ export async function getSynchronizationSchema(
   token: string,
   servicePrincipalId: string,
   jobId: string,
+  logger?: ApiLogger,
 ): Promise<SynchronizationSchema | null> {
   try {
     const res = await fetchWithAuth(
@@ -312,6 +338,8 @@ export async function getSynchronizationSchema(
         jobId,
       ),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const result = await handleApiResponse<SynchronizationSchema>(res);
@@ -333,6 +361,7 @@ export async function updateProvisioningCredentials(
   token: string,
   servicePrincipalId: string,
   credentials: { key: string; value: string }[],
+  logger?: ApiLogger,
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -344,6 +373,7 @@ export async function updateProvisioningCredentials(
         method: "PUT",
         body: JSON.stringify({ value: credentials }),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -360,6 +390,7 @@ export async function startProvisioningJob(
   token: string,
   servicePrincipalId: string,
   jobId: string,
+  logger?: ApiLogger,
 ): Promise<void | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -369,6 +400,7 @@ export async function startProvisioningJob(
       ),
       token,
       { method: "POST" },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -387,6 +419,7 @@ export async function configureAttributeMappings(
   schemaPayload:
     | { synchronizationRules: MicrosoftGraph.SynchronizationRule[] }
     | Partial<SynchronizationSchema>,
+  logger?: ApiLogger,
 ): Promise<SynchronizationSchema | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -399,6 +432,7 @@ export async function configureAttributeMappings(
         method: "PUT",
         body: JSON.stringify(schemaPayload),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -415,6 +449,7 @@ export async function assignUsersToApp(
   servicePrincipalId: string,
   principalId: string,
   appRoleId: string,
+  logger?: ApiLogger,
 ): Promise<AppRoleAssignment | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -430,6 +465,7 @@ export async function assignUsersToApp(
           appRoleId,
         }),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -443,6 +479,7 @@ export async function assignUsersToApp(
 export async function listAppRoleAssignments(
   token: string,
   servicePrincipalObjectId: string,
+  logger?: ApiLogger,
 ): Promise<AppRoleAssignment[]> {
   try {
     const res = await fetchWithAuth(
@@ -450,6 +487,8 @@ export async function listAppRoleAssignments(
         servicePrincipalObjectId,
       ),
       token,
+      undefined,
+      logger,
     );
     const result = await handleApiResponse<{ value: AppRoleAssignment[] }>(res);
     return typeof result === "object" &&
@@ -472,10 +511,11 @@ export interface SamlMetadata {
 export async function getSamlMetadata(
   tenantId: string,
   appId: string,
+  logger?: ApiLogger,
 ): Promise<SamlMetadata> {
   try {
     const url = microsoftAuthUrls.samlMetadata(tenantId, appId);
-    const res = await fetchWithAuth(url, "");
+    const res = await fetchWithAuth(url, "", undefined, logger);
     if (!res.ok) {
       throw new APIError(
         `Failed to fetch SAML metadata: ${res.statusText}`,

@@ -2,11 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { formatValue } from "./utils";
-import type { StepInput } from "@/lib/types";
-
-interface DisplayInput extends StepInput {
-  currentValue: unknown;
-}
+import type { DisplayInput } from "./workflow-types";
 
 interface StepCardInputsDisplayProps {
   inputs: DisplayInput[];
@@ -16,8 +12,8 @@ export function StepCardInputsDisplay({ inputs }: StepCardInputsDisplayProps) {
   if (!inputs || inputs.length === 0) return null;
 
   return (
-    <div className="grid text-sm border border-border rounded bg-card dark:bg-black/20">
-      <div className="grid grid-cols-3 bg-muted/50 dark:bg-white/5 text-muted-foreground font-medium px-2 py-1.5">
+    <div className="grid rounded border border-border bg-card text-sm">
+      <div className="grid grid-cols-3 bg-muted/50 px-2 py-1.5 font-medium text-muted-foreground">
         <div>Variable</div>
         <div>Value</div>
         <div>From Step</div>
@@ -25,15 +21,15 @@ export function StepCardInputsDisplay({ inputs }: StepCardInputsDisplayProps) {
       {inputs.map((input, index) => (
         <div
           key={index}
-          className="grid grid-cols-3 items-start gap-x-2 px-2 py-1.5 border-t border-border"
+          className="grid grid-cols-3 items-start gap-x-2 border-t border-border px-2 py-1.5"
         >
-          <code className="font-mono text-xs break-all">{input.data.key}</code>
+          <code className="break-all font-mono text-xs">{input.key}</code>
           <code
             className={cn(
-              "font-mono text-xs rounded px-1 py-0.5 break-all",
+              "break-all rounded px-1 py-0.5 font-mono text-xs",
               input.currentValue != null
                 ? "bg-slate-100 dark:bg-slate-700"
-                : "bg-muted/30 dark:bg-slate-800 italic",
+                : "italic bg-muted/30 dark:bg-slate-600"
             )}
             title={
               typeof input.currentValue === "string"
@@ -44,10 +40,10 @@ export function StepCardInputsDisplay({ inputs }: StepCardInputsDisplayProps) {
             {formatValue(input.currentValue) || "(Not collected yet)"}
           </code>
           <span
-            className="text-xs text-muted-foreground truncate"
-            title={input.stepTitle}
+            className="truncate text-xs text-muted-foreground"
+            title={input.sourceStepTitle}
           >
-            {input.stepTitle || "N/A"}
+            {input.sourceStepTitle || "N/A"}
           </span>
         </div>
       ))}

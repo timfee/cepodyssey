@@ -1,15 +1,15 @@
+import { executeStepAction } from "@/app/actions/step-actions";
+import { ErrorManager } from "@/lib/error-handling/error-manager";
+import { addOutputs } from "@/lib/redux/slices/app-config";
+import { addApiLog } from "@/lib/redux/slices/debug-panel";
+import {
+  clearCheckTimestamp,
+  updateStep,
+} from "@/lib/redux/slices/setup-steps";
+import { allStepDefinitions } from "@/lib/steps";
+import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./use-redux";
-import {
-  updateStep,
-  clearCheckTimestamp,
-} from "@/lib/redux/slices/setup-steps";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { executeStepAction } from "@/app/actions/step-actions";
-import type { StepId } from "@/lib/steps/step-refs";
-import { ErrorManager } from "@/lib/error-handling/error-manager";
-import { allStepDefinitions } from "@/lib/steps";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
@@ -32,7 +32,7 @@ export function useStepExecution() {
           status: "in_progress",
           error: null,
           message: undefined,
-        }),
+        })
       );
 
       try {
@@ -59,6 +59,7 @@ export function useStepExecution() {
             updateStep({
               id: stepId,
               status: "completed",
+              completionType: "server-verified",
               message: result.message,
               metadata: {
                 resourceUrl: result.resourceUrl,
@@ -66,47 +67,46 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
-          console.log(`[useStepExecution] ${definition.title} succeeded`);
         } else {
+          const errorMessage =
+            result.error?.message ||
+            "An unknown error occurred during execution.";
           dispatch(
             updateStep({
               id: stepId,
               status: "failed",
-              error: result.error?.message,
+              error: errorMessage,
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
-
-          if (result.outputs?.errorCode === "AUTH_EXPIRED") {
-            ErrorManager.dispatch(
-              new Error(result.error?.message || "Authentication expired"),
-              { stepId, stepTitle: definition.title },
-            );
-          } else {
-            console.error(
-              `[useStepExecution] ${definition.title} failed:`,
-              result.error?.message,
-            );
-          }
+          ErrorManager.dispatch(new Error(errorMessage), {
+            stepId,
+            stepTitle: definition.title,
+            ...result.outputs,
+          });
         }
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         dispatch(
           updateStep({
             id: stepId,
             status: "failed",
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
-          }),
+          })
         );
-
-        ErrorManager.dispatch(error, { stepId, stepTitle: definition.title });
+        ErrorManager.dispatch(error, {
+          stepId,
+          stepTitle: definition.title,
+        });
       }
     },
-    [dispatch, appConfig],
+    [dispatch, appConfig]
   );
 
   return { executeStep };

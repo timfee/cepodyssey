@@ -1,11 +1,5 @@
-import { ApiLogger } from "./api-logger";
+import { ApiLogger } from './api-logger';
 
-/**
- * Error thrown when an API call fails.
- * @param message human readable error message
- * @param status HTTP status returned by the API
- * @param code optional error code provided by the API
- */
 export class APIError extends Error {
   constructor(
     message: string,
@@ -13,14 +7,10 @@ export class APIError extends Error {
     public code?: string,
   ) {
     super(message);
-    this.name = "APIError";
+    this.name = 'APIError';
   }
 }
 
-/**
- * Run an async operation with exponential backoff retries.
- * Client-side API errors are rethrown without retrying.
- */
 export async function withRetry<T>(
   operation: () => Promise<T>,
   retries = 3,
@@ -35,32 +25,31 @@ export async function withRetry<T>(
         error instanceof APIError &&
         (error.status < 500 || error.status === 429)
       ) {
-        throw error; // Don't retry client errors (except 429)
+        throw error;
       }
       if (i < retries - 1) {
-        await new Promise((res) => setTimeout(res, 1000 * Math.pow(2, i)));
+        await new Promise((res) => setTimeout(res, 1000 * 2 ** i));
       }
     }
   }
   throw lastError;
 }
 
-/**
- * Perform a fetch request with a bearer token and JSON headers.
- */
 export async function fetchWithAuth(
   url: string,
   token: string,
   init?: RequestInit,
+  logger?: ApiLogger,
 ): Promise<Response> {
   return withRetry(async () => {
     const startTime = Date.now();
-    const logId = ApiLogger.logRequest(url, {
+    // Pass the full init object to the logger
+    const logId = logger?.logRequest(url, {
       ...init,
       headers: {
         ...init?.headers,
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
@@ -70,32 +59,26 @@ export async function fetchWithAuth(
         headers: {
           ...init?.headers,
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
-      const responseClone = response.clone();
-      let responseBody: unknown;
-      try {
-        responseBody = await responseClone.json();
-      } catch {
-        // Not JSON
+      if (logger && logId) {
+        const responseClone = response.clone();
+        const responseBody = await responseClone.json().catch(() => null);
+        logger.logResponse(logId, response, responseBody, Date.now() - startTime);
       }
-
-      const duration = Date.now() - startTime;
-      ApiLogger.logResponse(logId, response, responseBody, duration);
 
       return response;
     } catch (error) {
-      ApiLogger.logError(logId, error);
+      if (logger && logId) {
+        logger.logError(logId, error);
+      }
       throw error;
     }
   });
 }
 
-/**
- * Parse a JSON API response and throw APIError on failure.
- */
 export async function handleApiResponse<T>(
   res: Response,
 ): Promise<T | { alreadyExists: true }> {
@@ -107,14 +90,11 @@ export async function handleApiResponse<T>(
       error?: { message?: string; code?: string };
     };
     const message =
-      errorBody.error?.message ?? `Connection failed. Please try again.`;
-
-    // API errors will be logged by ApiLogger which is already tracking this response
-
+      errorBody.error?.message ?? `Request failed with status ${res.status}`;
     throw new APIError(message, res.status, errorBody.error?.code);
   }
   if (res.status === 204) {
-    return {} as T; // Success with no content
+    return {} as T;
   }
   return (await res.json()) as T;
 }

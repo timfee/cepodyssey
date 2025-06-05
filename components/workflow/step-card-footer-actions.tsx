@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { ManagedStep } from "@/lib/types";
 import {
   ExternalLink,
   Loader2,
@@ -11,6 +10,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo } from "react";
+import type { ManagedStep } from "./workflow-types";
 
 interface StepCardFooterActionsProps {
   step: ManagedStep;
@@ -48,7 +48,7 @@ export function StepCardFooterActions({
   if (isBlocked) {
     return (
       <div className="flex items-center text-sm text-muted-foreground">
-        <Lock className="h-4 w-4 mr-1.5 shrink-0" />
+        <Lock className="mr-1.5 h-4 w-4 shrink-0" />
         <span>Complete prerequisite steps first.</span>
       </div>
     );
@@ -56,7 +56,7 @@ export function StepCardFooterActions({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap items-center gap-2">
         {isCompleted ? (
           <>
             {step.automatability !== "manual" && (
@@ -66,7 +66,7 @@ export function StepCardFooterActions({
                 onClick={onExecute}
                 disabled={isProcessing}
               >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Re-run Check
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-run
               </Button>
             )}
             {step.automatability === "manual" &&
@@ -92,11 +92,11 @@ export function StepCardFooterActions({
               variant={step.automatability === "manual" ? "outline" : "default"}
             >
               {isProcessing ? (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : step.automatability !== "manual" ? (
-                <Zap className="h-4 w-4 mr-1.5" />
+                <Zap className="mr-1.5 h-4 w-4" />
               ) : (
-                <UserCheck className="h-4 w-4 mr-1.5" />
+                <UserCheck className="mr-1.5 h-4 w-4" />
               )}
               {isProcessing
                 ? "Processing..."
@@ -110,7 +110,7 @@ export function StepCardFooterActions({
               <Button
                 variant="link"
                 size="sm"
-                className="text-xs px-2 text-muted-foreground hover:text-primary"
+                className="px-2 text-xs text-muted-foreground hover:text-primary"
                 onClick={onRequestAdmin}
               >
                 Request from Admin
@@ -124,10 +124,10 @@ export function StepCardFooterActions({
           variant="link"
           size="sm"
           asChild
-          className="text-xs p-0 ml-auto text-muted-foreground hover:text-primary"
+          className="ml-auto p-0 text-xs text-muted-foreground hover:text-primary"
         >
           <a href={configureUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-3 w-3 mr-1" /> Configure
+            <ExternalLink className="mr-1 h-3 w-3" /> Configure
           </a>
         </Button>
       )}

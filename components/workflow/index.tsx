@@ -11,50 +11,50 @@ import { Card, CardFooter } from "@/components/ui/card";
 import { useAppDispatch } from "@/hooks/use-redux";
 import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import {
-  markStepComplete,
-  markStepIncomplete,
+  markStepComplete as markStepCompleteAction,
+  markStepIncomplete as markStepIncompleteAction,
 } from "@/lib/redux/slices/setup-steps";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
-import type { StepId } from "@/lib/steps/step-refs";
-import type { ManagedStep } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
+import type {
+  DisplayApiAction,
+  DisplayInput,
+  DisplayOutput,
+  StepId,
+  WorkflowStepCardProps,
+} from "./workflow-types";
+
 import {
   getAutomatabilityDisplayConfig,
   getStatusDisplayConfig,
-} from "./workflow/config";
-import { StepCardApiActionsDisplay } from "./workflow/step-card-api-actions-display";
-import { StepCardDetailsSection } from "./workflow/step-card-details-section";
-import { StepCardFooterActions } from "./workflow/step-card-footer-actions";
-import { StepCardHeader } from "./workflow/step-card-header";
-import { StepCardInputsDisplay } from "./workflow/step-card-inputs-display";
-import { StepCardOutputsDisplay } from "./workflow/step-card-outputs-display";
-import { parseApiAction } from "./workflow/utils";
+} from "./config";
+import { StepCardApiActionsDisplay } from "./step-card-api-actions-display";
+import { StepCardDetailsSection } from "./step-card-details-section";
+import { StepCardFooterActions } from "./step-card-footer-actions";
+import { StepCardHeader } from "./step-card-header";
+import { StepCardInputsDisplay } from "./step-card-inputs-display";
+import { StepCardOutputsDisplay } from "./step-card-outputs-display";
+import { parseApiAction } from "./utils";
 
-interface StepCardProps {
-  step: ManagedStep;
-  outputs: Record<string, unknown>;
-  onExecute: (stepId: StepId) => void;
-  canRunGlobal: boolean;
-}
-
-export function StepCard({
+export function WorkflowStepCard({
   step,
-  outputs,
-  onExecute,
+  allOutputs,
   canRunGlobal,
-}: StepCardProps) {
+  onExecute: executeCallback,
+  stepInputDefs,
+  stepOutputDefs,
+}: WorkflowStepCardProps) {
   const dispatch = useAppDispatch();
   const [isHeaderHovered, setIsHeaderHovered] = useState(false);
 
   const statusDisplay = useMemo(
     () => getStatusDisplayConfig(step.status, step.completionType),
-    [step.status, step.completionType],
+    [step.status, step.completionType]
   );
   const automatabilityDisplay = useMemo(
     () => getAutomatabilityDisplayConfig(step.automatability),
-    [step.automatability],
+    [step.automatability]
   );
 
   const isProcessing = step.status === "in_progress";
@@ -66,30 +66,34 @@ export function StepCard({
     return true;
   }, [canRunGlobal, isProcessing, isCompleted, isBlocked]);
 
-  const displayInputs = useMemo(() => {
-    return getStepInputs(step.id as StepId).map((inputDef) => ({
-      ...inputDef,
-      currentValue: outputs[inputDef.data.key!],
+  const displayInputs: DisplayInput[] = useMemo(() => {
+    return stepInputDefs.map((def) => ({
+      key: def.data.key,
+      description: def.data.description,
+      currentValue: allOutputs[def.data.key!],
+      sourceStepTitle: def.stepTitle,
     }));
-  }, [step.id, outputs]);
+  }, [stepInputDefs, allOutputs]);
 
-  const displayOutputs = useMemo(() => {
-    return getStepOutputs(step.id as StepId).map((outputDef) => ({
-      ...outputDef,
-      currentValue: outputs[outputDef.key],
+  const displayOutputs: DisplayOutput[] = useMemo(() => {
+    return stepOutputDefs.map((def) => ({
+      key: def.key,
+      description: def.description,
+      currentValue: allOutputs[def.key],
     }));
-  }, [step.id, outputs]);
+  }, [stepOutputDefs, allOutputs]);
 
-  const displayApiActions = useMemo(() => {
+  const displayApiActions: DisplayApiAction[] = useMemo(() => {
     return (step.actions ?? []).map((action) =>
-      parseApiAction(action, outputs),
+      parseApiAction(action, allOutputs)
     );
-  }, [step.actions, outputs]);
+  }, [step.actions, allOutputs]);
 
-  const handleExecute = () => onExecute(step.id as StepId);
+  const handleExecute = () => executeCallback(step.id as StepId);
   const handleMarkComplete = () =>
-    dispatch(markStepComplete({ id: step.id, isUserMarked: true }));
-  const handleMarkIncomplete = () => dispatch(markStepIncomplete(step.id));
+    dispatch(markStepCompleteAction({ id: step.id, isUserMarked: true }));
+  const handleMarkIncomplete = () =>
+    dispatch(markStepIncompleteAction(step.id));
   const handleRequestAdmin = () => dispatch(openAskAdminModal({ step }));
 
   return (
@@ -97,7 +101,7 @@ export function StepCard({
       className={cn(
         "w-full transition-all duration-200 ease-in-out shadow-sm hover:shadow-md",
         isProcessing && "animate-pulse",
-        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50",
+        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50"
       )}
     >
       <Accordion
@@ -110,9 +114,7 @@ export function StepCard({
           <AccordionTrigger
             className={cn(
               "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-lg",
-              canExecuteStep &&
-                isHeaderHovered &&
-                "bg-primary/5 dark:bg-primary/10",
+              canExecuteStep && isHeaderHovered && "bg-primary/5"
             )}
             onMouseEnter={() => setIsHeaderHovered(true)}
             onMouseLeave={() => setIsHeaderHovered(false)}
@@ -129,7 +131,7 @@ export function StepCard({
             />
           </AccordionTrigger>
           <AccordionContent className="px-4 pt-0 pb-4">
-            <div className="pl-8 space-y-4 pt-2">
+            <div className="space-y-4 pt-2 pl-8">
               <StepCardDetailsSection title="Technical Details">
                 <p className="text-sm text-muted-foreground">{step.details}</p>
               </StepCardDetailsSection>
@@ -168,7 +170,7 @@ export function StepCard({
 
               {step.error && (
                 <StepCardDetailsSection title="Error Details">
-                  <p className="text-sm text-destructive/90 bg-destructive/10 p-2 rounded-md">
+                  <p className="rounded-md bg-destructive/10 p-2 text-sm text-destructive/90">
                     {step.error}
                   </p>
                 </StepCardDetailsSection>
@@ -180,7 +182,7 @@ export function StepCard({
                     variant="outline"
                     size="sm"
                     asChild
-                    className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary focus-visible:ring-primary"
+                    className="border-primary/50 text-primary hover:bg-primary/5 hover:text-primary focus-visible:ring-primary"
                   >
                     <a
                       href={step.metadata.resourceUrl}
@@ -188,7 +190,7 @@ export function StepCard({
                       rel="noopener noreferrer"
                     >
                       View Resource{" "}
-                      <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                     </a>
                   </Button>
                 </div>
@@ -199,8 +201,8 @@ export function StepCard({
       </Accordion>
       <CardFooter
         className={cn(
-          "p-3 border-t flex flex-wrap gap-2 items-center justify-between",
-          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card",
+          "flex flex-wrap items-center justify-between gap-2 border-t p-3",
+          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card"
         )}
       >
         <StepCardFooterActions
@@ -209,7 +211,7 @@ export function StepCard({
           isCompleted={isCompleted}
           isProcessing={isProcessing}
           canExecute={canExecuteStep}
-          allOutputs={outputs}
+          allOutputs={allOutputs}
           onExecute={handleExecute}
           onMarkComplete={handleMarkComplete}
           onMarkIncomplete={handleMarkIncomplete}
