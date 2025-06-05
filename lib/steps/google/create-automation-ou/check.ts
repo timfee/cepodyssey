@@ -1,5 +1,5 @@
 import { OUTPUT_KEYS } from "@/lib/types";
-import { googleApi } from "@/lib/api/google/index";
+import { googleApi } from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
 import { createStepCheck } from "../../utils/check-factory";
 import { handleCheckError } from "../../utils/error-handling";

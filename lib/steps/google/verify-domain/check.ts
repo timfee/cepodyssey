@@ -1,5 +1,5 @@
 import { createStepCheck } from "../../utils/check-factory";
-import { googleApi } from "@/lib/api/google/index";
+import { googleApi } from "@/lib/api/google";
 import { handleCheckError } from "../../utils/error-handling";
 import { APIError } from "@/lib/api/utils";
 

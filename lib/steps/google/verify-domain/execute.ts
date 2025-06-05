@@ -1,4 +1,4 @@
-import { googleApi } from "@/lib/api/google/index";
+import { googleApi } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -16,7 +16,7 @@ export const executeVerifyDomain = withExecutionHandling({
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    const user = await googleApi.users.getLoggedIn(context.logger);
+    const user = await googleApi.users.getCurrentUser(context.logger);
     try {
       await googleApi.domains.add(context.domain, undefined, context.logger);
     } catch (error) {

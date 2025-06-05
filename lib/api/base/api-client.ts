@@ -25,6 +25,16 @@ export function createApiClient(config: ApiClientConfig) {
           logger,
         );
 
+        if (options.responseType === "text") {
+          if (!response.ok) {
+            throw new APIError(
+              `Request failed with status ${response.status}`,
+              response.status,
+            );
+          }
+          return (await response.text()) as T;
+        }
+
         return (await handleApiResponse<T>(response)) as T;
       } catch (error) {
         config.handleProviderError(error);

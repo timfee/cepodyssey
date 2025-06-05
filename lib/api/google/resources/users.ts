@@ -45,7 +45,7 @@ export const users = {
     return response.users ?? [];
   },
 
-  async getLoggedIn(logger?: ApiLogger): Promise<DirectoryUser> {
+  async getCurrentUser(logger?: ApiLogger): Promise<DirectoryUser> {
     const profile = await googleApiClient.get<{ email: string }>(
       `${API_BASES.googleOAuth}/userinfo`,
       logger,

@@ -1,6 +1,6 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import { googleApi } from "@/lib/api/google/index";
+import { googleApi } from "@/lib/api/google";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
 import { portalUrls } from "@/lib/api/url-builder";
