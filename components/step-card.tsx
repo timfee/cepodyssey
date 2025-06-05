@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Card, CardFooter } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -9,32 +7,37 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Card, CardFooter } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAppDispatch } from "@/hooks/use-redux";
 import {
-  CheckCircle2,
-  UserCheck,
-  Lock,
-  AlertTriangle,
-  Zap,
-  Eye,
-  ClipboardEdit,
-  ExternalLink,
-  RefreshCw,
-  Loader2,
-  Info,
-  type LucideIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ManagedStep } from "@/lib/types";
+  markStepComplete,
+  markStepIncomplete,
+} from "@/lib/redux/slices/setup-steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
 import type { StepId } from "@/lib/steps/step-refs";
-import { useAppDispatch } from "@/hooks/use-redux";
-import { markStepComplete, markStepIncomplete } from "@/lib/redux/slices/setup-steps";
+import type { ManagedStep } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardEdit,
+  ExternalLink,
+  Eye,
+  Info,
+  Loader2,
+  Lock,
+  RefreshCw,
+  UserCheck,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface StepCardProps {
   step: ManagedStep;
@@ -162,18 +165,19 @@ export function StepCard({
   const StatusIcon = statusInfo.icon;
   const AutoIcon = autoInfo.icon;
 
-
   const requiredInputs = useMemo(
     () => getStepInputs(step.id as StepId),
-    [step.id],
+    [step.id]
   );
   const producedOutputs = useMemo(
     () => getStepOutputs(step.id as StepId),
-    [step.id],
+    [step.id]
   );
 
   const canExecutePrimary = !(
-    step.status === "in_progress" || step.status === "completed" || !canRunGlobal
+    step.status === "in_progress" ||
+    step.status === "completed" ||
+    !canRunGlobal
   );
 
   const isCompleted = step.status === "completed";
@@ -185,18 +189,22 @@ export function StepCard({
       <Card
         className={cn(
           "w-full transition-all duration-200 ease-in-out",
-          "shadow-google-card border",
           isBlocked || isProcessing
             ? "opacity-70 border-border"
-            : "hover:shadow-google-card-hover hover:border-primary/50",
+            : "hover:shadow-google-card-hover hover:border-primary/50"
         )}
       >
-        <Accordion type="single" collapsible className="w-full" disabled={isProcessing}>
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full"
+          disabled={isProcessing}
+        >
           <AccordionItem value={`step-${step.id}`} className="border-b-0">
             <AccordionTrigger
               className={cn(
                 "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-md",
-                canExecutePrimary && isHeaderHovered && "bg-primary/5",
+                canExecutePrimary && isHeaderHovered && "bg-primary/5"
               )}
               onMouseEnter={() => setIsHeaderHovered(true)}
               onMouseLeave={() => setIsHeaderHovered(false)}
@@ -210,7 +218,7 @@ export function StepCard({
                           className={cn(
                             "h-6 w-6 shrink-0",
                             statusInfo.colorClass,
-                            isProcessing && "animate-spin",
+                            isProcessing && "animate-spin"
                           )}
                         />
                       </TooltipTrigger>
@@ -218,11 +226,18 @@ export function StepCard({
                         <p>{statusInfo.tooltip}</p>
                       </TooltipContent>
                     </Tooltip>
-                    <h3 className="font-semibold text-lg text-foreground">{step.title}</h3>
+                    <h3 className="font-semibold text-lg text-foreground">
+                      {step.title}
+                    </h3>
                   </div>
                   <div className="text-xs ml-2 shrink-0 pt-1">
-                    <span className={getProviderColorClass(step.provider)}>{step.provider}</span>
-                    <span className="text-muted-foreground/80"> / {step.activity}</span>
+                    <span className={getProviderColorClass(step.provider)}>
+                      {step.provider}
+                    </span>
+                    <span className="text-muted-foreground/80">
+                      {" "}
+                      / {step.activity}
+                    </span>
                   </div>
                 </div>
 
@@ -232,13 +247,17 @@ export function StepCard({
                       <span
                         className={cn(
                           "flex items-center gap-1 cursor-default",
-                          autoInfo.badgeClasses ? autoInfo.badgeClasses : autoInfo.baseColorClass,
+                          autoInfo.badgeClasses
+                            ? autoInfo.badgeClasses
+                            : autoInfo.baseColorClass
                         )}
                       >
                         <AutoIcon
                           className={cn(
                             "h-3.5 w-3.5",
-                            autoInfo.badgeClasses ? "text-warning-foreground" : autoInfo.baseColorClass,
+                            autoInfo.badgeClasses
+                              ? "text-warning-foreground"
+                              : autoInfo.baseColorClass
                           )}
                         />
                         <span className="font-medium border-b border-dashed border-muted-foreground/70 pb-px">
@@ -258,7 +277,7 @@ export function StepCard({
                       <span
                         className={cn(
                           "font-medium border-b border-dashed border-muted-foreground/70 pb-px",
-                          statusInfo.colorClass,
+                          statusInfo.colorClass
                         )}
                       >
                         {statusInfo.label}
@@ -269,7 +288,9 @@ export function StepCard({
                     </TooltipContent>
                   </Tooltip>
 
-                  {isProcessing && <span className="text-primary ml-1">(Processing...)</span>}
+                  {isProcessing && (
+                    <span className="text-primary ml-1">(Processing...)</span>
+                  )}
                 </div>
 
                 <p className="text-sm text-muted-foreground mt-2 pl-9 group-data-[state=closed]:truncate group-data-[state=closed]:max-w-[90%]">
@@ -280,12 +301,18 @@ export function StepCard({
             <AccordionContent className="px-4 pt-0 pb-4 bg-card">
               <div className="pl-9 space-y-4 pt-2">
                 <div>
-                  <h4 className="font-medium text-sm mb-1 text-foreground/90">Technical Details</h4>
-                  <p className="text-sm text-muted-foreground">{step.details}</p>
+                  <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                    Technical Details
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {step.details}
+                  </p>
                 </div>
                 {requiredInputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Inputs</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Inputs
+                    </h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                       {requiredInputs.map((input, index) => (
                         <li key={index}>{input.data.description}</li>
@@ -295,7 +322,9 @@ export function StepCard({
                 )}
                 {producedOutputs.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Outputs</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Outputs
+                    </h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                       {producedOutputs.map((output, index) => (
                         <li key={index}>{output.description}</li>
@@ -305,7 +334,9 @@ export function StepCard({
                 )}
                 {step.actions && step.actions.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Automated Actions</h4>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Automated Actions
+                    </h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                       {step.actions.map((action, index) => (
                         <li key={index}>{renderMonospace(action)}</li>
@@ -315,13 +346,19 @@ export function StepCard({
                 )}
                 {step.nextStep && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Next Step</h4>
-                    <p className="text-sm text-muted-foreground">{step.nextStep.description}</p>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">
+                      Next Step
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {step.nextStep.description}
+                    </p>
                   </div>
                 )}
                 {step.error && (
                   <div>
-                    <h4 className="font-medium text-sm mb-1 text-destructive">Error Details</h4>
+                    <h4 className="font-medium text-sm mb-1 text-destructive">
+                      Error Details
+                    </h4>
                     <p className="text-sm text-destructive/90">{step.error}</p>
                   </div>
                 )}
@@ -351,7 +388,7 @@ export function StepCard({
         <CardFooter
           className={cn(
             "p-4 border-t flex flex-wrap gap-2 items-center",
-            isBlocked ? "bg-slate-50" : "bg-card",
+            isBlocked ? "bg-slate-50" : "bg-card"
           )}
         >
           {isBlocked ? (
@@ -361,7 +398,9 @@ export function StepCard({
             </div>
           ) : isCompleted ? (
             <>
-              <span className={cn("font-medium text-sm", statusInfo.colorClass)}>
+              <span
+                className={cn("font-medium text-sm", statusInfo.colorClass)}
+              >
                 Status: {statusInfo.label}
               </span>
               <div className="flex-grow"></div>
@@ -400,14 +439,20 @@ export function StepCard({
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {isProcessing && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
                   Execute
                 </Button>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => dispatch(markStepComplete({ id: step.id, isUserMarked: true }))}
+                  onClick={() =>
+                    dispatch(
+                      markStepComplete({ id: step.id, isUserMarked: true })
+                    )
+                  }
                   disabled={isProcessing}
                 >
                   Mark as Complete
