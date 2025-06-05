@@ -1,4 +1,5 @@
 import { ApiLogger } from "./api-logger";
+import { requestCache } from "./request-cache";
 
 export class APIError extends Error {
   constructor(
@@ -41,9 +42,8 @@ export async function fetchWithAuth(
   init?: RequestInit,
   logger?: ApiLogger,
 ): Promise<Response> {
-  return withRetry(async () => {
+  const doFetch = async (): Promise<Response> => {
     const startTime = Date.now();
-    // Pass the full init object to the logger
     const logId = logger?.logRequest(url, {
       ...init,
       headers: {
@@ -81,7 +81,17 @@ export async function fetchWithAuth(
       }
       throw error;
     }
-  });
+  };
+
+  const fetcher = () => withRetry(doFetch);
+
+  const method = (init?.method ?? "GET").toUpperCase();
+  if (method === "GET") {
+    const key = `${method}:${url}:${JSON.stringify(init ?? {})}`;
+    return requestCache.request(key, fetcher);
+  }
+
+  return fetcher();
 }
 
 export async function handleApiResponse<T>(
