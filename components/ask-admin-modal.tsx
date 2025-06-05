@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertTriangleIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
   closeAskAdminModal,
@@ -68,7 +70,7 @@ export function AskAdminModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Ask Admin for Help: {step.title}</DialogTitle>
           <DialogDescription>
@@ -160,23 +162,26 @@ export function AskAdminModal() {
                 )}
 
                 {step.actions && step.actions.length > 0 && (
-                  <div className="my-3 p-3 border-2 border-amber-400 bg-amber-50 rounded-md shadow-inner">
-                    <h5 className="font-semibold text-sm text-amber-700 mb-1">
+                  <Alert variant="warning" className="my-3 text-left">
+                    <AlertTriangleIcon className="h-4 w-4" />
+                    <AlertTitle className="font-semibold mb-1">
                       System Actions This Step Will Perform:
-                    </h5>
-                    <ul className="list-disc list-inside text-xs text-amber-700 space-y-0.5 pl-4">
-                      {step.actions.map((action, index) => (
-                        <li key={index}>
-                          <code className="text-xs bg-amber-100 text-amber-800 p-0.5 rounded">
-                            {action}
-                          </code>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-xs text-amber-600 mt-2">
-                      Please review these actions carefully before proceeding.
-                    </p>
-                  </div>
+                    </AlertTitle>
+                    <AlertDescription>
+                      <ul className="list-disc list-inside space-y-1 pl-4 mt-2">
+                        {step.actions.map((action, index) => (
+                          <li key={index}>
+                            <code className="text-xs bg-amber-100 text-amber-800 p-1 rounded break-all">
+                              {action}
+                            </code>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-amber-600 mt-2">
+                        Please review these actions carefully before proceeding.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
                 )}
               </div>
 
