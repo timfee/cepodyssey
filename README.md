@@ -19,7 +19,8 @@ This project follows modern, resilient patterns for Next.js applications:
 ## Setup
 
 1. Install dependencies with `pnpm install`.
-2. Copy `.env.template` to `.env.local` and update values.
+2. Copy `.env.template` to `.env.local` and fill in all values. Environment
+   variables are validated with **@t3-oss/env-nextjs** in `lib/env.ts`.
 3. Run `pnpm dev` to start the development server.
 
 Before committing, run `pnpm lint && pnpm test`.
