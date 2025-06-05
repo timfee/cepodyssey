@@ -2,9 +2,10 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { GlobalErrorModal } from '@/components/global-error-modal'
 
+const mockDispatch = jest.fn()
 jest.mock('@/hooks/use-redux', () => ({
-  useAppDispatch: () => jest.fn(),
-  useAppSelector: (sel: (state: typeof mockState) => unknown) => sel(mockState),
+  useAppDispatch: () => mockDispatch,
+  useAppSelector: (sel: any) => sel(mockState),
 }))
 
 jest.mock('next-auth/react', () => ({ signOut: jest.fn() }))
@@ -22,5 +23,6 @@ it('renders and dismisses generic error', () => {
   const { queryByRole } = render(<GlobalErrorModal />)
   expect(screen.getByRole('dialog')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: /dismiss/i }))
+  expect(mockDispatch).toHaveBeenCalled()
   expect(queryByRole('dialog')).toBeInTheDocument()
 })
