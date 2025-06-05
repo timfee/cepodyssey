@@ -46,7 +46,7 @@ export async function executeInitiateSamlProfile(
           [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: existingProfile.name,
           [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]:
             existingProfile.spConfig.entityId,
-          [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
+          [OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL]:
             existingProfile.spConfig.assertionConsumerServiceUri,
         },
       };
@@ -75,7 +75,7 @@ export async function executeInitiateSamlProfile(
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: result.displayName,
         [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: result.name,
         [OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID]: result.spConfig.entityId,
-        [OUTPUT_KEYS.GOOGLE_SAML_ACS_URL]:
+        [OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL]:
           result.spConfig.assertionConsumerServiceUri,
       },
     };

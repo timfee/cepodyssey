@@ -61,7 +61,7 @@ export async function checkAssignSamlProfile(
       outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID] = profile.spConfig.entityId;
     }
     if (profile.spConfig?.assertionConsumerServiceUri) {
-      outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] =
+      outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL] =
         profile.spConfig.assertionConsumerServiceUri;
     }
 

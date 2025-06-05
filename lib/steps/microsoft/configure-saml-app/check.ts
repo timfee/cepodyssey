@@ -19,7 +19,7 @@ export async function checkConfigureSamlApp(
   const spEntityId = context.outputs[
     OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID
   ] as string;
-  const acsUrl = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_ACS_URL] as string;
+  const acsUrl = context.outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL] as string;
   if (!appObjectId || !spEntityId || !acsUrl) {
     return {
       completed: false,

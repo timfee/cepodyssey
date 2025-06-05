@@ -6,6 +6,7 @@ import {
 } from "./api-enablement-error";
 import { wrapAuthError } from "./auth-interceptor";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import type { ApiLogger } from "./api-logger";
 import { googleDirectoryUrls, googleIdentityUrls, API_BASES } from "./url-builder";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
@@ -56,17 +57,24 @@ export interface IdpCredential {
 
 const GWS_CUSTOMER_ID = "my_customer";
 
-export async function getLoggedInUser(token: string): Promise<DirectoryUser> {
+export async function getLoggedInUser(
+  token: string,
+  logger?: ApiLogger,
+): Promise<DirectoryUser> {
   try {
     const profileRes = await fetchWithAuth(
       `${API_BASES.googleOAuth}/userinfo`,
       token,
+      undefined,
+      logger,
     );
     const profile = await profileRes.json();
     const email = profile.email;
     const userRes = await fetchWithAuth(
       googleDirectoryUrls.users.get(email),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<DirectoryUser>(userRes);
     if (data && typeof data === 'object' && 'alreadyExists' in data) {
@@ -100,11 +108,14 @@ function handleGoogleError(error: unknown): never {
 export async function getDomainVerificationStatus(
   token: string,
   domainName: string,
+  logger?: ApiLogger,
 ): Promise<boolean> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.domains.get(GWS_CUSTOMER_ID, domainName),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return false;
     const data = await handleApiResponse<GoogleDomain>(res);
@@ -125,11 +136,16 @@ interface ListOrgUnitsResponse {
   organizationUnits?: GoogleOrgUnit[];
 }
 /** List all organizational units. */
-export async function listOrgUnits(token: string): Promise<GoogleOrgUnit[]> {
+export async function listOrgUnits(
+  token: string,
+  logger?: ApiLogger,
+): Promise<GoogleOrgUnit[]> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.orgUnits.list(GWS_CUSTOMER_ID),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<ListOrgUnitsResponse>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
@@ -148,6 +164,7 @@ export async function createOrgUnit(
   name: string,
   parentOrgUnitPath = "/",
   customerId = GWS_CUSTOMER_ID,
+  logger?: ApiLogger,
 ): Promise<GoogleOrgUnit | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -157,6 +174,7 @@ export async function createOrgUnit(
         method: "POST",
         body: JSON.stringify({ name, parentOrgUnitPath }),
       },
+      logger,
     );
     console.log("Sending request to createOrgUnit:", {
       name,
@@ -172,7 +190,7 @@ export async function createOrgUnit(
       error.message.includes("Invalid Ou Id")
     ) {
       // Fallback to using parentOrgUnitId by fetching the root OU ID
-      const orgUnits = await listOrgUnits(token);
+      const orgUnits = await listOrgUnits(token, logger);
       const rootOu = orgUnits.find((ou) => ou.orgUnitPath === "/");
       if (rootOu?.orgUnitId) {
         const retryRes = await fetchWithAuth(
@@ -182,6 +200,7 @@ export async function createOrgUnit(
             method: "POST",
             body: JSON.stringify({ name, parentOrgUnitId: rootOu.orgUnitId }),
           },
+          logger,
         );
         return handleApiResponse<GoogleOrgUnit>(retryRes);
       }
@@ -195,6 +214,7 @@ export async function createOrgUnit(
 export async function getOrgUnit(
   token: string,
   ouPath: string,
+  logger?: ApiLogger,
 ): Promise<GoogleOrgUnit | null> {
   try {
     console.log(
@@ -214,7 +234,7 @@ export async function getOrgUnit(
       GWS_CUSTOMER_ID,
       relativePath,
     );
-    const res = await fetchWithAuth(fetchUrl, token);
+    const res = await fetchWithAuth(fetchUrl, token, undefined, logger);
 
     if (res.status === 404) {
       return null;
@@ -234,12 +254,14 @@ export async function getOrgUnit(
 export async function createUser(
   token: string,
   user: Partial<DirectoryUser>,
+  logger?: ApiLogger,
 ): Promise<DirectoryUser | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(googleDirectoryUrls.users.create(), token, {
       method: "POST",
       body: JSON.stringify(user),
-    });
+    },
+    logger);
     return handleApiResponse<DirectoryUser>(res);
   } catch (error) {
     handleGoogleError(error);
@@ -250,11 +272,14 @@ export async function createUser(
 export async function getUser(
   token: string,
   userKey: string,
+  logger?: ApiLogger,
 ): Promise<DirectoryUser | null> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.users.get(userKey),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<DirectoryUser>(res);
@@ -276,10 +301,11 @@ export async function listUsers(
     orderBy?: string;
     maxResults?: number;
   },
+  logger?: ApiLogger,
 ): Promise<DirectoryUser[]> {
   try {
     const url = googleDirectoryUrls.users.list(params);
-    const res = await fetchWithAuth(url, token);
+    const res = await fetchWithAuth(url, token, undefined, logger);
     const data = await handleApiResponse<{ users?: DirectoryUser[] }>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data) {
       return [];
@@ -294,6 +320,7 @@ export async function listUsers(
 export async function addDomain(
   token: string,
   domainName: string,
+  logger?: ApiLogger,
 ): Promise<GoogleDomain | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -303,6 +330,7 @@ export async function addDomain(
         method: "POST",
         body: JSON.stringify({ domainName }),
       },
+      logger,
     );
     return handleApiResponse<GoogleDomain>(res);
   } catch (error) {
@@ -314,11 +342,14 @@ export async function addDomain(
 export async function getDomain(
   token: string,
   domainName: string,
+  logger?: ApiLogger,
 ): Promise<GoogleDomain | null> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.domains.get(GWS_CUSTOMER_ID, domainName),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<GoogleDomain>(res);
@@ -336,11 +367,16 @@ interface ListAdminRolesResponse {
   items?: GoogleRole[];
 }
 /** List available admin roles. */
-export async function listAdminRoles(token: string): Promise<GoogleRole[]> {
+export async function listAdminRoles(
+  token: string,
+  logger?: ApiLogger,
+): Promise<GoogleRole[]> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.roles.list(GWS_CUSTOMER_ID),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<ListAdminRolesResponse>(res);
     if (typeof data === "object" && data !== null && "alreadyExists" in data)
@@ -357,6 +393,7 @@ export async function assignAdminRole(
   userEmail: string,
   roleId: string,
   customerId = GWS_CUSTOMER_ID,
+  logger?: ApiLogger,
 ): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -370,6 +407,7 @@ export async function assignAdminRole(
           scopeType: "CUSTOMER",
         }),
       },
+      logger,
     );
     return handleApiResponse<GoogleRoleAssignment>(res);
   } catch (error) {
@@ -381,11 +419,14 @@ export async function assignAdminRole(
 export async function listRoleAssignments(
   token: string,
   userKey: string,
+  logger?: ApiLogger,
 ): Promise<GoogleRoleAssignment[]> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.roles.assignments.list(GWS_CUSTOMER_ID, userKey),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<{ items?: GoogleRoleAssignment[] }>(
       res,
@@ -403,6 +444,7 @@ export async function listRoleAssignments(
 export async function createSamlProfile(
   token: string,
   displayName: string,
+  logger?: ApiLogger,
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -412,6 +454,7 @@ export async function createSamlProfile(
         method: "POST",
         body: JSON.stringify({ displayName }),
       },
+      logger,
     );
 
     const data = await handleApiResponse<{
@@ -443,11 +486,14 @@ export async function createSamlProfile(
 export async function getSamlProfile(
   token: string,
   profileFullName: string,
+  logger?: ApiLogger,
 ): Promise<InboundSamlSsoProfile | null> {
   try {
     const res = await fetchWithAuth(
       googleIdentityUrls.samlProfiles.get(profileFullName),
       token,
+      undefined,
+      logger,
     );
     if (res.status === 404) return null;
     const data = await handleApiResponse<InboundSamlSsoProfile>(res);
@@ -464,11 +510,14 @@ export async function getSamlProfile(
 /** List all SAML profiles for the customer. */
 export async function listSamlProfiles(
   token: string,
+  logger?: ApiLogger,
 ): Promise<InboundSamlSsoProfile[]> {
   try {
     const res = await fetchWithAuth(
       googleIdentityUrls.samlProfiles.list(),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<{
       inboundSamlSsoProfiles?: InboundSamlSsoProfile[];
@@ -486,6 +535,7 @@ export async function updateSamlProfile(
   token: string,
   profileFullName: string,
   config: Partial<Pick<InboundSamlSsoProfile, "idpConfig">>,
+  logger?: ApiLogger,
 ): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
   try {
     const updateMaskPaths: string[] = [];
@@ -499,6 +549,7 @@ export async function updateSamlProfile(
         method: "PATCH",
         body: JSON.stringify(config),
       },
+      logger,
     );
     return handleApiResponse<InboundSamlSsoProfile>(res);
   } catch (error) {
@@ -514,6 +565,7 @@ export async function assignSamlToOrgUnits(
   token: string,
   profileFullName: string,
   assignments: AssignSamlSsoPayload["assignments"],
+  logger?: ApiLogger,
 ): Promise<object | { alreadyExists: true }> {
   try {
     const res = await fetchWithAuth(
@@ -523,6 +575,7 @@ export async function assignSamlToOrgUnits(
         method: "POST",
         body: JSON.stringify({ assignments } as AssignSamlSsoPayload),
       },
+      logger,
     );
     return handleApiResponse<object>(res);
   } catch (error) {
@@ -539,6 +592,7 @@ export async function addIdpCredentials(
   token: string,
   profileFullName: string,
   pemData?: string,
+  logger?: ApiLogger,
 ): Promise<{ success: boolean } | { alreadyExists: true }> {
   try {
     const body = pemData ? { pemData } : {};
@@ -549,6 +603,7 @@ export async function addIdpCredentials(
         method: "POST",
         body: JSON.stringify(body),
       },
+      logger,
     );
     return handleApiResponse(res);
   } catch (error) {
@@ -563,11 +618,14 @@ export async function addIdpCredentials(
 export async function listIdpCredentials(
   token: string,
   profileFullName: string,
+  logger?: ApiLogger,
 ): Promise<IdpCredential[]> {
   try {
     const res = await fetchWithAuth(
       googleIdentityUrls.samlProfiles.idpCredentials.list(profileFullName),
       token,
+      undefined,
+      logger,
     );
     const data = await handleApiResponse<{ idpCredentials?: IdpCredential[] }>(
       res,

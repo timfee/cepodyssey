@@ -12,7 +12,7 @@ export const G5_OUTPUTS: StepOutput[] = [
     description: "Full resource name of the SAML profile",
   },
   { key: OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID, description: "Google SP Entity ID" },
-  { key: OUTPUT_KEYS.GOOGLE_SAML_ACS_URL, description: "Google ACS URL" },
+  { key: OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL, description: "Google ACS URL" },
 ];
 
 export const G5_INPUTS: StepInput[] = [];

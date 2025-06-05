@@ -27,7 +27,7 @@ export function useStepExecution() {
           status: 'in_progress',
           error: null,
           message: undefined,
-        })
+        }),
       );
 
       try {
@@ -54,6 +54,7 @@ export function useStepExecution() {
             updateStep({
               id: stepId,
               status: 'completed',
+              completionType: 'server-verified',
               message: result.message,
               metadata: {
                 resourceUrl: result.resourceUrl,
@@ -61,47 +62,43 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
-          console.log(`[useStepExecution] ${definition.title} succeeded`);
         } else {
+          const errorMessage = result.error?.message || 'An unknown error occurred during execution.';
           dispatch(
             updateStep({
               id: stepId,
               status: 'failed',
-              error: result.error?.message,
+              error: errorMessage,
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
-
-          if (result.outputs?.errorCode === 'AUTH_EXPIRED') {
-            ErrorManager.dispatch(
-              new Error(result.error?.message || 'Authentication expired'),
-              { stepId, stepTitle: definition.title }
-            );
-          } else {
-            console.error(
-              `[useStepExecution] ${definition.title} failed:`,
-              result.error?.message,
-            );
-          }
+          ErrorManager.dispatch(new Error(errorMessage), {
+            stepId,
+            stepTitle: definition.title,
+            ...result.outputs,
+          });
         }
       } catch (error) {
-      dispatch(
-        updateStep({
-          id: stepId,
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          lastCheckedAt: new Date().toISOString(),
-        })
-      );
-
-        ErrorManager.dispatch(error, { stepId, stepTitle: definition.title });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        dispatch(
+          updateStep({
+            id: stepId,
+            status: 'failed',
+            error: errorMessage,
+            lastCheckedAt: new Date().toISOString(),
+          }),
+        );
+        ErrorManager.dispatch(error, {
+          stepId,
+          stepTitle: definition.title,
+        });
       }
     },
-    [dispatch, appConfig]
+    [dispatch, appConfig],
   );
 
   return { executeStep };

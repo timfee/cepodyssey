@@ -25,13 +25,30 @@ export async function executeCreateAutomationOu(
     const parentPath = "/";
     const customerId = (context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string })?.customerId;
     if (!customerId) {
-      return { success: false, error: { message: "Customer ID not found" } };
+      return {
+        success: false,
+        error: {
+          message:
+            "Customer ID not found. Please ensure the domain verification step (G-4) has been completed successfully.",
+          code: 'MISSING_DEPENDENCY',
+        },
+      };
     }
 
-    const result = await google.createOrgUnit(token, ouName, parentPath, customerId);
+    const result = await google.createOrgUnit(
+      token,
+      ouName,
+      parentPath,
+      customerId,
+      context.logger,
+    );
 
     if (typeof result === "object" && "alreadyExists" in result) {
-      const existing = await google.getOrgUnit(token, `${parentPath}${ouName}`);
+      const existing = await google.getOrgUnit(
+        token,
+        `${parentPath}${ouName}`,
+        context.logger,
+      );
       if (existing?.orgUnitId && existing.orgUnitPath) {
         return {
           success: true,

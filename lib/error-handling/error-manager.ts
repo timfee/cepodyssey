@@ -11,14 +11,13 @@ export interface ManagedError {
   code?: string;
   provider?: 'google' | 'microsoft';
   recoverable: boolean;
-  action?: {
-    label: string;
-    handler: () => void;
-  };
 }
 
 export class ErrorManager {
-  static handle(error: unknown, _context?: { stepId?: string; stepTitle?: string }): ManagedError {
+  static handle(
+    error: unknown,
+    _context?: { stepId?: string; stepTitle?: string },
+  ): ManagedError {
     if (error instanceof AuthenticationError) {
       return {
         category: 'auth',
@@ -26,12 +25,6 @@ export class ErrorManager {
         code: 'AUTH_EXPIRED',
         provider: error.provider,
         recoverable: true,
-        action: {
-          label: 'Sign In',
-          handler: () => {
-            window.location.href = '/login';
-          },
-        },
       };
     }
 
@@ -42,21 +35,15 @@ export class ErrorManager {
         message: error.message,
         code: error.code,
         recoverable: isApiEnablement,
-        action: isApiEnablement
-          ? {
-              label: 'Enable API',
-              handler: () => {
-                const match = error.message.match(/https:\/\/[^\s]+/);
-                if (match) window.open(match[0], '_blank');
-              },
-            }
-          : undefined,
       };
     }
 
     return {
       category: 'system',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred',
       recoverable: false,
     };
   }
@@ -75,7 +62,6 @@ export class ErrorManager {
           code: managed.code,
           provider: managed.provider,
           recoverable: managed.recoverable,
-          action: managed.action, // Make sure action is included here
         },
       }),
     );
