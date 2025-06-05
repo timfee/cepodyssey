@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardFooter } from "@/components/ui/card";
 import {
   Accordion,
@@ -33,9 +33,8 @@ import { cn } from "@/lib/utils";
 import type { ManagedStep } from "@/lib/types";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
 import type { StepId } from "@/lib/steps/step-refs";
-import { useStepCompletion } from "@/hooks/use-step-completion";
 import { useAppDispatch } from "@/hooks/use-redux";
-import { updateStep } from "@/lib/redux/slices/setup-steps";
+import { markStepComplete, markStepIncomplete } from "@/lib/redux/slices/setup-steps";
 
 interface StepCardProps {
   step: ManagedStep;
@@ -125,6 +124,22 @@ const automatabilityConfig: Record<
   },
 };
 
+const getProviderColorClass = (provider: string): string => {
+  switch (provider) {
+    case "Google":
+      return "text-blue-600 font-medium";
+    case "Microsoft":
+      return "text-teal-600 font-medium";
+    default:
+      return "text-muted-foreground/90 font-medium";
+  }
+};
+
+const renderMonospace = (text: string | undefined) =>
+  text ? (
+    <code className="font-mono text-xs bg-slate-100 p-0.5 rounded">{text}</code>
+  ) : null;
+
 export function StepCard({
   step,
   outputs,
@@ -132,28 +147,21 @@ export function StepCard({
   canRunGlobal,
 }: StepCardProps) {
   const dispatch = useAppDispatch();
-  const [userDone, setUserDone] = useStepCompletion(
-    step.id,
-    step.completionType === "user-marked",
-  );
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
 
-  const statusKey =
-    step.status === "completed" && step.completionType === "user-marked"
-      ? "completed-user"
-      : step.status === "completed"
-        ? "completed-verified"
-        : step.status;
+  const isUserCompleted =
+    step.status === "completed" && step.completionType === "user-marked";
+
+  const statusKey = isUserCompleted
+    ? "completed-user"
+    : step.status === "completed"
+      ? "completed-verified"
+      : step.status;
   const statusInfo = stateConfig[statusKey];
   const autoInfo = automatabilityConfig[step.automatability ?? "manual"];
   const StatusIcon = statusInfo.icon;
   const AutoIcon = autoInfo.icon;
 
-  const canExecute = useMemo(() => {
-    if (!canRunGlobal) return false;
-    if (step.status === "in_progress" || step.status === "completed")
-      return false;
-    return true;
-  }, [canRunGlobal, step.status]);
 
   const requiredInputs = useMemo(
     () => getStepInputs(step.id as StepId),
@@ -164,137 +172,266 @@ export function StepCard({
     [step.id],
   );
 
+  const canExecutePrimary = !(
+    step.status === "in_progress" || step.status === "completed" || !canRunGlobal
+  );
+
+  const isCompleted = step.status === "completed";
+  const isBlocked = step.status === "blocked";
+  const isProcessing = step.status === "in_progress";
+
   return (
-    <Card className="shadow-google-card hover:shadow-google-card-hover transition-all">
-      <div className="flex items-start p-4 gap-4">
-        <div className={cn("flex-shrink-0", statusInfo.colorClass)}>
-          {StatusIcon && <StatusIcon className="h-5 w-5" />}
-        </div>
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">{step.title}</h3>
-            <span className="text-xs text-muted-foreground">{step.id}</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="ml-1">
-                    <AutoIcon
-                      className={cn(
-                        "h-4 w-4",
-                        autoInfo.baseColorClass ?? "text-muted-foreground",
-                      )}
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>{autoInfo.label}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <p className="text-sm text-muted-foreground">{step.description}</p>
-        </div>
-        <div className="flex gap-2">
-          {step.status === "failed" && (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onExecute(step.id as StepId)}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" /> Retry
-            </Button>
-          )}
-          {step.status !== "completed" && step.automatability !== "manual" && (
-            <Button
-              size="sm"
-              onClick={() => onExecute(step.id as StepId)}
-              disabled={!canExecute}
-            >
-              {step.status === "in_progress" ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Zap className="h-4 w-4 mr-2" />
+    <TooltipProvider delayDuration={100}>
+      <Card
+        className={cn(
+          "w-full transition-all duration-200 ease-in-out",
+          "shadow-google-card border",
+          isBlocked || isProcessing
+            ? "opacity-70 border-border"
+            : "hover:shadow-google-card-hover hover:border-primary/50",
+        )}
+      >
+        <Accordion type="single" collapsible className="w-full" disabled={isProcessing}>
+          <AccordionItem value={`step-${step.id}`} className="border-b-0">
+            <AccordionTrigger
+              className={cn(
+                "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-md",
+                canExecutePrimary && isHeaderHovered && "bg-primary/5",
               )}
-              {step.status === "in_progress" ? "Working" : "Execute"}
-            </Button>
-          )}
-          {step.automatability === "manual" && (
-            <Button
-              size="sm"
-              variant={userDone ? "secondary" : "outline"}
-              onClick={() => {
-                const newVal = !userDone;
-                setUserDone(newVal);
-                dispatch(
-                  updateStep({
-                    id: step.id,
-                    status: newVal ? "completed" : "pending",
-                    completionType: newVal ? "user-marked" : undefined,
-                  }),
-                );
-              }}
+              onMouseEnter={() => setIsHeaderHovered(true)}
+              onMouseLeave={() => setIsHeaderHovered(false)}
             >
-              {userDone ? (
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-              ) : (
-                <ClipboardEdit className="h-4 w-4 mr-1" />
-              )}
-              {userDone ? "Mark Undone" : "Mark Done"}
-            </Button>
-          )}
-        </div>
-      </div>
-      <Accordion type="single" collapsible>
-        <AccordionItem value="details">
-          <AccordionTrigger className="px-4">Details</AccordionTrigger>
-          <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground">
-            {step.details}
-          </AccordionContent>
-        </AccordionItem>
-        {requiredInputs.length > 0 && (
-          <AccordionItem value="inputs">
-            <AccordionTrigger className="px-4">
-              Required Inputs
+              <div className="flex flex-col w-full text-left">
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <StatusIcon
+                          className={cn(
+                            "h-6 w-6 shrink-0",
+                            statusInfo.colorClass,
+                            isProcessing && "animate-spin",
+                          )}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{statusInfo.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <h3 className="font-semibold text-lg text-foreground">{step.title}</h3>
+                  </div>
+                  <div className="text-xs ml-2 shrink-0 pt-1">
+                    <span className={getProviderColorClass(step.provider)}>{step.provider}</span>
+                    <span className="text-muted-foreground/80"> / {step.activity}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1.5 text-xs pl-9">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={cn(
+                          "flex items-center gap-1 cursor-default",
+                          autoInfo.badgeClasses ? autoInfo.badgeClasses : autoInfo.baseColorClass,
+                        )}
+                      >
+                        <AutoIcon
+                          className={cn(
+                            "h-3.5 w-3.5",
+                            autoInfo.badgeClasses ? "text-warning-foreground" : autoInfo.baseColorClass,
+                          )}
+                        />
+                        <span className="font-medium border-b border-dashed border-muted-foreground/70 pb-px">
+                          {autoInfo.label}
+                        </span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{autoInfo.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <span className="mx-1 text-muted-foreground/50">|</span>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={cn(
+                          "font-medium border-b border-dashed border-muted-foreground/70 pb-px",
+                          statusInfo.colorClass,
+                        )}
+                      >
+                        {statusInfo.label}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{statusInfo.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {isProcessing && <span className="text-primary ml-1">(Processing...)</span>}
+                </div>
+
+                <p className="text-sm text-muted-foreground mt-2 pl-9 group-data-[state=closed]:truncate group-data-[state=closed]:max-w-[90%]">
+                  {step.description}
+                </p>
+              </div>
             </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <ul className="text-sm list-disc pl-5 space-y-1">
-                {requiredInputs.map((inp) => (
-                  <li key={inp.data.key || inp.data.stepId}>
-                    {inp.data.description}
-                  </li>
-                ))}
-              </ul>
+            <AccordionContent className="px-4 pt-0 pb-4 bg-card">
+              <div className="pl-9 space-y-4 pt-2">
+                <div>
+                  <h4 className="font-medium text-sm mb-1 text-foreground/90">Technical Details</h4>
+                  <p className="text-sm text-muted-foreground">{step.details}</p>
+                </div>
+                {requiredInputs.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Inputs</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {requiredInputs.map((input, index) => (
+                        <li key={index}>{input.data.description}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {producedOutputs.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Outputs</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {producedOutputs.map((output, index) => (
+                        <li key={index}>{output.description}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {step.actions && step.actions.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Automated Actions</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {step.actions.map((action, index) => (
+                        <li key={index}>{renderMonospace(action)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {step.nextStep && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 text-foreground/90">Next Step</h4>
+                    <p className="text-sm text-muted-foreground">{step.nextStep.description}</p>
+                  </div>
+                )}
+                {step.error && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 text-destructive">Error Details</h4>
+                    <p className="text-sm text-destructive/90">{step.error}</p>
+                  </div>
+                )}
+                {isCompleted && step.metadata?.resourceUrl && (
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      disabled={isProcessing}
+                      className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary focus-visible:ring-primary"
+                    >
+                      <a
+                        href={step.metadata.resourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View Resource <ExternalLink className="h-4 w-4 ml-2" />
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </AccordionContent>
           </AccordionItem>
-        )}
-        {producedOutputs.length > 0 && (
-          <AccordionItem value="outputs">
-            <AccordionTrigger className="px-4">Outputs</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <ul className="text-sm list-disc pl-5 space-y-1">
-                {producedOutputs.map((out) => (
-                  <li key={out.key}>{out.description}</li>
-                ))}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        )}
-      </Accordion>
-      {step.adminUrls?.configure && (
-        <CardFooter className="px-4 py-2">
-          <Button variant="link" asChild className="text-xs p-0">
-            <a
-              href={
-                typeof step.adminUrls.configure === "function"
-                  ? step.adminUrls.configure(outputs) || "#"
-                  : step.adminUrls.configure
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-3 w-3 mr-1" /> Configure
-            </a>
-          </Button>
+        </Accordion>
+        <CardFooter
+          className={cn(
+            "p-4 border-t flex flex-wrap gap-2 items-center",
+            isBlocked ? "bg-slate-50" : "bg-card",
+          )}
+        >
+          {isBlocked ? (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Lock className="h-4 w-4 mr-2 shrink-0" />
+              <span>Complete prerequisite steps first.</span>
+            </div>
+          ) : isCompleted ? (
+            <>
+              <span className={cn("font-medium text-sm", statusInfo.colorClass)}>
+                Status: {statusInfo.label}
+              </span>
+              <div className="flex-grow"></div>
+              {step.automatability !== "manual" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onExecute(step.id as StepId)}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Re-run
+                </Button>
+              )}
+              {step.automatability === "manual" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => dispatch(markStepIncomplete(step.id))}
+                  disabled={isProcessing}
+                >
+                  Mark as Incomplete
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              {step.automatability !== "manual" ? (
+                <Button
+                  onClick={() => onExecute(step.id as StepId)}
+                  disabled={!canExecutePrimary}
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Execute
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => dispatch(markStepComplete({ id: step.id, isUserMarked: true }))}
+                  disabled={isProcessing}
+                >
+                  Mark as Complete
+                </Button>
+              )}
+            </>
+          )}
+          {step.adminUrls?.configure && (
+            <Button variant="link" size="sm" asChild className="text-xs p-0">
+              <a
+                href={
+                  typeof step.adminUrls.configure === "function"
+                    ? step.adminUrls.configure(outputs) || "#"
+                    : step.adminUrls.configure
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" /> Configure
+              </a>
+            </Button>
+          )}
         </CardFooter>
-      )}
-    </Card>
+      </Card>
+    </TooltipProvider>
   );
 }
