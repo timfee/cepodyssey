@@ -1,4 +1,4 @@
-import type { AppConfigState, StepStatusInfo } from "@/lib/types";
+import type { AppConfigState, StepStatusInfo, StepDefinition } from "@/lib/types";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -6,6 +6,13 @@ export interface PersistedProgress {
 }
 
 const getStorageKey = (domain: string) => `automation-progress-${domain}`;
+
+function migrateStepStatus(input: StepStatusInfo | string): StepStatusInfo {
+  if (typeof input === "string") {
+    return { status: input as StepStatusInfo["status"] };
+  }
+  return input as StepStatusInfo;
+}
 
 /**
  * Saves the current setup progress to localStorage.
@@ -33,10 +40,31 @@ export function saveProgress(
 export function loadProgress(domain: string): PersistedProgress | null {
   if (typeof window === "undefined" || !domain) return null;
   try {
-    const key = getStorageKey(domain);
-    const savedData = localStorage.getItem(key);
+  const key = getStorageKey(domain);
+  const savedData = localStorage.getItem(key);
     if (!savedData) return null;
-    return JSON.parse(savedData) as PersistedProgress;
+    const parsed = JSON.parse(savedData) as PersistedProgress;
+
+  // Import step definitions to check which steps are checkable
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { allStepDefinitions } = require("@/lib/steps");
+
+    // Filter out checkable steps from persisted state
+    const filteredSteps: Record<string, StepStatusInfo> = {};
+    Object.keys(parsed.steps).forEach((stepId) => {
+      const stepDef = allStepDefinitions.find(
+        (def: StepDefinition) => def.id === stepId,
+      );
+      // Only keep status for steps without a check function (non-checkable/manual steps)
+      if (stepDef && !stepDef.check) {
+        filteredSteps[stepId] = migrateStepStatus(parsed.steps[stepId]);
+      }
+    });
+
+    return {
+      steps: filteredSteps,
+      outputs: parsed.outputs || {},
+    };
   } catch (error) {
     console.error("Failed to load or parse progress from localStorage:", error);
     return null;

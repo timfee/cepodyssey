@@ -5,6 +5,7 @@ import {
   Loader2Icon,
   PlayIcon,
   LogInIcon,
+  RefreshCw,
 } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
@@ -319,13 +320,46 @@ export function AutomationDashboard({
     ).length;
     const progressPercent = (completedSteps / totalSteps) * 100;
 
+    const refreshChecks = useCallback(async () => {
+      if (!canRunAutomation) {
+        return;
+      }
+      toast.info("Refreshing step status...", { duration: 2000 });
+
+      // Get all checkable steps
+      const checkableSteps = allStepDefinitions
+        .filter((step) => step.check !== undefined)
+        .map((step) => step.id as StepId);
+
+      for (const stepId of checkableSteps) {
+        await executeCheck(stepId);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+
+      toast.success("Status refreshed", { duration: 2000 });
+    }, [canRunAutomation, executeCheck]);
+
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Progress</CardTitle>
-          <CardDescription>
-            {completedSteps}/{totalSteps} done
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Progress</CardTitle>
+              <CardDescription>
+                {completedSteps}/{totalSteps} done
+              </CardDescription>
+            </div>
+            {canRunAutomation && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshChecks}
+                title="Refresh status from server"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <Progress value={progressPercent} className="h-3" />
