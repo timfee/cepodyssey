@@ -25,7 +25,12 @@ const eslintConfig = [
       ".turbo",
     ],
   },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends("next/core-web-vitals", "next/typescript", "plugin:react-redux/recommended"),
+  ...compat.config({
+    rules: {
+      "react-redux/useSelector-prefer-selectors": "off",
+    },
+  }),
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
