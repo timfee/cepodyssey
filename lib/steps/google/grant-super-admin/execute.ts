@@ -5,6 +5,7 @@ import { portalUrls } from '@/lib/api/url-builder';
 import { getGoogleToken } from '../../utils/auth';
 import { STEP_IDS } from '@/lib/steps/step-refs';
 import { withExecutionHandling } from '../../utils/execute-wrapper';
+import { validateRequiredOutputs } from '../../utils/validation';
 
 export const executeGrantSuperAdmin = withExecutionHandling({
   stepId: STEP_IDS.GRANT_SUPER_ADMIN,

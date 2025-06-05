@@ -12,6 +12,7 @@ import {
   googleIdentityUrls,
 } from "./url-builder";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import { AlreadyExistsError } from "./errors";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -169,7 +170,7 @@ export async function createOrgUnit(
   parentOrgUnitPath = "/",
   customerId = GWS_CUSTOMER_ID,
   logger?: ApiLogger
-): Promise<GoogleOrgUnit | { alreadyExists: true }> {
+): Promise<GoogleOrgUnit> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.orgUnits.create(customerId),
@@ -186,7 +187,11 @@ export async function createOrgUnit(
       url: googleDirectoryUrls.orgUnits.create(customerId),
     });
 
-    return handleApiResponse<GoogleOrgUnit>(res);
+    const data = await handleApiResponse<GoogleOrgUnit>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError(`Org unit '${name}' already exists`);
+    }
+    return data;
   } catch (error) {
     if (
       error instanceof APIError &&
@@ -206,7 +211,11 @@ export async function createOrgUnit(
           },
           logger
         );
-        return handleApiResponse<GoogleOrgUnit>(retryRes);
+        const retryData = await handleApiResponse<GoogleOrgUnit>(retryRes);
+        if (typeof retryData === "object" && "alreadyExists" in retryData) {
+          throw new AlreadyExistsError(`Org unit '${name}' already exists`);
+        }
+        return retryData;
       }
     }
 
@@ -259,7 +268,7 @@ export async function createUser(
   token: string,
   user: Partial<DirectoryUser>,
   logger?: ApiLogger
-): Promise<DirectoryUser | { alreadyExists: true }> {
+): Promise<DirectoryUser> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.users.create(),
@@ -270,7 +279,11 @@ export async function createUser(
       },
       logger
     );
-    return handleApiResponse<DirectoryUser>(res);
+    const data = await handleApiResponse<DirectoryUser>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError(`User '${user.primaryEmail}' already exists`);
+    }
+    return data;
   } catch (error) {
     handleGoogleError(error);
   }
@@ -329,7 +342,7 @@ export async function addDomain(
   token: string,
   domainName: string,
   logger?: ApiLogger
-): Promise<GoogleDomain | { alreadyExists: true }> {
+): Promise<GoogleDomain> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.domains.create(GWS_CUSTOMER_ID),
@@ -340,7 +353,11 @@ export async function addDomain(
       },
       logger
     );
-    return handleApiResponse<GoogleDomain>(res);
+    const data = await handleApiResponse<GoogleDomain>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError(`Domain '${domainName}' already exists`);
+    }
+    return data;
   } catch (error) {
     handleGoogleError(error);
   }
@@ -402,7 +419,7 @@ export async function assignAdminRole(
   roleId: string,
   customerId = GWS_CUSTOMER_ID,
   logger?: ApiLogger
-): Promise<GoogleRoleAssignment | { alreadyExists: true }> {
+): Promise<GoogleRoleAssignment> {
   try {
     const res = await fetchWithAuth(
       googleDirectoryUrls.roles.assignments.create(customerId),
@@ -417,7 +434,13 @@ export async function assignAdminRole(
       },
       logger
     );
-    return handleApiResponse<GoogleRoleAssignment>(res);
+    const data = await handleApiResponse<GoogleRoleAssignment>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError(
+        `Admin role '${roleId}' already assigned to ${userEmail}`,
+      );
+    }
+    return data;
   } catch (error) {
     handleGoogleError(error);
   }
@@ -453,7 +476,7 @@ export async function createSamlProfile(
   token: string,
   displayName: string,
   logger?: ApiLogger
-): Promise<InboundSamlSsoProfile | { alreadyExists: true }> {
+): Promise<InboundSamlSsoProfile> {
   try {
     const res = await fetchWithAuth(
       googleIdentityUrls.samlProfiles.create(),
@@ -471,7 +494,7 @@ export async function createSamlProfile(
     }>(res);
 
     if ("alreadyExists" in data) {
-      return { alreadyExists: true };
+      throw new AlreadyExistsError(`SAML profile '${displayName}' already exists`);
     }
 
     if (!data.done || !data.response) {
@@ -480,13 +503,7 @@ export async function createSamlProfile(
 
     return data.response;
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "alreadyExists" in error
-    ) {
-      return { alreadyExists: true };
-    }
+    if (error instanceof AlreadyExistsError) throw error;
     handleGoogleError(error);
   }
 }
@@ -574,7 +591,7 @@ export async function assignSamlToOrgUnits(
   profileFullName: string,
   assignments: AssignSamlSsoPayload["assignments"],
   logger?: ApiLogger
-): Promise<object | { alreadyExists: true }> {
+): Promise<object> {
   try {
     const res = await fetchWithAuth(
       googleIdentityUrls.samlProfiles.assignToOrgUnits(profileFullName),
@@ -585,7 +602,11 @@ export async function assignSamlToOrgUnits(
       },
       logger
     );
-    return handleApiResponse<object>(res);
+    const data = await handleApiResponse<object>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError("SAML profile already assigned to OU");
+    }
+    return data;
   } catch (error) {
     handleGoogleError(error);
   }
@@ -601,7 +622,7 @@ export async function addIdpCredentials(
   profileFullName: string,
   pemData?: string,
   logger?: ApiLogger
-): Promise<{ success: boolean } | { alreadyExists: true }> {
+): Promise<{ success: boolean }> {
   try {
     const body = pemData ? { pemData } : {};
     const res = await fetchWithAuth(
@@ -613,7 +634,11 @@ export async function addIdpCredentials(
       },
       logger
     );
-    return handleApiResponse(res);
+    const data = await handleApiResponse<{ success: boolean }>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError("IdP credentials already exist");
+    }
+    return data as { success: boolean };
   } catch (error) {
     handleGoogleError(error);
   }

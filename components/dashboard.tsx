@@ -22,7 +22,7 @@ import {
   saveProgress,
   type PersistedProgress,
 } from "@/lib/redux/persistence";
-import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
+import { addOutputs } from "@/lib/redux/slices/app-config";
 import { setError } from "@/lib/redux/slices/errors";
 import {
   clearAllCheckTimestamps,
@@ -32,11 +32,7 @@ import {
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
-import type {
-  AppConfigState as AppConfigTypeFromTypes,
-  StepCheckResult,
-  StepContext,
-} from "@/lib/types";
+import type { StepCheckResult, StepContext } from "@/lib/types";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -55,16 +51,12 @@ import { SessionWarning } from "./session-warning";
 
 interface AutomationDashboardProps {
   serverSession: Session;
-  initialConfig?: Partial<AppConfigTypeFromTypes>;
 }
 /**
  * Main dashboard component handling setup progress and automation actions.
  */
 
-export function AutomationDashboard({
-  serverSession,
-  initialConfig,
-}: AutomationDashboardProps) {
+export function AutomationDashboard({ serverSession }: AutomationDashboardProps) {
   const { session, status } = useSessionSync();
 
   const dispatch = useAppDispatch();
@@ -77,33 +69,7 @@ export function AutomationDashboard({
   const isLoadingSession = status === "loading";
   const currentSession = session ?? serverSession;
 
-  // Effect: initialize Redux config from server session values.
-  useEffect(() => {
-    // Only run when Redux lacks domain/tenant or new values are provided.
-    if (
-      initialConfig &&
-      (initialConfig.domain !== appConfig.domain ||
-        initialConfig.tenantId !== appConfig.tenantId ||
-        (initialConfig.domain && !appConfig.domain) ||
-        (initialConfig.tenantId && !appConfig.tenantId))
-    ) {
-      console.log(
-        "AutomationDashboard: Initializing Redux with config from server session props:",
-        initialConfig,
-      );
-      dispatch(
-        initializeConfig({
-          domain: initialConfig.domain ?? null,
-          tenantId: initialConfig.tenantId ?? null,
-          outputs: initialConfig.outputs ?? {},
-        }),
-      );
-    } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
-      console.log(
-        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant.",
-      );
-    }
-  }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
+
 
   // Effect: load saved progress from localStorage.
   useEffect(() => {

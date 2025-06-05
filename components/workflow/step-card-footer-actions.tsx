@@ -1,16 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  ExternalLink,
-  Loader2,
-  Lock,
-  RefreshCw,
-  UserCheck,
-  Zap,
-} from "lucide-react";
 import { useMemo } from "react";
 import type { ManagedStep } from "./workflow-types";
+import {
+  BlockedMessage,
+  CompletedButtons,
+  ExecutionButtons,
+  ConfigureLink,
+} from "./step-card-footer-elements";
 
 interface StepCardFooterActionsProps {
   step: ManagedStep;
@@ -46,91 +43,31 @@ export function StepCardFooterActions({
   }, [step.adminUrls, allOutputs]);
 
   if (isBlocked) {
-    return (
-      <div className="flex items-center text-sm text-muted-foreground">
-        <Lock className="mr-1.5 h-4 w-4 shrink-0" />
-        <span>Complete prerequisite steps first.</span>
-      </div>
-    );
+    return <BlockedMessage />;
   }
+
+  const actionSection = isCompleted ? (
+    <CompletedButtons
+      step={step}
+      isProcessing={isProcessing}
+      onExecute={onExecute}
+      onMarkIncomplete={onMarkIncomplete}
+    />
+  ) : (
+    <ExecutionButtons
+      step={step}
+      isProcessing={isProcessing}
+      canExecute={canExecute}
+      onExecute={onExecute}
+      onMarkComplete={onMarkComplete}
+      onRequestAdmin={onRequestAdmin}
+    />
+  );
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        {isCompleted ? (
-          <>
-            {step.automatability !== "manual" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onExecute}
-                disabled={isProcessing}
-              >
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-run
-              </Button>
-            )}
-            {step.automatability === "manual" &&
-              step.completionType === "user-marked" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onMarkIncomplete}
-                  disabled={isProcessing}
-                >
-                  Mark as Incomplete
-                </Button>
-              )}
-          </>
-        ) : (
-          <>
-            <Button
-              size="sm"
-              onClick={
-                step.automatability !== "manual" ? onExecute : onMarkComplete
-              }
-              disabled={!canExecute || isProcessing}
-              variant={step.automatability === "manual" ? "outline" : "default"}
-            >
-              {isProcessing ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : step.automatability !== "manual" ? (
-                <Zap className="mr-1.5 h-4 w-4" />
-              ) : (
-                <UserCheck className="mr-1.5 h-4 w-4" />
-              )}
-              {isProcessing
-                ? "Processing..."
-                : step.automatability !== "manual"
-                  ? step.status === "failed"
-                    ? "Retry"
-                    : "Execute"
-                  : "Mark as Complete"}
-            </Button>
-            {step.automatability !== "manual" && step.status !== "failed" && (
-              <Button
-                variant="link"
-                size="sm"
-                className="px-2 text-xs text-muted-foreground hover:text-primary"
-                onClick={onRequestAdmin}
-              >
-                Request from Admin
-              </Button>
-            )}
-          </>
-        )}
-      </div>
-      {configureUrl && (
-        <Button
-          variant="link"
-          size="sm"
-          asChild
-          className="ml-auto p-0 text-xs text-muted-foreground hover:text-primary"
-        >
-          <a href={configureUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="mr-1 h-3 w-3" /> Configure
-          </a>
-        </Button>
-      )}
+      <div className="flex flex-wrap items-center gap-2">{actionSection}</div>
+      {configureUrl && <ConfigureLink url={configureUrl} />}
     </>
   );
 }
