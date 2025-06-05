@@ -1,5 +1,5 @@
-import MicrosoftEntraIDProvider from "next-auth/providers/microsoft-entra-id";
 import { config } from "@/lib/config";
+import MicrosoftEntraIDProvider from "next-auth/providers/microsoft-entra-id";
 
 const microsoftProvider = MicrosoftEntraIDProvider({
   clientId: config.MICROSOFT_CLIENT_ID,

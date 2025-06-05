@@ -1,5 +1,5 @@
-import GoogleProvider from "next-auth/providers/google";
 import { config } from "@/lib/config";
+import GoogleProvider from "next-auth/providers/google";
 
 const googleProvider = GoogleProvider({
   clientId: config.GOOGLE_CLIENT_ID,

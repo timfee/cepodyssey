@@ -1,6 +1,5 @@
 import { AutomationDashboard } from "@/components/dashboard";
 import { InitialConfigLoader } from "@/components/initial-config-loader";
-import { RouteGuard } from "@/components/route-guard";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 /**
@@ -11,9 +10,8 @@ export default async function Page() {
   const session = await auth();
 
   if (!session?.user) {
-    // Client-side RouteGuard will handle the redirect and display a loading
-    // spinner while the authentication state resolves.
-    return <RouteGuard>{null}</RouteGuard>;
+    // Server component: do not render RouteGuard (client component) here
+    return null;
   }
 
   // Redirect if either provider is missing.
@@ -31,9 +29,9 @@ export default async function Page() {
   const tenantId = session.microsoftTenantId ?? null;
 
   return (
-    <RouteGuard>
+    <>
       <InitialConfigLoader domain={domain} tenantId={tenantId} />
       <AutomationDashboard serverSession={session} />
-    </RouteGuard>
+    </>
   );
 }

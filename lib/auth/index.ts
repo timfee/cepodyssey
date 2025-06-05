@@ -1,14 +1,11 @@
-
-
+import { config } from "@/lib/config";
 import NextAuth from "next-auth";
-import googleProvider from "./providers/google";
-import microsoftProvider from "./providers/microsoft";
-import signInCallback from "./callbacks/signin";
 import jwt from "./callbacks/jwt";
 import session from "./callbacks/session";
-import { config } from "@/lib/config";
+import signInCallback from "./callbacks/signin";
+import googleProvider from "./providers/google";
+import microsoftProvider from "./providers/microsoft";
 export { cleanupInvalidSession } from "./utils/session-store";
-
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: config.AUTH_SECRET,

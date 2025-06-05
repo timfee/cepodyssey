@@ -1,5 +1,6 @@
 import { APIError } from "@/lib/api/utils";
 import { auth, cleanupInvalidSession } from "@/lib/auth";
+import { HTTP_STATUS_UNAUTHORIZED } from "@/lib/constants/http-status";
 import { Logger } from "@/lib/utils/logger";
 import type { Session } from "next-auth";
 
@@ -101,7 +102,7 @@ export class SessionManager {
     if (!validation.valid) {
       throw new APIError(
         validation.error?.message ?? "Authentication required",
-        401,
+        HTTP_STATUS_UNAUTHORIZED,
         validation.error?.code
       );
     }

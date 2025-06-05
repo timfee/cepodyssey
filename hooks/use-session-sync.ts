@@ -1,4 +1,3 @@
-import { SessionManager } from "@/lib/auth/utils/session-manager";
 import {
   resetAuthState,
   setDomain,
@@ -28,8 +27,9 @@ export function useSessionSync() {
     const checkInterval = setInterval(async () => {
       if (Date.now() - lastCheckRef.current > 5 * 60 * 1000) {
         lastCheckRef.current = Date.now();
-        const valid = await SessionManager.refreshIfNeeded(() => update());
-        if (!valid) {
+        // Only use update() from next-auth, do not call SessionManager or server-only code
+        const updated = await update();
+        if (updated?.error === "RefreshTokenError") {
           handleError(new Error("Session expired. Please sign in again."), {
             stepTitle: "Session",
           });
