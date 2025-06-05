@@ -6,7 +6,7 @@ export const checkCreateSamlApp = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.SAML_SSO_APP_ID],
   checkLogic: async (context) => {
     const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    const result = await checkMicrosoftServicePrincipal(appId);
+    const result = await checkMicrosoftServicePrincipal(appId, context.logger);
     if (result.completed && result.outputs) {
       return {
         completed: true,

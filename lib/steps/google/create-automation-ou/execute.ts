@@ -1,9 +1,8 @@
-import * as google from "@/lib/api/google";
+import { googleApi, type GoogleOrgUnit } from "@/lib/api/google/index";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { AlreadyExistsError } from "@/lib/api/errors";
-import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { validateRequiredOutputs } from "../../utils/validation";
@@ -12,7 +11,6 @@ export const executeCreateAutomationOu = withExecutionHandling({
   stepId: STEP_IDS.CREATE_AUTOMATION_OU,
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const token = await getGoogleToken();
 
     const validation = validateRequiredOutputs(
       context,
@@ -38,10 +36,9 @@ export const executeCreateAutomationOu = withExecutionHandling({
       };
     }
 
-    let created: google.GoogleOrgUnit;
+    let created: GoogleOrgUnit;
     try {
-      created = await google.createOrgUnit(
-        token,
+      created = await googleApi.orgUnits.create(
         ouName,
         parentPath,
         customerId,
@@ -49,9 +46,9 @@ export const executeCreateAutomationOu = withExecutionHandling({
       );
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
-        const existing = await google.getOrgUnit(
-          token,
+        const existing = await googleApi.orgUnits.get(
           `${parentPath}${ouName}`,
+          customerId,
           context.logger,
         );
         if (existing?.orgUnitId && existing.orgUnitPath) {

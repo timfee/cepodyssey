@@ -562,3 +562,4 @@ export async function getSamlMetadata(
     handleMicrosoftError(error);
   }
 }
+export { microsoftApi } from "./microsoft/index";

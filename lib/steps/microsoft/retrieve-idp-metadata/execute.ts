@@ -1,4 +1,4 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
@@ -16,7 +16,7 @@ export const executeRetrieveIdpMetadata = withExecutionHandling({
     const { tenantId } = await getTokens();
     const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
     const spId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string;
-    const { certificate, ssoUrl, entityId } = await microsoft.getSamlMetadata(
+    const { certificate, ssoUrl, entityId } = await microsoftApi.saml.getMetadata(
       tenantId,
       appId,
       context.logger,

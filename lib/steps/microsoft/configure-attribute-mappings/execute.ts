@@ -1,9 +1,8 @@
-import * as microsoft from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import type * as MicrosoftGraph from "microsoft-graph";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 
@@ -15,7 +14,6 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_JOB_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const { microsoftToken } = await getTokens();
     const spId = context.outputs[
       OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
     ] as string;
@@ -26,11 +24,11 @@ export const executeConfigureAttributeMappings = withExecutionHandling({
       id: "GoogleApps",
     };
 
-    await microsoft.configureAttributeMappings(
-      microsoftToken,
+    await microsoftApi.provisioning.configureMappings(
       spId,
       jobId,
       schema,
+      context.logger,
     );
 
     return {

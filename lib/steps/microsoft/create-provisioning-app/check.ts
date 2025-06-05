@@ -6,7 +6,7 @@ export const checkProvisioningApp = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.PROVISIONING_APP_ID],
   checkLogic: async (context) => {
     const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
-    const result = await checkMicrosoftServicePrincipal(appId);
+    const result = await checkMicrosoftServicePrincipal(appId, context.logger);
 
     if (result.completed && result.outputs) {
       return {
