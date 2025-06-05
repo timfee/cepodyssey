@@ -2,98 +2,20 @@ import { auth } from "@/app/(auth)/auth";
 import { Provider, type ProviderType } from "@/lib/constants/enums";
 import { ApiLogger } from "./api-logger";
 import { APIError, withRetry } from "./utils";
+import {
+  AuthenticationError,
+  AUTH_ERROR_PATTERNS,
+  isAuthenticationError,
+  wrapAuthError,
+} from "./auth-errors";
 
-/**
- * Custom error used when API requests fail due to expired or missing
- * authentication. The original error is preserved for debugging.
- */
-export class AuthenticationError extends APIError {
-  constructor(
-    message: string,
-    public provider: ProviderType,
-    public originalError?: unknown
-  ) {
-    super(message, 401, "AUTH_EXPIRED");
-    this.name = "AuthenticationError";
-  }
-}
-
-// More comprehensive error patterns
-const AUTH_ERROR_PATTERNS = {
-  google: [
-    /invalid authentication credentials/i,
-    /OAuth 2 access token/i,
-    /login cookie or other valid authentication credential/i,
-    /Token has been expired or revoked/i,
-    /Request had insufficient authentication scopes/i,
-    /401 Unauthorized/i,
-  ],
-  microsoft: [
-    /InvalidAuthenticationToken/i,
-    /Access token validation failure/i,
-    /Token expired/i,
-    /CompactToken parsing failed/i,
-    /unauthorized_client/i,
-    /invalid_grant/i,
-  ],
-} as const;
-
-/**
- * Type guard for detecting authentication-related failures.
- */
-export function isAuthenticationError(
-  error: unknown
-): error is AuthenticationError {
-  if (error instanceof AuthenticationError) return true;
-
-  if (error instanceof APIError) {
-    // Check numeric and string status codes
-    if (
-      error.status === 401 ||
-      error.code === "401" ||
-      Number(error.code) === 401
-    ) {
-      return true;
-    }
-
-    // Check error message patterns
-    if (error.message) {
-      const errorMessage = error.message.toLowerCase();
-      return (
-        AUTH_ERROR_PATTERNS.google.some((pattern) =>
-          pattern.test(errorMessage)
-        ) ||
-        AUTH_ERROR_PATTERNS.microsoft.some((pattern) =>
-          pattern.test(errorMessage)
-        )
-      );
-    }
-  }
-
-  return false;
-}
-
-/**
- * Normalize any error into an `AuthenticationError` instance so callers
- * can handle them consistently.
- */
-export function wrapAuthError(
-  error: unknown,
-  provider: ProviderType
-): AuthenticationError {
-  if (error instanceof APIError && error.status === 401) {
-    return new AuthenticationError(
-      `${provider === Provider.GOOGLE ? "Google Workspace" : "Microsoft"} authentication expired. Please sign in again.`,
-      provider,
-      error
-    );
-  }
-  return new AuthenticationError(
-    `Authentication failed for ${provider}. Please sign in again.`,
-    provider,
-    error
-  );
-}
+// Re-export auth error helpers for convenience
+export {
+  AuthenticationError,
+  AUTH_ERROR_PATTERNS,
+  isAuthenticationError,
+  wrapAuthError,
+} from "./auth-errors";
 /**
  * Wrapper around `fetch` that automatically attaches the user's access
  * token and logs requests and responses.

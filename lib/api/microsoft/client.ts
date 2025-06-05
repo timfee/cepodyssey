@@ -1,5 +1,5 @@
 import { createApiClient } from "../base/api-client";
-import { wrapAuthError } from "../auth-interceptor";
+import { wrapAuthError } from "../auth-errors";
 import { APIError } from "../utils";
 import { getMicrosoftToken } from "../../steps/utils/auth";
 
@@ -11,7 +11,7 @@ function handleMicrosoftError(error: unknown): never {
 }
 
 export const microsoftApiClient = createApiClient({
-  provider: 'microsoft',
+  provider: "microsoft",
   getToken: getMicrosoftToken,
   handleProviderError: handleMicrosoftError,
 });

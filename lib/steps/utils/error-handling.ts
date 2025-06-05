@@ -1,4 +1,4 @@
-import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { isAuthenticationError } from "@/lib/api/auth-errors";
 import { APIError } from "@/lib/api/utils";
 import { serverLogger } from "@/lib/logging/server-logger";
 import { ErrorManager } from "@/lib/error-handling/error-manager";

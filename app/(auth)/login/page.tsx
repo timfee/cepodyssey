@@ -37,7 +37,7 @@ function LoginPage() {
 
   const [domain, setDomain] = useState("");
   const [tenantId, setTenantId] = useState(
-    config.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "",
+    publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID || "",
   );
   const [isTenantDiscovered, setIsTenantDiscovered] = useState(false);
   const [isLookingUpTenant, setIsLookingUpTenant] = useState(false);
@@ -135,7 +135,7 @@ function LoginPage() {
   };
 
   const onMicrosoftSignIn = () => {
-    const effectiveTenantId = tenantId || config.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
+    const effectiveTenantId = tenantId || publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
     // Domain is optional for MS login but used as hint when provided
     if (!effectiveTenantId && !config.MICROSOFT_TENANT_ID) {
       Logger.info('[LoginPage]', 'No Tenant ID found. Using default Microsoft sign-in.');
@@ -154,9 +154,7 @@ function LoginPage() {
     isLoadingOverall || !domain || (session?.hasGoogleAuth ?? false);
   const isMicrosoftButtonDisabled =
     isLoadingOverall ||
-    (!tenantId &&
-      !config.NEXT_PUBLIC_MICROSOFT_TENANT_ID &&
-      !config.MICROSOFT_TENANT_ID) ||
+    (!tenantId && !publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID) ||
     (session?.hasMicrosoftAuth ?? false);
 
   return (
@@ -206,7 +204,7 @@ function LoginPage() {
                   }`}
                   disabled={
                     isLoadingOverall ||
-                    !!config.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
+                    !!publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
                     session?.hasMicrosoftAuth
                   }
                 />
@@ -218,7 +216,7 @@ function LoginPage() {
                     isLoadingOverall ||
                     !domain ||
                     isLookingUpTenant ||
-                    !!config.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
+                    !!publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID ||
                     session?.hasMicrosoftAuth
                   }
                   className="shrink-0"
@@ -238,7 +236,7 @@ function LoginPage() {
                   {lookupMessage}
                 </p>
               )}
-              {config.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
+              {publicConfig.NEXT_PUBLIC_MICROSOFT_TENANT_ID && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   Tenant ID is pre-configured.
                 </p>
