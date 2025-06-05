@@ -18,13 +18,13 @@ export async function executeGrantSuperAdmin(
     const token = await getGoogleToken();
     const validation = validateRequiredOutputs(context, [
       OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
-      OUTPUT_KEYS.GWS_CUSTOMER_ID,
+      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
     ]);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
-    const customerId = context.outputs[OUTPUT_KEYS.GWS_CUSTOMER_ID] as string;
+    const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string;
     if (!email) {
       return {
         success: false,

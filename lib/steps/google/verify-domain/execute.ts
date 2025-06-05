@@ -27,14 +27,14 @@ export async function executeVerifyDomain(
         success: true,
         message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
         resourceUrl: portalUrls.google.domains.manage(context.domain),
-        outputs: { [OUTPUT_KEYS.GWS_CUSTOMER_ID]: user.customerId },
+        outputs: { [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]: user.customerId },
       };
     }
     return {
       success: true,
       message: `Domain '${context.domain}' added. Please ensure it is verified in your Google Workspace Admin console for SAML SSO.`,
       resourceUrl: portalUrls.google.domains.manage(context.domain),
-      outputs: { [OUTPUT_KEYS.GWS_CUSTOMER_ID]: user.customerId },
+      outputs: { [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]: user.customerId },
     };
   } catch (e) {
     return handleExecutionError(e, STEP_IDS.VERIFY_DOMAIN);

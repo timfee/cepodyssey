@@ -19,7 +19,7 @@ export async function executeCreateAutomationOu(
     const token = await getGoogleToken();
     const validation = validateRequiredOutputs(
       context,
-      [OUTPUT_KEYS.GWS_CUSTOMER_ID],
+      [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID],
       STEP_IDS.VERIFY_DOMAIN
     );
     if (!validation.valid) {

@@ -176,6 +176,8 @@ export const OUTPUT_KEYS = {
   SERVICE_ACCOUNT_ID: "googleUserId",
   // G-3: Grant Super Admin
   SUPER_ADMIN_ROLE_ID: "googleSuperAdminRoleId",
+  // G-4: Verify Domain
+  GOOGLE_CUSTOMER_ID: "g4GwsCustomerId",
   // G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
