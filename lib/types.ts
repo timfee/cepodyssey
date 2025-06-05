@@ -168,11 +168,17 @@ export type ManagedStep = StepDefinition & StepStatusInfo;
  */
 export const OUTPUT_KEYS = {
   // --- Google Workspace Outputs ---
+  GOOGLE_CUSTOMER_ID: "googleCustomerId",
   AUTOMATION_OU_PATH: "googleOuPath",
   AUTOMATION_OU_ID: "googleOuId",
   SERVICE_ACCOUNT_EMAIL: "googleUserEmail",
   SERVICE_ACCOUNT_ID: "googleUserId",
   SUPER_ADMIN_ROLE_ID: "googleSuperAdminRoleId",
+
+  // G-4: Verify Domain
+  GOOGLE_CUSTOMER_ID: "g4GwsCustomerId",
+
+  // G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
   GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",

@@ -1,34 +1,26 @@
-# API Client Guidelines
+# AI Agent Instructions for API Wrappers (`lib/api/`)
 
-This directory contains clients for communicating with external APIs (Google Workspace and Microsoft Graph).
+## Purpose of this Directory
 
-## Core Concepts
+This directory contains strongly-typed wrappers for external APIs (Google Admin SDK, Microsoft Graph). Its purpose is to abstract away raw `fetch` calls and handle API-specific data transformations.
 
-1. **`ApiLogger`**: A simple class instantiated by a server action to track all API calls within that action's lifecycle. It is passed down through the call stack to `fetchWithAuth`. **It is not a singleton.**
-2. **`APIError`**: A custom error class used to wrap all failed API responses. It includes the HTTP status and an error code from the API, allowing for specific error handling upstream.
-3. **`fetchWithAuth`**: The primary function for making authenticated API calls. It handles adding the `Authorization` header, setting `Content-Type`, and invoking the `ApiLogger`.
-4. **`withRetry`**: A simple exponential backoff wrapper for `fetchWithAuth` to handle transient network or server (5xx) errors.
-5. **URL Builder**: All endpoint URLs are constructed via `lib/api/url-builder.ts` to ensure consistency and prevent hardcoded strings.
+### Core Principles
 
-## Function Signature Pattern
+- **Clarity**: Function names should clearly map to an API endpoint and action (e.g., `getUser`, `createOrgUnit`).
+- **Consistency**: All functions must follow the standardized contracts for returning data and handling errors.
 
-All functions that make an API call must accept an optional `ApiLogger` instance and pass it to `fetchWithAuth`.
+---
 
-```typescript
-import { ApiLogger } from "./api-logger";
+### Strict Agent Rules
 
-export async function someApiFunction(
-  token: string,
-  params: SomeParams,
-  logger?: ApiLogger, // Accept the logger
-): Promise<SomeResult> {
-  // ...
-  const res = await fetchWithAuth(
-    someUrl,
-    token,
-    { method: "POST", body: JSON.stringify(payload) },
-    logger, // Pass it to the fetch client
-  );
-  // ...
-}
-```
+1. **Standardized Return Contracts**:
+    - Functions that **GET** a resource (e.g., `getUser`) **MUST** return `Promise<Resource | null>`. Return `null` if the resource is not found (e.g., on a 404 error).
+    - Functions that **CREATE** a resource (e.g., `createUser`) **MUST** `throw new AlreadyExistsError()` if the resource already exists (e.g., on a 409 conflict). They must **NOT** return a special object like `{ alreadyExists: true }`.
+
+2. **Logger Parameter**:
+    - Every exported function that makes an external network call **MUST** accept an optional `ApiLogger` instance as its last parameter.
+    - Example signature: `export async function getUser(token: string, email: string, logger?: ApiLogger)`
+
+3. **Logging API Calls**:
+    - Inside the function, before making the `fetch` call, log the action using `logger?.addLog(...)`.
+    - The correct method is `addLog`, not `log`.

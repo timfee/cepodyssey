@@ -27,6 +27,7 @@ declare module "next-auth/jwt" {
     error?: "RefreshTokenError";
   }
 }
+
 declare module "next-auth/providers/google" {
   interface GoogleProfile extends NextAuthProfile {
     hd?: string;

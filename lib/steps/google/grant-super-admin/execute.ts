@@ -8,12 +8,40 @@ import { withExecutionHandling } from '../../utils/execute-wrapper';
 
 export const executeGrantSuperAdmin = withExecutionHandling({
   stepId: STEP_IDS.GRANT_SUPER_ADMIN,
-  requiredOutputs: [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL],
+
+  requiredOutputs: [
+    OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+    OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
+  ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
-    const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
 
-    const user = await google.getUser(token, email, context.logger);
+    const validation = validateRequiredOutputs(context, [
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
+    ]);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
+    const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
+    const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string;
+    if (!email) {
+      return {
+        success: false,
+        error: {
+          message: "Provisioning user email missing.",
+          code: "MISSING_DEPENDENCY",
+        },
+      };
+    }
+    if (!customerId) {
+      return {
+        success: false,
+        error: { message: "Customer ID not found in previous step." },
+      };
+    }
+    const user = await google.getUser(token, email);
+
     if (user?.isAdmin) {
       return {
         success: true,
@@ -31,7 +59,9 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
-    await google.assignAdminRole(token, email, '3', undefined, context.logger);
+    
+    await google.assignAdminRole(token, email, '3', customerId, context.logger);
+
     return {
       success: true,
       message: `Super Admin role assigned to '${email}'.`,
