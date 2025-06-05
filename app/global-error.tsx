@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, HomeIcon, RefreshCwIcon } from "lucide-react";
-import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { isAuthenticationError } from "@/lib/api/auth-errors";
 
 export default function GlobalError({
   error,
