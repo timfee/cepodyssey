@@ -52,10 +52,12 @@ export async function checkSamlProfile(
       message: `SAML Profile '${profile.displayName}' exists.`,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs(STEP_IDS.INITIATE_SAML_PROFILE).map((o) => ({
-          ...o,
-          value: outputs[o.key as keyof typeof outputs],
-        })),
+        producedOutputs: getStepOutputs(STEP_IDS.INITIATE_SAML_PROFILE).map(
+          (o) => ({
+            ...o,
+            value: outputs[o.key as keyof typeof outputs],
+          }),
+        ),
       },
     };
   } catch (e) {

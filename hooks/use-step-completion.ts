@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 
-export function useStepCompletion(stepId: string, initialCompleted: boolean = false) {
+export function useStepCompletion(
+  stepId: string,
+  initialCompleted: boolean = false,
+) {
   const storageKey = `workflow-step-status-${stepId}`;
 
   const [isCompleted, setIsCompleted] = useState(() => {

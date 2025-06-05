@@ -39,17 +39,21 @@ export async function checkProvisioningUser(
         outputs: {
           [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: user.primaryEmail,
           [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: user.id,
-          producedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_USER).map((o) => ({
+          producedOutputs: getStepOutputs(
+            STEP_IDS.CREATE_PROVISIONING_USER,
+          ).map((o) => ({
             ...o,
             value:
               o.key === OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL
                 ? user.primaryEmail
                 : user.id,
           })),
-          inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER).map((inp) => ({
-            ...inp,
-            data: { ...inp.data, value: context.outputs[inp.data.key!] },
-          })),
+          inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER).map(
+            (inp) => ({
+              ...inp,
+              data: { ...inp.data, value: context.outputs[inp.data.key!] },
+            }),
+          ),
         },
       };
     }

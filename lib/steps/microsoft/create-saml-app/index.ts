@@ -11,7 +11,10 @@ export const M6_OUTPUTS: StepOutput[] = [
     key: OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID,
     description: "Application Object ID",
   },
-  { key: OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID, description: "Service Principal ID" },
+  {
+    key: OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+    description: "Service Principal ID",
+  },
 ];
 
 export const M6_INPUTS: StepInput[] = [];
@@ -33,7 +36,10 @@ export const m6CreateSamlApp: StepDefinition = {
   inputs: M6_INPUTS,
   outputs: M6_OUTPUTS,
   requires: [STEP_IDS.START_PROVISIONING],
-  nextStep: { id: STEP_IDS.CONFIGURE_SAML_APP, description: "Configure SAML settings" },
+  nextStep: {
+    id: STEP_IDS.CONFIGURE_SAML_APP,
+    description: "Configure SAML settings",
+  },
   actions: ["POST /applicationTemplates/{templateId}/instantiate"],
   adminUrls: {
     configure: (outputs) => {

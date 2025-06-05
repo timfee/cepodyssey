@@ -49,7 +49,7 @@ export function useAutoCheck(
           console.log(`[AutoCheck] Checking step ${stepId}`);
           const checkResult = await executeCheck(stepId);
 
-          if (checkResult && 'apiLogs' in checkResult && checkResult.apiLogs) {
+          if (checkResult && "apiLogs" in checkResult && checkResult.apiLogs) {
             console.log(
               `[AutoCheck] Adding ${checkResult.apiLogs.length} API logs for step ${stepId}`,
             );

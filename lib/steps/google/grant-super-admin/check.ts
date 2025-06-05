@@ -43,10 +43,13 @@ export async function checkSuperAdmin(
         completed: true,
         message: `Service account '${email}' has admin privileges.`,
         outputs: {
-          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map((o) => ({
-            ...o,
-            value: o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
-          })),
+          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map(
+            (o) => ({
+              ...o,
+              value:
+                o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
+            }),
+          ),
           inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
@@ -62,10 +65,13 @@ export async function checkSuperAdmin(
         message: `Service account has Super Admin role assigned.`,
         outputs: {
           [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3",
-          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map((o) => ({
-            ...o,
-            value: o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
-          })),
+          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map(
+            (o) => ({
+              ...o,
+              value:
+                o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
+            }),
+          ),
           inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },

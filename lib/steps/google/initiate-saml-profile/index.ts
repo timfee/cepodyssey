@@ -1,17 +1,23 @@
+import { portalUrls } from "@/lib/api/url-builder";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { portalUrls } from "@/lib/api/url-builder";
 import { checkSamlProfile } from "./check";
 import { executeInitiateSamlProfile } from "./execute";
-import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export const G5_OUTPUTS: StepOutput[] = [
-  { key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME, description: "SAML profile name" },
+  {
+    key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME,
+    description: "SAML profile name",
+  },
   {
     key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
     description: "Full resource name of the SAML profile",
   },
-  { key: OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID, description: "Google SP Entity ID" },
+  {
+    key: OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,
+    description: "Google SP Entity ID",
+  },
   { key: OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL, description: "Google ACS URL" },
 ];
 

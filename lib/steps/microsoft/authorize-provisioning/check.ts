@@ -35,10 +35,14 @@ export async function checkAuthorizeProvisioning(
         ...result,
         outputs: {
           ...(result.outputs || {}),
-        producedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING).map((o) => ({
-            ...o,
-            value: result.outputs ? result.outputs[o.key as keyof typeof result.outputs] : undefined,
-          })),
+          producedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING).map(
+            (o) => ({
+              ...o,
+              value: result.outputs
+                ? result.outputs[o.key as keyof typeof result.outputs]
+                : undefined,
+            }),
+          ),
           inputs: getStepInputs(STEP_IDS.AUTHORIZE_PROVISIONING).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },

@@ -115,7 +115,10 @@ export async function validateTokenPresence(token: JWT): Promise<{
   if (!token.googleAccessToken || token.googleAccessToken === "undefined") {
     missingTokens.push("google");
   }
-  if (!token.microsoftAccessToken || token.microsoftAccessToken === "undefined") {
+  if (
+    !token.microsoftAccessToken ||
+    token.microsoftAccessToken === "undefined"
+  ) {
     missingTokens.push("microsoft");
   }
   return {
@@ -452,7 +455,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       const validation = await validateTokenPresence(token);
       if (!validation.valid) {
-        session.error = 'MissingTokens' as unknown as 'RefreshTokenError';
+        session.error = "MissingTokens" as unknown as "RefreshTokenError";
         session.hasGoogleAuth = false;
         session.hasMicrosoftAuth = false;
         return session;

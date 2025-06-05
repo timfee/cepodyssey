@@ -60,11 +60,9 @@ function LoginPage() {
     if (error) {
       let errorMessage = "Authentication failed. Please try again.";
       if (error === "GoogleAdminRequired")
-        errorMessage =
-          "You need Google Super Admin access to continue";
+        errorMessage = "You need Google Super Admin access to continue";
       if (error === "MicrosoftAdminRequired")
-        errorMessage =
-          "You need Microsoft Global Admin access to continue";
+        errorMessage = "You need Microsoft Global Admin access to continue";
       if (error === "SignInInformationMissing")
         errorMessage = "Something went wrong. Please try signing in again.";
       if (error === "TokenNotFound") {
@@ -85,9 +83,7 @@ function LoginPage() {
       if (authAttempt === "google" && !session?.hasGoogleAuth) {
         console.error("Google authentication failed. Please try again.");
       } else if (authAttempt === "microsoft" && !session?.hasMicrosoftAuth) {
-        console.error(
-          "Microsoft authentication failed. Please try again.",
-        );
+        console.error("Microsoft authentication failed. Please try again.");
       }
     }
   }, [searchParams, session, sessionStatus]);

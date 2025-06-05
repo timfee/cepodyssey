@@ -61,7 +61,10 @@ export const g6UpdateSamlProfile: StepDefinition = {
   inputs: G6_INPUTS,
   outputs: G6_OUTPUTS,
   requires: [STEP_IDS.INITIATE_SAML_PROFILE, STEP_IDS.RETRIEVE_IDP_METADATA],
-  nextStep: { id: STEP_IDS.ASSIGN_SAML_PROFILE, description: "Assign the SAML profile" },
+  nextStep: {
+    id: STEP_IDS.ASSIGN_SAML_PROFILE,
+    description: "Assign the SAML profile",
+  },
 
   actions: ["PATCH /v1/inboundSamlSsoProfiles/{profile}"],
   adminUrls: {

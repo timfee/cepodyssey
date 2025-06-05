@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAppSelector } from '@/hooks/use-redux';
-import { allStepDefinitions } from '@/lib/steps';
-import type { ManagedStep, StepStatusInfo } from '@/lib/types';
-import React from 'react';
-import type { StepId } from '@/lib/steps/step-refs';
-import { getStepInputs, getStepOutputs } from '@/lib/steps/registry';
-import { WorkflowStepCard } from './workflow';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppSelector } from "@/hooks/use-redux";
+import { allStepDefinitions } from "@/lib/steps";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import type { StepId } from "@/lib/steps/step-refs";
+import type { ManagedStep, StepStatusInfo } from "@/lib/types";
+import React from "react";
+import { WorkflowStepCard } from "./workflow";
 
 interface ProgressVisualizerProps {
   onExecuteStep: (stepId: StepId) => void;
@@ -25,17 +25,17 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   const managedSteps: ManagedStep[] = React.useMemo(() => {
     return allStepDefinitions.map((definition) => {
       const statusInfo: StepStatusInfo = stepsStatusMap[definition.id] || {
-        status: 'pending',
+        status: "pending",
       };
 
       let effectiveStatus = statusInfo.status;
       if (definition.requires && definition.requires.length > 0) {
         const requirementsMet = definition.requires.every((reqId) => {
           const req = stepsStatusMap[reqId];
-          return req && req.status === 'completed';
+          return req && req.status === "completed";
         });
-        if (!requirementsMet && statusInfo.status === 'pending') {
-          effectiveStatus = 'blocked';
+        if (!requirementsMet && statusInfo.status === "pending") {
+          effectiveStatus = "blocked";
         }
       }
 
@@ -44,26 +44,26 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
   }, [stepsStatusMap]);
 
   const categories = [
-    { id: 'all', label: 'All Steps', steps: managedSteps },
+    { id: "all", label: "All Steps", steps: managedSteps },
     {
-      id: 'provisioning',
-      label: 'Provisioning',
-      steps: managedSteps.filter((s) => s.activity === 'Provisioning'),
+      id: "provisioning",
+      label: "Provisioning",
+      steps: managedSteps.filter((s) => s.activity === "Provisioning"),
     },
     {
-      id: 'sso',
-      label: 'SSO',
-      steps: managedSteps.filter((s) => s.activity === 'SSO'),
+      id: "sso",
+      label: "SSO",
+      steps: managedSteps.filter((s) => s.activity === "SSO"),
     },
     {
-      id: 'foundation',
-      label: 'Foundation',
-      steps: managedSteps.filter((s) => s.activity === 'Foundation'),
+      id: "foundation",
+      label: "Foundation",
+      steps: managedSteps.filter((s) => s.activity === "Foundation"),
     },
   ];
 
   const getProgress = (steps: ManagedStep[]) => {
-    const completed = steps.filter((s) => s.status === 'completed').length;
+    const completed = steps.filter((s) => s.status === "completed").length;
     return steps.length > 0 ? (completed / steps.length) * 100 : 0;
   };
 
@@ -80,9 +80,9 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
           {categories.map((cat) => (
             <TabsTrigger key={cat.id} value={cat.id}>
               {cat.label}
-              {cat.id !== 'all' && (
+              {cat.id !== "all" && (
                 <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                  {cat.steps.filter((s) => s.status === 'completed').length}/
+                  {cat.steps.filter((s) => s.status === "completed").length}/
                   {cat.steps.length}
                 </Badge>
               )}
@@ -98,7 +98,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === 'completed').length}/
+                  {cat.steps.filter((s) => s.status === "completed").length}/
                   {cat.steps.length} done
                 </span>
               </div>

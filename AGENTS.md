@@ -4,7 +4,7 @@ This document outlines the core architectural principles of the Directory Setup 
 
 ## Core Principles
 
-1.  **Clear Client/Server Separation**: This project uses the Next.js App Router. **Server Actions are the *only* way the client communicates with the backend**. Server Actions must never throw exceptions; they always return a serializable result object (`{ success: true, ... }` or `{ success: false, error: {...} }`).
+1.  **Clear Client/Server Separation**: This project uses the Next.js App Router. **Server Actions are the _only_ way the client communicates with the backend**. Server Actions must never throw exceptions; they always return a serializable result object (`{ success: true, ... }` or `{ success: false, error: {...} }`).
 
 2.  **Request-Scoped Logic**: All server-side operations are stateless. For tasks like logging that require context through a call stack, a new `ApiLogger` instance is created at the start of the server action and passed down through all subsequent functions. This avoids race conditions and memory leaks associated with global singletons.
 
@@ -16,16 +16,16 @@ This document outlines the core architectural principles of the Directory Setup 
 
 ## Directory Structure
 
--   **/app**: Next.js App Router, routing, pages, and layouts.
-    -   **/app/actions**: All Server Actions. The application's backend lives here.
-    -   **/app/(auth)**: Authentication-related routes and `next-auth` configuration.
--   **/components**: All React components.
-    -   **/components/ui**: Core UI elements from `shadcn/ui`.
-    -   **/components/workflow**: Custom components for the automation workflow, like the `WorkflowStepCard`.
--   **/hooks**: Reusable client-side React hooks.
--   **/lib**: Core application logic, shared utilities, and type definitions.
-    -   **/lib/api**: API clients for Google and Microsoft. Contains the `ApiLogger`.
-    -   **/lib/error-handling**: The global `ErrorManager`.
-    -   **/lib/redux**: Redux Toolkit store, slices, and state management.
-    -   **/lib/steps**: The heart of the automation logic, containing all step definitions.
-    -   **/lib/types.ts**: Central TypeScript definitions.
+- **/app**: Next.js App Router, routing, pages, and layouts.
+  - **/app/actions**: All Server Actions. The application's backend lives here.
+  - **/app/(auth)**: Authentication-related routes and `next-auth` configuration.
+- **/components**: All React components.
+  - **/components/ui**: Core UI elements from `shadcn/ui`.
+  - **/components/workflow**: Custom components for the automation workflow, like the `WorkflowStepCard`.
+- **/hooks**: Reusable client-side React hooks.
+- **/lib**: Core application logic, shared utilities, and type definitions.
+  - **/lib/api**: API clients for Google and Microsoft. Contains the `ApiLogger`.
+  - **/lib/error-handling**: The global `ErrorManager`.
+  - **/lib/redux**: Redux Toolkit store, slices, and state management.
+  - **/lib/steps**: The heart of the automation logic, containing all step definitions.
+  - **/lib/types.ts**: Central TypeScript definitions.

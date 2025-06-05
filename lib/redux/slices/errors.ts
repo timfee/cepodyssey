@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import type { RootState } from '../store';
+import { createSlice, PayloadAction, createSelector } from "@reduxjs/toolkit";
+import type { RootState } from "../store";
 
 export interface ErrorInfo {
   message: string;
@@ -15,7 +15,7 @@ const initialState: ErrorState = {
 };
 
 export const errorsSlice = createSlice({
-  name: 'errors',
+  name: "errors",
   initialState,
   reducers: {
     setError(state, action: PayloadAction<ErrorInfo>) {
@@ -31,7 +31,7 @@ export const { setError, clearError } = errorsSlice.actions;
 
 export const selectError = createSelector(
   (state: RootState) => state.errors.error,
-  (error): ErrorInfo => error || { message: '', details: undefined },
+  (error): ErrorInfo => error || { message: "", details: undefined },
 );
 
 export const selectHasError = createSelector(

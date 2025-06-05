@@ -16,10 +16,10 @@ export async function executeGrantSuperAdmin(
 ): Promise<StepExecutionResult> {
   try {
     const token = await getGoogleToken();
-    const validation = validateRequiredOutputs(
-      context,
-      [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL, OUTPUT_KEYS.GWS_CUSTOMER_ID],
-    );
+    const validation = validateRequiredOutputs(context, [
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+      OUTPUT_KEYS.GWS_CUSTOMER_ID,
+    ]);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }

@@ -1,12 +1,15 @@
-import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from './use-redux';
-import { updateStep, clearCheckTimestamp } from '@/lib/redux/slices/setup-steps';
-import { addOutputs } from '@/lib/redux/slices/app-config';
-import { executeStepAction } from '@/app/actions/step-actions';
-import type { StepId } from '@/lib/steps/step-refs';
-import { ErrorManager } from '@/lib/error-handling/error-manager';
-import { allStepDefinitions } from '@/lib/steps';
-import { addApiLog } from '@/lib/redux/slices/debug-panel';
+import { executeStepAction } from "@/app/actions/step-actions";
+import { ErrorManager } from "@/lib/error-handling/error-manager";
+import { addOutputs } from "@/lib/redux/slices/app-config";
+import { addApiLog } from "@/lib/redux/slices/debug-panel";
+import {
+  clearCheckTimestamp,
+  updateStep,
+} from "@/lib/redux/slices/setup-steps";
+import { allStepDefinitions } from "@/lib/steps";
+import type { StepId } from "@/lib/steps/step-refs";
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "./use-redux";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
@@ -16,7 +19,9 @@ export function useStepExecution() {
     async (stepId: StepId) => {
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
-        ErrorManager.dispatch(new Error(`Step ${stepId} not found`), { stepId });
+        ErrorManager.dispatch(new Error(`Step ${stepId} not found`), {
+          stepId,
+        });
         return;
       }
 
@@ -24,10 +29,10 @@ export function useStepExecution() {
       dispatch(
         updateStep({
           id: stepId,
-          status: 'in_progress',
+          status: "in_progress",
           error: null,
           message: undefined,
-        }),
+        })
       );
 
       try {
@@ -53,8 +58,8 @@ export function useStepExecution() {
           dispatch(
             updateStep({
               id: stepId,
-              status: 'completed',
-              completionType: 'server-verified',
+              status: "completed",
+              completionType: "server-verified",
               message: result.message,
               metadata: {
                 resourceUrl: result.resourceUrl,
@@ -62,19 +67,21 @@ export function useStepExecution() {
                 ...(result.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
         } else {
-          const errorMessage = result.error?.message || 'An unknown error occurred during execution.';
+          const errorMessage =
+            result.error?.message ||
+            "An unknown error occurred during execution.";
           dispatch(
             updateStep({
               id: stepId,
-              status: 'failed',
+              status: "failed",
               error: errorMessage,
               message: result.message,
               metadata: result.outputs || {},
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
           ErrorManager.dispatch(new Error(errorMessage), {
             stepId,
@@ -83,14 +90,15 @@ export function useStepExecution() {
           });
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         dispatch(
           updateStep({
             id: stepId,
-            status: 'failed',
+            status: "failed",
             error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
-          }),
+          })
         );
         ErrorManager.dispatch(error, {
           stepId,
@@ -98,7 +106,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, appConfig],
+    [dispatch, appConfig]
   );
 
   return { executeStep };

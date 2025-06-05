@@ -1,9 +1,8 @@
-import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { checkDomain } from "./check";
 import { executeVerifyDomain } from "./execute";
-import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export const G4_OUTPUTS: StepOutput[] = [];
 export const G4_INPUTS: StepInput[] = [];
@@ -25,7 +24,10 @@ export const g4VerifyDomain: StepDefinition = {
   inputs: G4_INPUTS,
   outputs: G4_OUTPUTS,
   requires: [],
-  nextStep: { id: STEP_IDS.INITIATE_SAML_PROFILE, description: "Create the SAML SSO profile" },
+  nextStep: {
+    id: STEP_IDS.INITIATE_SAML_PROFILE,
+    description: "Create the SAML SSO profile",
+  },
 
   actions: ["POST /admin/directory/v1/customer/{customerId}/domains"],
   adminUrls: {

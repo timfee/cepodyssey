@@ -30,15 +30,21 @@ export async function checkAttributeMappings(
     ...result,
     outputs: result.completed
       ? {
-          producedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
-          inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS).map((inp) => ({
-            ...inp,
-            data: { ...inp.data, value: context.outputs[inp.data.key!] },
-          })),
+          producedOutputs: getStepOutputs(
+            STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
+          ),
+          inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS).map(
+            (inp) => ({
+              ...inp,
+              data: { ...inp.data, value: context.outputs[inp.data.key!] },
+            }),
+          ),
         }
       : {
           inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
-          expectedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
+          expectedOutputs: getStepOutputs(
+            STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
+          ),
         },
   };
 }

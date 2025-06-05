@@ -58,8 +58,8 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
  * Defaults to true in development unless explicitly disabled.
  */
 export function isApiDebugEnabled(): boolean {
-  const flag = process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-  if (flag === "true") return true
-  if (flag === "false") return false
-  return process.env.NODE_ENV !== "production"
+  const flag = process.env.NEXT_PUBLIC_ENABLE_API_DEBUG;
+  if (flag === "true") return true;
+  if (flag === "false") return false;
+  return process.env.NODE_ENV !== "production";
 }

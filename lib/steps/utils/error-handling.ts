@@ -75,7 +75,10 @@ export async function handleExecutionError(
   }
 
   if (error instanceof APIError) {
-    return { success: false, error: { message: error.message, code: error.code } };
+    return {
+      success: false,
+      error: { message: error.message, code: error.code },
+    };
   }
 
   const managed = ErrorManager.handle(error, { stepId });

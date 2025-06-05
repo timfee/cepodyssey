@@ -1,25 +1,28 @@
-"use client"
+"use client";
 
-import { useAppSelector, useAppDispatch } from "@/hooks/use-redux"
-import { toggleDebugPanel, selectFilteredLogs } from "@/lib/redux/slices/debug-panel"
-import { Button } from "@/components/ui/button"
-import { Terminal } from "lucide-react"
-import { isApiDebugEnabled } from "@/lib/utils"
+import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
+import {
+  toggleDebugPanel,
+  selectFilteredLogs,
+} from "@/lib/redux/slices/debug-panel";
+import { Button } from "@/components/ui/button";
+import { Terminal } from "lucide-react";
+import { isApiDebugEnabled } from "@/lib/utils";
 
 export function DebugPanelNub() {
-  const dispatch = useAppDispatch()
-  const isOpen = useAppSelector((state) => state.debugPanel.isOpen)
-  const logs = useAppSelector(selectFilteredLogs)
+  const dispatch = useAppDispatch();
+  const isOpen = useAppSelector((state) => state.debugPanel.isOpen);
+  const logs = useAppSelector(selectFilteredLogs);
 
-  const debugDisabled = !isApiDebugEnabled()
+  const debugDisabled = !isApiDebugEnabled();
 
   if (debugDisabled || isOpen) {
-    return null
+    return null;
   }
 
   const errorCount = logs.filter(
-    (log) => log.error || (log.responseStatus && log.responseStatus >= 400)
-  ).length
+    (log) => log.error || (log.responseStatus && log.responseStatus >= 400),
+  ).length;
 
   return (
     <Button
@@ -34,5 +37,5 @@ export function DebugPanelNub() {
         <span className="ml-2 text-xs text-destructive">({errorCount})</span>
       )}
     </Button>
-  )
+  );
 }

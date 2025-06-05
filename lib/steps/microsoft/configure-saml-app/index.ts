@@ -77,7 +77,10 @@ export const m7ConfigureSamlApp: StepDefinition = {
   inputs: M7_INPUTS,
   outputs: M7_OUTPUTS,
   requires: [STEP_IDS.CREATE_SAML_APP, STEP_IDS.INITIATE_SAML_PROFILE],
-  nextStep: { id: STEP_IDS.RETRIEVE_IDP_METADATA, description: "Retrieve IdP metadata" },
+  nextStep: {
+    id: STEP_IDS.RETRIEVE_IDP_METADATA,
+    description: "Retrieve IdP metadata",
+  },
   actions: ["Manual: Enter SAML settings in portal"],
   adminUrls: {
     configure: (outputs) => {

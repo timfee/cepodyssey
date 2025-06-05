@@ -1,38 +1,41 @@
-'use client';
+"use client";
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Card, CardFooter } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import type {
-  StepId,
-  WorkflowStepCardProps,
-  DisplayInput,
-  DisplayOutput,
-  DisplayApiAction,
-} from './workflow-types';
-import { ExternalLink } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useAppDispatch } from '@/hooks/use-redux';
-import { openAskAdminModal } from '@/lib/redux/slices/modals';
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card, CardFooter } from "@/components/ui/card";
+import { useAppDispatch } from "@/hooks/use-redux";
+import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import {
   markStepComplete as markStepCompleteAction,
   markStepIncomplete as markStepIncompleteAction,
-} from '@/lib/redux/slices/setup-steps';
+} from "@/lib/redux/slices/setup-steps";
+import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react";
+import { useMemo, useState } from "react";
+import type {
+  DisplayApiAction,
+  DisplayInput,
+  DisplayOutput,
+  StepId,
+  WorkflowStepCardProps,
+} from "./workflow-types";
 
-import { getStatusDisplayConfig, getAutomatabilityDisplayConfig } from './config';
-import { parseApiAction } from './utils';
-import { StepCardHeader } from './step-card-header';
-import { StepCardDetailsSection } from './step-card-details-section';
-import { StepCardInputsDisplay } from './step-card-inputs-display';
-import { StepCardOutputsDisplay } from './step-card-outputs-display';
-import { StepCardApiActionsDisplay } from './step-card-api-actions-display';
-import { StepCardFooterActions } from './step-card-footer-actions';
+import {
+  getAutomatabilityDisplayConfig,
+  getStatusDisplayConfig,
+} from "./config";
+import { StepCardApiActionsDisplay } from "./step-card-api-actions-display";
+import { StepCardDetailsSection } from "./step-card-details-section";
+import { StepCardFooterActions } from "./step-card-footer-actions";
+import { StepCardHeader } from "./step-card-header";
+import { StepCardInputsDisplay } from "./step-card-inputs-display";
+import { StepCardOutputsDisplay } from "./step-card-outputs-display";
+import { parseApiAction } from "./utils";
 
 export function WorkflowStepCard({
   step,
@@ -47,16 +50,16 @@ export function WorkflowStepCard({
 
   const statusDisplay = useMemo(
     () => getStatusDisplayConfig(step.status, step.completionType),
-    [step.status, step.completionType],
+    [step.status, step.completionType]
   );
   const automatabilityDisplay = useMemo(
     () => getAutomatabilityDisplayConfig(step.automatability),
-    [step.automatability],
+    [step.automatability]
   );
 
-  const isProcessing = step.status === 'in_progress';
-  const isCompleted = step.status === 'completed';
-  const isBlocked = step.status === 'blocked';
+  const isProcessing = step.status === "in_progress";
+  const isCompleted = step.status === "completed";
+  const isBlocked = step.status === "blocked";
 
   const canExecuteStep = useMemo(() => {
     if (!canRunGlobal || isProcessing || isCompleted || isBlocked) return false;
@@ -82,7 +85,7 @@ export function WorkflowStepCard({
 
   const displayApiActions: DisplayApiAction[] = useMemo(() => {
     return (step.actions ?? []).map((action) =>
-      parseApiAction(action, allOutputs),
+      parseApiAction(action, allOutputs)
     );
   }, [step.actions, allOutputs]);
 
@@ -96,11 +99,9 @@ export function WorkflowStepCard({
   return (
     <Card
       className={cn(
-        'w-full transition-all duration-200 ease-in-out shadow-sm hover:shadow-md',
-        isProcessing && 'animate-pulse',
-        isBlocked
-          ? 'opacity-70 border-border'
-          : 'hover:border-primary/50',
+        "w-full transition-all duration-200 ease-in-out shadow-sm hover:shadow-md",
+        isProcessing && "animate-pulse",
+        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50"
       )}
     >
       <Accordion
@@ -112,8 +113,8 @@ export function WorkflowStepCard({
         <AccordionItem value={`step-${step.id}`} className="border-b-0">
           <AccordionTrigger
             className={cn(
-              'p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-lg',
-              canExecuteStep && isHeaderHovered && 'bg-primary/5',
+              "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-lg",
+              canExecuteStep && isHeaderHovered && "bg-primary/5"
             )}
             onMouseEnter={() => setIsHeaderHovered(true)}
             onMouseLeave={() => setIsHeaderHovered(false)}
@@ -188,7 +189,8 @@ export function WorkflowStepCard({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      View Resource <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                      View Resource{" "}
+                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                     </a>
                   </Button>
                 </div>
@@ -199,8 +201,8 @@ export function WorkflowStepCard({
       </Accordion>
       <CardFooter
         className={cn(
-          'flex flex-wrap items-center justify-between gap-2 border-t p-3',
-          isBlocked ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-card',
+          "flex flex-wrap items-center justify-between gap-2 border-t p-3",
+          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card"
         )}
       >
         <StepCardFooterActions

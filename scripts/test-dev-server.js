@@ -60,13 +60,13 @@ const checkServer = setInterval(() => {
               process.exit(1);
             } else if (res.statusCode >= 500) {
               console.error(
-                `\n\n❌ Server returned error status: ${res.statusCode}`
+                `\n\n❌ Server returned error status: ${res.statusCode}`,
               );
               devServer.kill();
               process.exit(1);
             } else {
               console.log(
-                "\n\n✅ Dev server is running without runtime errors!"
+                "\n\n✅ Dev server is running without runtime errors!",
               );
               devServer.kill();
               process.exit(0);

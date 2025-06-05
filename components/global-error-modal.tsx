@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { useAppDispatch, useAppSelector } from '@/hooks/use-redux';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
   clearError,
   selectError,
   selectHasError,
-} from '@/lib/redux/slices/errors';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { AlertTriangleIcon, LogInIcon, ExternalLinkIcon } from 'lucide-react';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+} from "@/lib/redux/slices/errors";
+import { AlertTriangleIcon, ExternalLinkIcon, LogInIcon } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export function GlobalErrorModal() {
   const dispatch = useAppDispatch();
@@ -31,14 +31,14 @@ export function GlobalErrorModal() {
 
   const handleSignIn = async () => {
     await signOut({ redirect: false });
-    router.push('/login');
+    router.push("/login");
     handleDismiss();
   };
 
   const handleEnableAPI = () => {
     const urlMatch = error.message.match(/https:\/\/[^\s]+/);
     if (urlMatch) {
-      window.open(urlMatch[0], '_blank');
+      window.open(urlMatch[0], "_blank");
     }
     handleDismiss();
   };
@@ -49,13 +49,13 @@ export function GlobalErrorModal() {
     | {
         category?: string;
         code?: string;
-        provider?: 'google' | 'microsoft';
+        provider?: "google" | "microsoft";
       }
     | undefined;
 
   const isAuthError =
-    details?.category === 'auth' || details?.code === 'AUTH_EXPIRED';
-  const isAPIEnablementError = details?.code === 'API_NOT_ENABLED';
+    details?.category === "auth" || details?.code === "AUTH_EXPIRED";
+  const isAPIEnablementError = details?.code === "API_NOT_ENABLED";
 
   return (
     <Dialog open={hasError} onOpenChange={handleDismiss}>
@@ -64,25 +64,25 @@ export function GlobalErrorModal() {
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangleIcon className="h-5 w-5 text-destructive" />
             {isAuthError
-              ? 'Authentication Required'
+              ? "Authentication Required"
               : isAPIEnablementError
-                ? 'API Not Enabled'
-                : 'Error'}
+                ? "API Not Enabled"
+                : "Error"}
           </DialogTitle>
           <DialogDescription>
             {isAuthError
-              ? 'Your session has expired or is invalid.'
-              : 'An error occurred that requires your attention.'}
+              ? "Your session has expired or is invalid."
+              : "An error occurred that requires your attention."}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm">{error.message}</p>
           {isAuthError && details?.provider && (
             <p className="mt-2 text-sm text-muted-foreground">
-              Provider:{' '}
-              {details.provider === 'google'
-                ? 'Google Workspace'
-                : 'Microsoft Entra ID'}
+              Provider:{" "}
+              {details.provider === "google"
+                ? "Google Workspace"
+                : "Microsoft Entra ID"}
             </p>
           )}
         </div>

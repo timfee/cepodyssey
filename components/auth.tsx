@@ -33,10 +33,9 @@ export function AuthStatus() {
 
   const handleSignIn = (provider: "google" | "microsoft-entra-id") => {
     if (!isConfigReady) {
-      handleError(
-        new Error("Enter your domain and Tenant ID first"),
-        { stepTitle: "Authentication" },
-      );
+      handleError(new Error("Enter your domain and Tenant ID first"), {
+        stepTitle: "Authentication",
+      });
       return;
     }
     const options: { hd?: string; tenant?: string } = {};

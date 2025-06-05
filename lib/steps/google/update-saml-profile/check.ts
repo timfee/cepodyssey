@@ -107,10 +107,12 @@ export async function checkSamlProfileUpdate(
       message: `SAML Profile '${profile.displayName}' is correctly configured with IdP '${expectedIdpEntityId}'.`,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE).map((o) => ({
-          ...o,
-          value: outputs[o.key as keyof typeof outputs],
-        })),
+        producedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE).map(
+          (o) => ({
+            ...o,
+            value: outputs[o.key as keyof typeof outputs],
+          }),
+        ),
         inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
