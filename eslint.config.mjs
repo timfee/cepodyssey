@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import tsdoc from "eslint-plugin-tsdoc";
 import security from "eslint-plugin-security";
 import sonar from "eslint-plugin-sonarjs";
+import custom from "./eslint/custom-rules.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,11 +40,24 @@ const eslintConfig = [
   {
     plugins: {
       tsdoc,
+      custom,
     },
     rules: {
       "react-redux/useSelector-prefer-selectors": "off",
       "tsdoc/syntax": "warn",
       "sonarjs/cognitive-complexity": ["warn", 20],
+      "custom/no-hardcoded-url": "error",
+      "custom/no-raw-fetch": "error",
+      "custom/no-console-log": "warn",
+      "custom/no-hardcoded-admin-id": "warn",
+      "no-magic-numbers": ["warn", { "ignore": [-1, 0, 1] }],
+    },
+  },
+  {
+    files: ["**/__tests__/**", "test/**"],
+    rules: {
+      "custom/no-console-log": "off",
+      "no-magic-numbers": "off",
     },
   },
   {

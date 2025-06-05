@@ -2,6 +2,11 @@ import { withRetry } from "@/lib/api/utils";
 import { Logger } from "@/lib/utils/logger";
 import type { JWT } from "next-auth/jwt";
 import { config } from "@/lib/config";
+import { MICROSOFT_GLOBAL_ADMIN_ROLE_TEMPLATE_ID } from "@/lib/constants/role-ids";
+
+/** Microsoft Global Admin role template ID */
+export const MICROSOFT_GLOBAL_ADMIN_ROLE_ID =
+  "62e90394-69f5-4237-9190-012177145e10";
 
 export async function validateTokenPresence(token: JWT): Promise<{
   valid: boolean;
@@ -138,10 +143,11 @@ export async function checkMicrosoftAdmin(accessToken: string): Promise<boolean>
       data.value,
     );
 
-    const globalAdminRoleTemplateId = "62e90394-69f5-4237-9190-012177145e10";
     const isGlobalAdmin =
-      data.value?.some((role) => role.roleTemplateId === globalAdminRoleTemplateId) ??
-      false;
+      data.value?.some(
+        (role) => role.roleTemplateId === MICROSOFT_GLOBAL_ADMIN_ROLE_TEMPLATE_ID,
+      ) ?? false;
+
     Logger.debug(
       "[Auth]",
       `checkMicrosoftAdmin: Determined Global Admin: ${isGlobalAdmin}`,

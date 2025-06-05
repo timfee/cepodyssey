@@ -1,3 +1,7 @@
+/**
+ * Result returned from {@link validateRequiredOutputs} describing whether the
+ * current step inputs/configuration are sufficient.
+ */
 export interface ValidationResult {
   valid: boolean;
   error?: {
@@ -8,6 +12,9 @@ export interface ValidationResult {
 
 import type { StepContext } from "@/lib/types";
 
+/**
+ * Ensure prerequisite data is present before executing a step.
+ */
 export function validateRequiredOutputs(
   context: StepContext,
   requiredKeys: string[],

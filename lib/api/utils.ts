@@ -1,3 +1,6 @@
+/**
+ * Generic error used for API request failures.
+ */
 export class APIError extends Error {
   constructor(
     message: string,
@@ -9,6 +12,9 @@ export class APIError extends Error {
   }
 }
 
+/**
+ * Retry an async operation with exponential backoff.
+ */
 export async function withRetry<T>(
   operation: () => Promise<T>,
   retries = 3,
@@ -34,6 +40,9 @@ export async function withRetry<T>(
 }
 
 
+/**
+ * Parse the JSON body of a fetch response and throw standardized errors.
+ */
 export async function handleApiResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const errorBody = (await res.json().catch(() => ({}))) as {

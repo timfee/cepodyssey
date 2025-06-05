@@ -4,6 +4,7 @@ import { APIError } from "../../utils";
 import type { SamlMetadata } from "../types";
 import type { ApiLogger } from "../../api-logger";
 
+/** Fetch IdP SAML metadata for Entra ID applications. */
 export const saml = {
   async getMetadata(
     tenantId: string,

@@ -15,3 +15,13 @@ This project follows modern, resilient patterns for Next.js applications:
 - **Request-Scoped Logging**: API logging is handled by creating a new `ApiLogger` instance for every server request. This instance is passed down through the entire call chain (`context.logger`) to collect a complete trace of the operation, which is then returned to the client for debugging. This avoids the pitfalls of global state in a serverless environment.
 
 - **Centralized Error Handling**: All user-facing errors are handled through a global error modal driven by a centralized `error-manager.ts`. This provides a consistent user experience and keeps error-handling logic out of individual UI components.
+
+## Setup
+
+1. Install dependencies with `pnpm install`.
+2. Copy `.env.template` to `.env.local` and update values.
+3. Run `pnpm dev` to start the development server.
+
+Before committing, run `pnpm lint && pnpm test`.
+
+Run tests with `pnpm test` and lint with `pnpm lint`.

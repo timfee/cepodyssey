@@ -3,6 +3,10 @@ import crypto from 'crypto';
 import type { LogEntry } from './types';
 import { config } from "@/lib/config";
 
+/**
+ * In-memory log store used during server actions. Logs are keyed by a session
+ * cookie so multiple browser windows remain isolated.
+ */
 class ServerLogger {
   private static instance: ServerLogger;
   private logs = new Map<string, LogEntry[]>();
@@ -34,6 +38,7 @@ class ServerLogger {
     return sessionId;
   }
 
+  /** Record a log entry for the current session. */
   async log(entry: Omit<LogEntry, 'id' | 'timestamp'>): Promise<void> {
     const sessionId = await this.getSessionId();
     const fullEntry: LogEntry = {
@@ -56,6 +61,7 @@ class ServerLogger {
     this.emit(sessionId, fullEntry);
   }
 
+  /** Retrieve recent logs for the current session. */
   async getRecentLogs(count = 50): Promise<LogEntry[]> {
     const sessionId = await this.getSessionId();
     const sessionLogs = this.logs.get(sessionId) || [];
@@ -64,6 +70,9 @@ class ServerLogger {
 
   private clients = new Map<string, Set<ReadableStreamDefaultController>>();
 
+  /**
+   * Register an SSE client to receive log updates.
+   */
   subscribe(sessionId: string, controller: ReadableStreamDefaultController) {
     if (!this.clients.has(sessionId)) {
       this.clients.set(sessionId, new Set());
@@ -71,6 +80,7 @@ class ServerLogger {
     this.clients.get(sessionId)!.add(controller);
   }
 
+  /** Remove an SSE client subscription. */
   unsubscribe(sessionId: string, controller: ReadableStreamDefaultController) {
     this.clients.get(sessionId)?.delete(controller);
   }

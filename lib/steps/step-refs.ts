@@ -1,3 +1,4 @@
+/** Unique identifiers for each step used across the app. */
 export const STEP_IDS = {
   // Google steps
   CREATE_AUTOMATION_OU: "G-1",
@@ -22,4 +23,5 @@ export const STEP_IDS = {
   TEST_SSO: "M-10",
 } as const;
 
+/** Union type of all possible step identifiers. */
 export type StepId = (typeof STEP_IDS)[keyof typeof STEP_IDS];

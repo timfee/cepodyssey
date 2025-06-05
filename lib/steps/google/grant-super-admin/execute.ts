@@ -1,4 +1,5 @@
 import { googleApi } from "@/lib/api/google";
+import { GOOGLE_SUPER_ADMIN_ROLE_ID } from "@/lib/constants/role-ids";
 
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
@@ -54,7 +55,7 @@ export const executeGrantSuperAdmin = withExecutionHandling({
       return {
         success: true,
         message: `User '${email}' is already an admin.`,
-        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: GOOGLE_SUPER_ADMIN_ROLE_ID },
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
@@ -63,21 +64,26 @@ export const executeGrantSuperAdmin = withExecutionHandling({
       customerId,
       context.logger,
     );
-    if (roles.some((r) => r.roleId === "3")) {
+    if (roles.some((r) => r.roleId === GOOGLE_SUPER_ADMIN_ROLE_ID)) {
       return {
         success: true,
         message: `User '${email}' already has Super Admin role.`,
-        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+        outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: GOOGLE_SUPER_ADMIN_ROLE_ID },
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
 
-    await googleApi.roles.assign(email, "3", customerId, context.logger);
+    await googleApi.roles.assign(
+      email,
+      GOOGLE_SUPER_ADMIN_ROLE_ID,
+      customerId,
+      context.logger,
+    );
 
     return {
       success: true,
       message: `Super Admin role assigned to '${email}'.`,
-      outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
+      outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: GOOGLE_SUPER_ADMIN_ROLE_ID },
       resourceUrl: portalUrls.google.users.details(email),
     };
   },

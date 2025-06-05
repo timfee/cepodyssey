@@ -3,6 +3,7 @@ import { microsoftGraphUrls } from "../../url-builder";
 import { APIError } from "../../utils";
 import type { Application } from "../types";
 import type { ApiLogger } from "../../api-logger";
+/** Helpers for managing Microsoft Entra applications. */
 
 export const applications = {
   async list(filter?: string, logger?: ApiLogger): Promise<Application[]> {
