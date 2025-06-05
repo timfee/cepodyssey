@@ -25,7 +25,6 @@ import {
 import { cn } from "@/lib/utils"
 import { ApiLogCard } from "./api-log-card"
 import { toast } from "sonner"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useEffect } from "react"
 
 export function DebugPanel() {
@@ -59,46 +58,13 @@ export function DebugPanel() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [dispatch])
 
-  if (debugDisabled) {
+  if (debugDisabled || !isOpen) {
     return null
   }
 
   const showProdWarning =
     process.env.NODE_ENV === "production" &&
     process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-
-  if (!isOpen) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={() => dispatch(toggleDebugPanel())}
-              size="icon"
-              className={cn(
-                "fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg",
-                errorCount > 0 && "animate-pulse"
-              )}
-              variant={errorCount > 0 ? "destructive" : "default"}
-            >
-              <BugIcon className="h-6 w-6" />
-              {errorCount > 0 && (
-                <Badge 
-                  className="absolute -top-1 -right-1 h-6 w-6 p-0 flex items-center justify-center"
-                  variant="destructive"
-                >
-                  {errorCount}
-                </Badge>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>API Debug Panel {errorCount > 0 && `(${errorCount} errors)`}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 h-[60vh] flex flex-col bg-background border-t shadow-2xl">

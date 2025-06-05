@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { ModalManager } from "@/components/modal-manager";
 import { DebugPanel } from "@/components/debug-panel";
+import { DebugPanelNub } from "@/components/debug-panel-nub";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangleIcon } from "lucide-react";
@@ -56,6 +57,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <ModalManager />
+          <DebugPanelNub />
           <DebugPanel />
           <Toaster richColors />
         </Providers>
