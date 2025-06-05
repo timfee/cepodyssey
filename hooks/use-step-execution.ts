@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './use-redux';
-import { updateStep } from '@/lib/redux/slices/setup-steps';
+import { updateStep, clearCheckTimestamp } from '@/lib/redux/slices/setup-steps';
 import { addOutputs } from '@/lib/redux/slices/app-config';
 import { executeStepAction } from '@/app/actions/step-actions';
 import type { StepId } from '@/lib/steps/step-refs';
@@ -20,6 +20,7 @@ export function useStepExecution() {
         return;
       }
 
+      dispatch(clearCheckTimestamp(stepId));
       dispatch(
         updateStep({
           id: stepId,
@@ -55,6 +56,7 @@ export function useStepExecution() {
                 completedAt: new Date().toISOString(),
                 ...(result.outputs || {}),
               },
+              lastCheckedAt: new Date().toISOString(),
             })
           );
           toast.success(`${definition.title}: Success!`, { id: toastId });
@@ -66,6 +68,7 @@ export function useStepExecution() {
               error: result.error?.message,
               message: result.message,
               metadata: result.outputs || {},
+              lastCheckedAt: new Date().toISOString(),
             })
           );
 
@@ -80,13 +83,14 @@ export function useStepExecution() {
         }
       } catch (error) {
         toast.dismiss(toastId);
-        dispatch(
-          updateStep({
-            id: stepId,
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Unknown error',
-          })
-        );
+      dispatch(
+        updateStep({
+          id: stepId,
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          lastCheckedAt: new Date().toISOString(),
+        })
+      );
 
         ErrorManager.dispatch(error, { stepId, stepTitle: definition.title });
       }

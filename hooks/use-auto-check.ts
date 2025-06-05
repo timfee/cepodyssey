@@ -1,51 +1,73 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppSelector } from "./use-redux";
-import { Logger } from "@/lib/utils/logger";
-import type { StepId } from "@/lib/steps/step-refs";
 import { allStepDefinitions } from "@/lib/steps";
+import type { StepId } from "@/lib/steps/step-refs";
+import { debounce } from "@/lib/utils";
 
 /**
- * Automatically runs step checks when configuration is available.
- * Only executes for steps that have a check function defined.
+ * Automatically checks step status when configuration is available.
+ * Each step is only checked once per session unless manually refreshed.
  */
 export function useAutoCheck(
   executeCheck: (stepId: StepId) => Promise<void>,
-): void {
+) {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
 
-  const runChecks = useCallback(async () => {
-    if (!appConfig.domain || !appConfig.tenantId) return;
+  const checkedSteps = useRef(new Set<StepId>());
+  const isCheckingRef = useRef(false);
+  const [isChecking, setIsChecking] = useState(false);
 
-    Logger.info("[Hook]", "Running auto-checks for checkable steps");
+  const runChecks = useCallback(
+    async (force = false) => {
+      if (isCheckingRef.current) return;
+      if (!appConfig.domain || !appConfig.tenantId) return;
 
-    // Get all checkable steps (those with a check function)
-    const checkableSteps = allStepDefinitions
-      .filter((step) => step.check !== undefined)
-      .map((step) => step.id as StepId);
+      isCheckingRef.current = true;
+      setIsChecking(true);
 
-    for (const stepId of checkableSteps) {
-      const status = stepsStatus[stepId];
+      const checkableSteps = allStepDefinitions
+        .filter((s) => s.check)
+        .map((s) => s.id as StepId);
 
-      // Skip if already checking or in progress
-      if (status?.status === "in_progress") {
-        continue;
+      for (const stepId of checkableSteps) {
+        const status = stepsStatus[stepId];
+        const lastChecked = status?.lastCheckedAt
+          ? new Date(status.lastCheckedAt).getTime()
+          : 0;
+        const recentlyChecked = Date.now() - lastChecked < 30_000 && !force;
+        const shouldCheck =
+          force ||
+          !checkedSteps.current.has(stepId) ||
+          status?.status === "failed" ||
+          status?.status === "pending";
+
+        if (shouldCheck && !recentlyChecked) {
+          await executeCheck(stepId);
+          checkedSteps.current.add(stepId);
+          await new Promise((r) => setTimeout(r, 300));
+        }
       }
 
-      try {
-        await executeCheck(stepId);
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      } catch (error) {
-        Logger.error("[Hook]", `Check failed for ${stepId}`, error);
-      }
-    }
-  }, [appConfig.domain, appConfig.tenantId, stepsStatus, executeCheck]);
+      isCheckingRef.current = false;
+      setIsChecking(false);
+    },
+    [executeCheck, appConfig.domain, appConfig.tenantId, stepsStatus],
+  );
 
-  // Run checks whenever domain/tenantId changes or on mount
+  const debouncedRunChecks = useRef(debounce(() => runChecks(false), 5000));
+
   useEffect(() => {
     if (appConfig.domain && appConfig.tenantId) {
-      const timer = setTimeout(runChecks, 1000);
-      return () => clearTimeout(timer);
+      debouncedRunChecks.current();
     }
-  }, [appConfig.domain, appConfig.tenantId, runChecks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appConfig.domain, appConfig.tenantId]);
+
+  const manualRefresh = useCallback(async () => {
+    checkedSteps.current.clear();
+    await runChecks(true);
+  }, [runChecks]);
+
+  return { manualRefresh, isChecking };
 }

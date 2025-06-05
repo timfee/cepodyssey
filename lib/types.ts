@@ -6,6 +6,8 @@ export interface StepStatusInfo {
   completionType?: "server-verified" | "user-marked";
   error?: string | null;
   message?: string;
+  /** Timestamp of the most recent check run */
+  lastCheckedAt?: string;
   metadata?: {
     completedAt?: string;
     preExisting?: boolean;

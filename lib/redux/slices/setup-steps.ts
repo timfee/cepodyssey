@@ -48,10 +48,27 @@ export const setupStepsSlice = createSlice({
       };
       state.userCompletions[id] = false;
     },
+    clearCheckTimestamp(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      if (state.steps[id]) {
+        state.steps[id].lastCheckedAt = undefined;
+      }
+    },
+    clearAllCheckTimestamps(state) {
+      Object.values(state.steps).forEach((step) => {
+        step.lastCheckedAt = undefined;
+      });
+    },
   },
 });
 
-export const { initializeSteps, updateStep, markStepComplete, markStepIncomplete } =
-  setupStepsSlice.actions;
+export const {
+  initializeSteps,
+  updateStep,
+  markStepComplete,
+  markStepIncomplete,
+  clearCheckTimestamp,
+  clearAllCheckTimestamps,
+} = setupStepsSlice.actions;
 
 export default setupStepsSlice.reducer;
