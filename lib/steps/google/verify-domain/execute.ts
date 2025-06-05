@@ -11,8 +11,21 @@ export const executeVerifyDomain = withExecutionHandling({
   requiredOutputs: [],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
-    const user = await google.getLoggedInUser(token, context.logger);
-    await google.addDomain(token, context.domain, context.logger);
+
+    const validation = validateRequiredOutputs(context, []);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
+    const user = await google.getLoggedInUser(token);
+    const result = await google.addDomain(token, context.domain);
+    if (typeof result === "object" && "alreadyExists" in result) {
+      return {
+        success: true,
+        message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
+        resourceUrl: portalUrls.google.domains.manage(context.domain),
+        outputs: { [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]: user.customerId },
+      };
+    }
 
     return {
       success: true,

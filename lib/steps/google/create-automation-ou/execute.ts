@@ -11,9 +11,30 @@ export const executeCreateAutomationOu = withExecutionHandling({
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
-    const ouName = 'Automation';
-    const parentPath = '/';
-    const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string;
+
+    const validation = validateRequiredOutputs(
+      context,
+      [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID],
+      STEP_IDS.VERIFY_DOMAIN
+    );
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
+    const ouName = "Automation";
+    const parentPath = "/";
+    const customerId = (
+      context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string }
+    )?.customerId;
+    if (!customerId) {
+      return {
+        success: false,
+        error: {
+          message:
+            "Customer ID not found. Please ensure the domain verification step (G-4) has been completed successfully.",
+          code: "MISSING_DEPENDENCY",
+        },
+      };
+    }
 
     const result = await google.createOrgUnit(
       token,

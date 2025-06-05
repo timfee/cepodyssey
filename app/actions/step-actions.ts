@@ -2,6 +2,7 @@
 
 import { auth } from "@/app/(auth)/auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { ApiLogger } from "@/lib/api/api-logger";
 import { checkStep, executeStep } from "@/lib/steps/registry";
 import type { StepId } from "@/lib/steps/step-refs";
 import type {
@@ -65,42 +66,48 @@ export async function executeStepCheck(
 
 export async function executeStepAction(
   stepId: StepId,
-  context: StepContext
+  context: StepContext,
 ): Promise<StepExecutionResult> {
+  const logger = new ApiLogger();
+  context.logger = logger;
+
   try {
     const sessionValidation = await validateSession();
     if (!sessionValidation.valid && sessionValidation.error) {
+      logger.addLog('[StepAction] Session validation failed.');
       return {
         success: false,
         error: {
-          message: sessionValidation.error.message || "Authentication required",
-          code: "AUTH_EXPIRED",
+          message:
+            sessionValidation.error.message || 'Authentication required',
+          code: 'AUTH_EXPIRED',
         },
         outputs: sessionValidation.error.outputs,
+        apiLogs: logger.getLogs(),
       };
     }
 
-    // The registry now handles logger creation and log attachment
-    return await executeStep(stepId, context);
+    const result = await executeStep(stepId, context);
+    result.apiLogs = logger.getLogs();
+    return result;
   } catch (error) {
-    console.error(
-      `[StepAction] Unhandled exception for step ${stepId}:`,
-      error
-    );
-    // This catch block ensures we ALWAYS return a valid StepExecutionResult
+    logger.addLog(`[StepAction] Unhandled exception for step ${stepId}: ${error}`);
+    const isAuthError = isAuthenticationError(error);
     return {
       success: false,
       error: {
         message:
           error instanceof Error
             ? error.message
-            : "Execution failed unexpectedly.",
-        code: "EXECUTION_ERROR",
+            : 'An unknown error occurred.',
+        code: isAuthError ? 'AUTH_EXPIRED' : 'EXECUTION_ERROR',
       },
       outputs: {
-        errorCode: "EXECUTION_ERROR",
+        errorCode: isAuthError ? 'AUTH_EXPIRED' : 'EXECUTION_ERROR',
         errorMessage: String(error),
+        errorProvider: isAuthError ? error.provider : undefined,
       },
+      apiLogs: logger.getLogs(),
     };
   }
 }

@@ -14,10 +14,33 @@ export const executeGrantSuperAdmin = withExecutionHandling({
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
+
+    const validation = validateRequiredOutputs(context, [
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
+    ]);
+    if (!validation.valid) {
+      return { success: false, error: validation.error };
+    }
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
     const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string;
+    if (!email) {
+      return {
+        success: false,
+        error: {
+          message: "Provisioning user email missing.",
+          code: "MISSING_DEPENDENCY",
+        },
+      };
+    }
+    if (!customerId) {
+      return {
+        success: false,
+        error: { message: "Customer ID not found in previous step." },
+      };
+    }
+    const user = await google.getUser(token, email);
 
-    const user = await google.getUser(token, email, context.logger);
     if (user?.isAdmin) {
       return {
         success: true,

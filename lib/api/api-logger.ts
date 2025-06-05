@@ -8,6 +8,18 @@ export class ApiLogger {
     return [...this.logs];
   }
 
+  /**
+   * Add a plain text log entry for debugging purposes.
+   */
+  addLog(message: string) {
+    this.logs.push({
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      method: 'LOG',
+      url: message,
+    });
+  }
+
   logRequest(url: string, init?: RequestInit): string {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const provider = this.detectProvider(url);
