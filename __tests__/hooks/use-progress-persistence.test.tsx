@@ -31,7 +31,7 @@ describe('useProgressPersistence', () => {
     renderHook(() => useProgressPersistence(), { wrapper })
     await waitFor(() => expect(loadProgress).toHaveBeenCalledWith('example.com'))
     expect(store.getState().app.steps.A.status).toBe(StepStatus.COMPLETED)
-    expect((store.getState().app.outputs as any).x).toBe(1)
+    expect((store.getState().app.outputs as Record<string, unknown>).x).toBe(1)
   })
 
   it('initializes pending steps when no persisted data', async () => {

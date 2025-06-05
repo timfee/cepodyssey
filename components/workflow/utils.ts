@@ -1,5 +1,10 @@
 import type { DisplayApiAction } from "./workflow-types";
 
+/**
+ * Convert a workflow action string (e.g. "GET /api/foo") into a structured
+ * object. Output placeholders like `{id}` are replaced with values from
+ * `outputs` when available.
+ */
 export function parseApiAction(
   action: string,
   outputs: Record<string, unknown>,
@@ -29,6 +34,10 @@ export function parseApiAction(
   return { method, path, isManual };
 }
 
+/**
+ * Render a value for display in the UI, truncating long strings and
+ * safely stringifying objects.
+ */
 export function formatValue(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") {

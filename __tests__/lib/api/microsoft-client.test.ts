@@ -1,9 +1,9 @@
 import { APIError } from "@/lib/api/utils"
-import { createApiClient } from '@/lib/api/base/api-client'
 import "@/lib/api/microsoft/client"
 import { wrapAuthError } from '@/lib/api/auth-interceptor'
 
-var passedConfig: any
+// eslint-disable-next-line no-var
+var passedConfig: unknown
 jest.mock('@/lib/api/base/api-client', () => ({
   createApiClient: jest.fn((cfg) => { passedConfig = cfg; return { get: jest.fn() } })
 }))

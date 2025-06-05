@@ -1,6 +1,11 @@
 import type { DefaultSession, Profile as NextAuthProfile } from "next-auth";
 import type { JWT as NextAuthJWT } from "next-auth/jwt";
 
+/**
+ * Extend NextAuth's default types with additional fields used during the
+ * multi-provider authentication flow.
+ */
+
 declare module "next-auth" {
   interface Session {
     user: DefaultSession["user"];

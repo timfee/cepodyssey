@@ -34,7 +34,7 @@ describe('api utils', () => {
 })
   it('handleApiResponse handles 204', async () => {
     const res = new Response(null, { status: 204 })
-    const data = await handleApiResponse<{ }>(res)
+    const data = await handleApiResponse<object>(res)
     expect(data).toEqual({})
   })
 

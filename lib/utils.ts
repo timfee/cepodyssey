@@ -51,12 +51,6 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 /**
- * Constructs a Google Admin Console URL for a SAML profile
- * @param profileFullName - The full resource name (e.g., "inboundSamlSsoProfiles/12345")
- * @returns The properly formatted Admin Console URL
- */
-
-/**
  * Determine if API debug logging is enabled.
  * Defaults to true in development unless explicitly disabled.
  */

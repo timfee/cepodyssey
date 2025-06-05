@@ -35,6 +35,9 @@ const buttonVariants = cva(
   },
 );
 
+/**
+ * Generic button component with Radix slot support and variant styling.
+ */
 function Button({
   className,
   variant,
@@ -45,6 +48,7 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
+  // Allow rendering as a custom element when `asChild` is true
   const Comp = asChild ? Slot : "button";
 
   return (

@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { LogEntry } from '@/lib/logging/types';
 import { isApiDebugEnabled } from '@/lib/utils';
 
+/**
+ * Connects to the SSE log stream and exposes recent server logs for the
+ * debug panel.
+ */
 export function useDebugLogger() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);

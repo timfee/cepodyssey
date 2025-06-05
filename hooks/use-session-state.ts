@@ -9,6 +9,7 @@ import {
 } from "@/lib/redux/slices/app-state";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 
+/** Details about the user's current authentication state. */
 interface SessionState {
   isAuthenticated: boolean;
   hasGoogleAuth: boolean;
@@ -16,6 +17,10 @@ interface SessionState {
   isLoading: boolean;
 }
 
+/**
+ * Tracks authentication status across both providers and keeps Redux
+ * state in sync with the NextAuth session.
+ */
 export function useSessionState(): SessionState {
   const { data: session, status, update } = useSession();
   const dispatch = useAppDispatch();

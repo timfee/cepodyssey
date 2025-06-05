@@ -10,6 +10,10 @@ import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 
+/**
+ * Provides a function for executing steps and updating Redux with the
+ * resulting status and outputs.
+ */
 export function useStepExecution() {
   const dispatch = useAppDispatch();
   const domain = useAppSelector((state) => state.app.domain);

@@ -3,6 +3,10 @@ import { Provider, type ProviderType } from "@/lib/constants/enums";
 import { ApiLogger } from "./api-logger";
 import { APIError, withRetry } from "./utils";
 
+/**
+ * Custom error used when API requests fail due to expired or missing
+ * authentication. The original error is preserved for debugging.
+ */
 export class AuthenticationError extends APIError {
   constructor(
     message: string,
@@ -34,6 +38,9 @@ const AUTH_ERROR_PATTERNS = {
   ],
 } as const;
 
+/**
+ * Type guard for detecting authentication-related failures.
+ */
 export function isAuthenticationError(
   error: unknown
 ): error is AuthenticationError {
@@ -66,6 +73,10 @@ export function isAuthenticationError(
   return false;
 }
 
+/**
+ * Normalize any error into an `AuthenticationError` instance so callers
+ * can handle them consistently.
+ */
 export function wrapAuthError(
   error: unknown,
   provider: ProviderType
@@ -83,6 +94,10 @@ export function wrapAuthError(
     error
   );
 }
+/**
+ * Wrapper around `fetch` that automatically attaches the user's access
+ * token and logs requests and responses.
+ */
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},

@@ -23,6 +23,10 @@ import {
 } from "@/lib/redux/slices/ui-state";
 import { useSession } from "next-auth/react";
 
+/**
+ * Modal allowing non-admin users to request assistance from an
+ * administrator for a specific step.
+ */
 export function AskAdminModal() {
   const dispatch = useAppDispatch();
   const { isOpen, step } = useAppSelector(selectAskAdminModal);

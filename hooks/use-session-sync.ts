@@ -10,6 +10,10 @@ import {
   setTenantId,
 } from "@/lib/redux/slices/app-state";
 
+/**
+ * Periodically validates the user session and syncs domain and tenant
+ * information from the session into Redux.
+ */
 export function useSessionSync() {
   const { data: session, status, update } = useSession();
   const router = useRouter();

@@ -3,6 +3,10 @@ import { appStateSlice } from "./slices/app-state";
 import { uiStateSlice } from "./slices/ui-state";
 import { config } from "@/lib/config";
 
+/**
+ * Central Redux store instance. DevTools and runtime checks are enabled
+ * unless the app is running in production.
+ */
 export const store = configureStore({
   reducer: {
     app: appStateSlice.reducer,
@@ -17,5 +21,7 @@ export const store = configureStore({
     }),
 });
 
+/** Root state type derived from the store. */
 export type RootState = ReturnType<typeof store.getState>;
+/** Dispatch type for useAppDispatch hook. */
 export type AppDispatch = typeof store.dispatch;

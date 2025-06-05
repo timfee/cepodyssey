@@ -1,10 +1,17 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 
+/**
+ * Options for {@link createStepCheck} specifying required outputs and the
+ * wrapped implementation.
+ */
 interface CreateCheckOptions {
   requiredOutputs: string[];
   checkLogic: (context: StepContext) => Promise<StepCheckResult>;
 }
 
+/**
+ * Wrap a step's `check` function with common validation logic.
+ */
 export function createStepCheck({
   requiredOutputs,
   checkLogic,

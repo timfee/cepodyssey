@@ -5,6 +5,7 @@ import { APIError } from "../../utils";
 import type { Application, ServicePrincipal } from "../types";
 import type { ApiLogger } from "../../api-logger";
 
+/** Graph templates API helpers. */
 export const templates = {
   async createEnterpriseApp(
     templateId: string,

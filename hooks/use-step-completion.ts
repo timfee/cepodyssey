@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { secureStorage } from "@/lib/storage";
 
+/**
+ * Tracks completion state for a step using local storage so progress persists
+ * across sessions.
+ *
+ * @param stepId - Unique identifier of the step
+ * @param initialCompleted - Whether the step should start as completed
+ * @returns Tuple of completion flag and setter
+ */
 export function useStepCompletion(
   stepId: string,
   initialCompleted: boolean = false,

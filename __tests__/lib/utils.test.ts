@@ -1,6 +1,4 @@
 import { validateRequiredOutputs, debounce, isApiDebugEnabled } from '@/lib/utils'
-import { config } from '@/lib/config'
-
 jest.mock('@/lib/config', () => ({ config: { NODE_ENV: 'test', NEXT_PUBLIC_ENABLE_API_DEBUG: 'false' } }))
 
 describe('utils', () => {

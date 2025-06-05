@@ -11,11 +11,17 @@ import type {
   StepDefinition,
 } from "@/lib/types";
 
+/**
+ * Dynamically load a step definition by ID.
+ */
 async function getStep(stepId: StepId): Promise<StepDefinition | undefined> {
   const { allStepDefinitions } = await import("@/lib/steps");
   return allStepDefinitions.find((s) => s.id === stepId);
 }
 
+/**
+ * Ensure the current NextAuth session is valid before executing a step.
+ */
 async function validateSession(): Promise<{
   valid: boolean;
   error?: StepCheckResult;
@@ -38,6 +44,9 @@ async function validateSession(): Promise<{
   return { valid: true };
 }
 
+/**
+ * Invoke the `check` function of a step in a validated session context.
+ */
 export async function executeStepCheck(
   stepId: StepId,
   context: StepContext,
@@ -83,6 +92,9 @@ export async function executeStepCheck(
   }
 }
 
+/**
+ * Execute the automation logic for a step and return the structured result.
+ */
 export async function executeStepAction(
   stepId: StepId,
   context: StepContext,
