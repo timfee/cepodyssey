@@ -49,16 +49,16 @@ export interface StepStatusInfo {
 // Centralized constants for step data flow
 export const OUTPUT_KEYS = {
   // Google Outputs
-  AUTOMATION_OU_ID: "g1AutomationOuId",
-  SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
-  GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
+  AUTOMATION_OU_ID: "googleOuId",
+  SERVICE_ACCOUNT_EMAIL: "googleUserEmail",
+  GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
 
   // Microsoft Outputs
-  PROVISIONING_APP_ID: "m1ProvisioningAppId",
-  FLAG_M3_PROV_CREDS_CONFIGURED: "flagM3ProvCredsConfigured",
+  PROVISIONING_APP_ID: "msAppId",
+  FLAG_M3_PROV_CREDS_CONFIGURED: "msCredsConfigured",
 
   // Cross-System Outputs
-  IDP_ENTITY_ID: "m8IdpEntityId",
+  IDP_ENTITY_ID: "msIdpEntityId",
 } as const;
 ```
 

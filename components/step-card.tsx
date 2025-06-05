@@ -15,12 +15,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAppDispatch } from "@/hooks/use-redux";
+import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import {
   markStepComplete,
   markStepIncomplete,
 } from "@/lib/redux/slices/setup-steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
-import { openAskAdminModal } from "@/lib/redux/slices/modals";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -142,7 +142,7 @@ const getProviderColorClass = (provider: string): string => {
 // Parse action string and substitute parameters using available outputs
 function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>,
+  outputs: Record<string, unknown>
 ): { method: string; path: string; isManual: boolean } {
   let trimmed = action.trim();
   let isManual = false;
@@ -217,11 +217,11 @@ export function StepCard({
 
   const requiredInputs = useMemo(
     () => getStepInputs(step.id as StepId),
-    [step.id],
+    [step.id]
   );
   const producedOutputs = useMemo(
     () => getStepOutputs(step.id as StepId),
-    [step.id],
+    [step.id]
   );
 
   const parsedActions = useMemo(() => {
@@ -251,7 +251,7 @@ export function StepCard({
           step.status === "in_progress" && "animate-pulse",
           isBlocked || isProcessing
             ? "opacity-70 border-border"
-            : "hover:border-primary/50",
+            : "hover:border-primary/50"
         )}
       >
         <Accordion
@@ -264,7 +264,7 @@ export function StepCard({
             <AccordionTrigger
               className={cn(
                 "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-md",
-                canExecute && isHeaderHovered && "bg-primary/5",
+                canExecute && isHeaderHovered && "bg-primary/5"
               )}
               onMouseEnter={() => setIsHeaderHovered(true)}
               onMouseLeave={() => setIsHeaderHovered(false)}
@@ -278,7 +278,7 @@ export function StepCard({
                           className={cn(
                             "h-5 w-5",
                             statusInfo.colorClass,
-                            step.status === "in_progress" && "animate-spin",
+                            step.status === "in_progress" && "animate-spin"
                           )}
                         />
                       </TooltipTrigger>
@@ -317,7 +317,7 @@ export function StepCard({
                           "flex items-center gap-1 cursor-default",
                           autoInfo.badgeClasses
                             ? autoInfo.badgeClasses
-                            : autoInfo.baseColorClass,
+                            : autoInfo.baseColorClass
                         )}
                       >
                         <AutoIcon
@@ -325,7 +325,7 @@ export function StepCard({
                             "h-3.5 w-3.5",
                             autoInfo.badgeClasses
                               ? "text-warning-foreground"
-                              : autoInfo.baseColorClass,
+                              : autoInfo.baseColorClass
                           )}
                         />
                         <span className="font-medium border-b border-dashed border-muted-foreground/70 pb-px">
@@ -345,7 +345,7 @@ export function StepCard({
                       <span
                         className={cn(
                           "font-medium border-b border-dashed border-muted-foreground/70 pb-px",
-                          statusInfo.colorClass,
+                          statusInfo.colorClass
                         )}
                       >
                         {statusInfo.label}
@@ -404,7 +404,7 @@ export function StepCard({
                             <code
                               className={cn(
                                 "font-mono text-xs rounded px-1 py-0.5 break-all",
-                                val != null ? "bg-slate-100" : "bg-muted",
+                                val != null ? "bg-slate-100" : "bg-muted"
                               )}
                               title={typeof val === "string" ? val : undefined}
                             >
@@ -442,7 +442,7 @@ export function StepCard({
                             <code
                               className={cn(
                                 "font-mono text-xs rounded px-1 py-0.5 break-all",
-                                val != null ? "bg-slate-100" : "bg-muted",
+                                val != null ? "bg-slate-100" : "bg-muted"
                               )}
                               title={typeof val === "string" ? val : undefined}
                             >
@@ -465,7 +465,7 @@ export function StepCard({
                           <span
                             className={cn(
                               "font-mono text-xs",
-                              getMethodColor(action.method),
+                              getMethodColor(action.method)
                             )}
                           >
                             {action.method}
@@ -522,7 +522,7 @@ export function StepCard({
         <CardFooter
           className={cn(
             "p-4 border-t flex flex-wrap gap-2 items-center",
-            isBlocked ? "bg-slate-50" : "bg-card",
+            isBlocked ? "bg-slate-50" : "bg-card"
           )}
         >
           {isBlocked ? (
@@ -600,7 +600,7 @@ export function StepCard({
                   size="sm"
                   onClick={() =>
                     dispatch(
-                      markStepComplete({ id: step.id, isUserMarked: true }),
+                      markStepComplete({ id: step.id, isUserMarked: true })
                     )
                   }
                   disabled={isProcessing}

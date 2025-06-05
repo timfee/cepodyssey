@@ -130,19 +130,19 @@ All data exchange between steps uses predefined output keys:
 ```typescript
 OUTPUT_KEYS = {
   // Google Outputs
-  AUTOMATION_OU_ID: "g1AutomationOuId",
-  GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
-  GOOGLE_SAML_ACS_URL: "g5GoogleSamlAcsUrl",
+  AUTOMATION_OU_ID: "googleOuId",
+  GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
+  GOOGLE_SAML_ACS_URL: "googleSamlAcsUrl",
 
   // Microsoft Outputs
-  PROVISIONING_APP_ID: "m1ProvisioningAppId",
-  PROVISIONING_SP_OBJECT_ID: "m1ProvisioningSpObjectId",
-  SAML_SSO_APP_ID: "m6SamlSsoAppId",
+  PROVISIONING_APP_ID: "msAppId",
+  PROVISIONING_SP_OBJECT_ID: "msSpObjectId",
+  SAML_SSO_APP_ID: "msSamlAppId",
 
   // Cross-System Outputs
-  IDP_ENTITY_ID: "m8IdpEntityId",
-  IDP_SSO_URL: "m8IdpSsoUrl",
-  IDP_CERTIFICATE_BASE64: "m8IdpCertificateBase64",
+  IDP_ENTITY_ID: "msIdpEntityId",
+  IDP_SSO_URL: "msIdpSsoUrl",
+  IDP_CERTIFICATE_BASE64: "msIdpCertBase64",
 };
 ```
 

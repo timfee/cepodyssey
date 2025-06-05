@@ -139,8 +139,12 @@ export interface StepDefinition {
 
   // Resource links
   adminUrls?: {
-    configure?: string | ((outputs: Record<string, unknown>) => string | null | undefined);
-    verify?: string | ((outputs: Record<string, unknown>) => string | null | undefined);
+    configure?:
+      | string
+      | ((outputs: Record<string, unknown>) => string | null | undefined);
+    verify?:
+      | string
+      | ((outputs: Record<string, unknown>) => string | null | undefined);
   };
 
   // Server functions
@@ -161,38 +165,38 @@ export type ManagedStep = StepDefinition & StepStatusInfo;
  */
 export const OUTPUT_KEYS = {
   // Google - G-1: Create 'Automation' Organizational Unit
-  AUTOMATION_OU_PATH: "g1AutomationOuPath",
-  AUTOMATION_OU_ID: "g1AutomationOuId",
+  GOOGLE_OU_PATH: "googleOuPath",
+  GOOGLE_OU_ID: "googleOuId",
   // Google - G-2: Create Provisioning User
-  SERVICE_ACCOUNT_EMAIL: "g2ServiceAccountEmail",
-  SERVICE_ACCOUNT_ID: "g2ServiceAccountId",
-  SERVICE_ACCOUNT_PASSWORD: "g2ServiceAccountPassword",
+  GOOGLE_USER_EMAIL: "googleUserEmail",
+  GOOGLE_USER_ID: "googleUserId",
+  GOOGLE_USER_PASSWORD: "googleUserPassword",
   // Google - G-3: Grant Admin Privileges to Provisioning User
-  SUPER_ADMIN_ROLE_ID: "g3SuperAdminRoleId",
+  GOOGLE_SUPERADMIN_ROLE_ID: "googleSuperAdminRoleId",
   // Google - G-5: Initiate Google SAML Profile
-  GOOGLE_SAML_PROFILE_NAME: "g5GoogleSsoProfileName",
-  GOOGLE_SAML_PROFILE_FULL_NAME: "g5GoogleSsoProfileFullName",
-  // SP configuration returned from Google (entityId, ACS URI)
-  GOOGLE_SAML_SP_ENTITY_ID: "g5GoogleSamlSpEntityId",
-  GOOGLE_SAML_ACS_URL: "g5GoogleSamlAcsUrl",
-  // Microsoft - M-1: Create Provisioning App
-  PROVISIONING_APP_ID: "m1ProvisioningAppId", // App (Client) ID
-  PROVISIONING_APP_OBJECT_ID: "m1ProvisioningAppObjectId", // Application Object ID
-  PROVISIONING_SP_OBJECT_ID: "m1ProvisioningSpObjectId", // Service Principal Object ID
-  // Microsoft - M-3: Authorize Provisioning Connection
-  PROVISIONING_JOB_ID: "m3ProvisioningJobId",
+  GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
+  GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
+  // Google SAML Service Provider config
+  GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
+  GOOGLE_SAML_SP_ACS_URL: "googleSamlAcsUrl",
+  // Microsoft - M-1: Create Enterprise App
+  MS_APP_ID: "msAppId",
+  MS_APP_OBJECT_ID: "msAppObjectId",
+  MS_SP_OBJECT_ID: "msSpObjectId",
+  // Microsoft - M-3: Authorize Enterprise App
+  MS_JOB_ID: "msJobId",
   // Microsoft - M-6: Create SAML SSO App
-  SAML_SSO_APP_ID: "m6SamlSsoAppId", // App (Client) ID
-  SAML_SSO_APP_OBJECT_ID: "m6SamlSsoAppObjectId", // Application Object ID
-  SAML_SSO_SP_OBJECT_ID: "m6SamlSsoSpObjectId", // Service Principal Object ID
-  // Microsoft - M-8: Retrieve Azure IdP Metadata
-  IDP_CERTIFICATE_BASE64: "m8IdpCertificateBase64",
-  IDP_SSO_URL: "m8IdpSsoUrl",
-  IDP_ENTITY_ID: "m8IdpEntityId",
-  // Flags set by execution steps to indicate completion of complex configurations
-  FLAG_M2_PROV_APP_PROPS_CONFIGURED: "flagM2ProvAppPropsConfigured",
-  FLAG_M3_PROV_CREDS_CONFIGURED: "flagM3ProvCredsConfigured",
-  FLAG_M4_PROV_MAPPINGS_CONFIGURED: "flagM4ProvMappingsConfigured",
-  FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "flagM7SamlAppSettingsConfigured",
-  FLAG_M10_SSO_TESTED: "flagM10SsoTested",
+  MS_SAML_APP_ID: "msSamlAppId",
+  MS_SAML_APP_OBJECT_ID: "msSamlAppObjectId",
+  MS_SAML_SP_OBJECT_ID: "msSamlSpObjectId",
+  // Microsoft - M-8: Retrieve IdP Metadata
+  MS_IDP_CERT_BASE64: "msIdpCertBase64",
+  MS_IDP_SSO_URL: "msIdpSsoUrl",
+  MS_IDP_ENTITY_ID: "msIdpEntityId",
+  // Flags for configuration steps
+  MS_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
+  MS_CREDS_CONFIGURED: "msCredsConfigured",
+  MS_MAPPINGS_CONFIGURED: "msMappingsConfigured",
+  MS_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
+  MS_SSO_TESTED: "msSsoTested",
 };
