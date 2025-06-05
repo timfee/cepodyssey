@@ -22,20 +22,20 @@ This project follows modern Next.js App Router conventions:
 
 ### Environment Setup
 
-1.  **Install Dependencies:**
+1. **Install Dependencies:**
 
     ```bash
     pnpm install
     ```
 
-2.  **Create Environment File:**
+2. **Create Environment File:**
     Copy the example environment file to create your local configuration:
 
     ```bash
     cp .env.example .env.local
     ```
 
-3.  **Populate `.env.local`:**
+3. **Populate `.env.local`:**
     Fill in the following values from your Google Cloud and Azure App Registrations. **Crucially, the scopes must match exactly** to ensure token refresh and API permissions work correctly.
 
     ```env
@@ -59,13 +59,15 @@ This project follows modern Next.js App Router conventions:
 
 ### Running the Application
 
-1.  **Run the development server:**
+1. **Run the development server:**
+
     ```bash
     pnpm dev
     ```
-2.  Open [http://localhost:3000](http://localhost:3000) in your browser.
-3.  Sign in with both your Google and Microsoft administrator accounts.
-4.  Follow the on-screen steps to configure and execute the automation.
+
+2. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Sign in with both your Google and Microsoft administrator accounts.
+4. Follow the on-screen steps to configure and execute the automation.
 
 ## Development and Testing
 
