@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
 import { getMicrosoftToken } from "../../utils/auth";
+import { portalUrls } from "@/lib/api/url-builder";
 
 function createCheckFunction<T, A extends unknown[]>(
   checkName: string,
@@ -48,7 +49,7 @@ const checkMicrosoftServicePrincipalInner = createCheckFunction(
           retrievedAppId: sp.appId,
           appObjectId,
           displayName: sp.displayName,
-          resourceUrl: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/${sp.id}/appId/${sp.appId}`,
+          resourceUrl: portalUrls.azure.enterpriseApp.overview(sp.id, sp.appId),
         },
       } as StepCheckResult;
     }
