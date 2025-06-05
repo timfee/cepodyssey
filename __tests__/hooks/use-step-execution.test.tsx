@@ -4,6 +4,23 @@ import { Provider } from 'react-redux'
 import { store } from '@/lib/redux/store'
 import { executeStepAction } from '@/app/actions/step-actions'
 import type { StepId } from '@/lib/steps/step-refs'
+import type { StepDefinition } from '@/lib/types'
+
+jest.mock('@/lib/steps', () => {
+  const step: StepDefinition & { execute: jest.Mock } = {
+    id: 'G-1',
+    title: 'Test step',
+    description: 'desc',
+    details: 'details',
+    category: 'Google',
+    activity: 'Provisioning',
+    provider: 'Google',
+    automatability: 'automated',
+    automatable: true,
+    execute: jest.fn(async () => ({ success: true, outputs: { testOutput: 'value' } })),
+  }
+  return { __esModule: true, allStepDefinitions: [step], mockStep: step }
+})
 
 jest.mock('@/app/actions/step-actions')
 

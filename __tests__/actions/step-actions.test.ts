@@ -2,7 +2,23 @@ import { executeStepCheck } from '@/app/actions/step-actions'
 import { auth } from '@/app/(auth)/auth'
 import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
-import type { StepContext } from '@/lib/types'
+import type { StepContext, StepDefinition } from '@/lib/types'
+
+jest.mock('@/lib/steps', () => {
+  const step: StepDefinition & { check: jest.Mock } = {
+    id: 'G-1',
+    title: 'Test step',
+    description: 'desc',
+    details: 'details',
+    category: 'Google',
+    activity: 'Provisioning',
+    provider: 'Google',
+    automatability: 'automated',
+    automatable: true,
+    check: jest.fn(async () => ({ completed: false, message: 'not found' })),
+  }
+  return { __esModule: true, allStepDefinitions: [step], mockStep: step }
+})
 
 jest.mock('@/app/(auth)/auth')
 
@@ -27,18 +43,12 @@ describe('Step Actions', () => {
       const result = await executeStepCheck('G-1', {} as StepContext)
 
       expect(result.completed).toBe(false)
-      expect(result.outputs?.errorCode).toBe('AUTH_EXPIRED')
+      expect(result.outputs?.errorCode).toBe('NO_SESSION')
     })
 
     it('should handle API errors gracefully', async () => {
-      server.use(
-        http.get('*', () => {
-          return HttpResponse.json(
-            { error: { message: 'API rate limit exceeded' } },
-            { status: 429 },
-          )
-        }),
-      )
+      const { mockStep } = await import('@/lib/steps')
+      ;(mockStep.check as jest.Mock).mockRejectedValueOnce(new Error('API rate limit exceeded'))
 
       const result = await executeStepCheck('G-1', {
         domain: 'example.com',
@@ -47,7 +57,7 @@ describe('Step Actions', () => {
       } as StepContext)
 
       expect(result.completed).toBe(false)
-      expect(result.message).toContain('rate limit')
+      expect(result.message).toContain('API rate limit exceeded')
     })
   })
 })

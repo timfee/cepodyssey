@@ -7,7 +7,7 @@ export function mockEnv() {
     GOOGLE_CLIENT_SECRET: 'test-google-secret',
     MICROSOFT_CLIENT_ID: 'test-ms-client',
     MICROSOFT_CLIENT_SECRET: 'test-ms-secret',
-    MICROSOFT_TENANT_ID: 'test-tenant-id',
+    MICROSOFT_TENANT_ID: '123e4567-e89b-12d3-a456-426614174000',
     GOOGLE_API_BASE: 'https://admin.googleapis.com',
     GRAPH_API_BASE: 'https://graph.microsoft.com/v1.0',
     GOOGLE_ADMIN_SCOPES: 'test-scopes',
