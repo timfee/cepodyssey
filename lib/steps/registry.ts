@@ -3,16 +3,38 @@ import type {
   StepCheckResult,
   StepContext,
   StepExecutionResult,
+  StepDefinition,
+  StepInput,
+  StepOutput,
 } from "@/lib/types";
+import type { StepId } from "./step-refs";
+
+export const STEPS: Record<StepId, StepDefinition> = {} as Record<StepId, StepDefinition>;
+allStepDefinitions.forEach((step) => {
+  STEPS[step.id as StepId] = step;
+});
+
+export function getStep(stepId: StepId): StepDefinition {
+  const step = STEPS[stepId];
+  if (!step) {
+    throw new Error(`Step ${stepId} not found in registry`);
+  }
+  return step;
+}
+
+export function getStepInputs(stepId: StepId): StepInput[] {
+  return getStep(stepId).inputs || [];
+}
+
+export function getStepOutputs(stepId: StepId): StepOutput[] {
+  return getStep(stepId).outputs || [];
+}
 
 export async function checkStep(
-  stepId: string,
+  stepId: StepId,
   context: StepContext,
 ): Promise<StepCheckResult> {
-  const step = allStepDefinitions.find((s) => s.id === stepId);
-  if (!step) {
-    return { completed: false, message: `Step ${stepId} not found` };
-  }
+  const step = getStep(stepId);
   if (!step.check) {
     return { completed: false, message: "No check available for this step." };
   }
@@ -20,19 +42,10 @@ export async function checkStep(
 }
 
 export async function executeStep(
-  stepId: string,
+  stepId: StepId,
   context: StepContext,
 ): Promise<StepExecutionResult> {
-  const step = allStepDefinitions.find((s) => s.id === stepId);
-  if (!step) {
-    return {
-      success: false,
-      error: {
-        message: `Step ${stepId} not found`,
-        code: "RESOURCE_NOT_FOUND",
-      },
-    };
-  }
+  const step = getStep(stepId);
   if (!step.execute) {
     return {
       success: false,

@@ -326,3 +326,47 @@ Common runtime errors to watch for:
  - "Cannot read properties of undefined" - missing null checks
  - "Selector returned different result" - unmemoized selectors
  - Component rendering errors (shown as ⨯ in output)
+
+## Step Definition Patterns
+
+### Step References
+All step IDs are defined in `lib/steps/step-refs.ts` as constants. Never use hardcoded step ID strings.
+
+```typescript
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+// Good
+requires: [STEP_IDS.CREATE_AUTOMATION_OU]
+
+// Bad
+requires: ["G-1"]
+```
+
+### Step Inputs and Outputs
+Each step module defines its own inputs and outputs in the `index.ts` file:
+
+```typescript
+export const G1_OUTPUTS: StepOutput[] = [
+  {
+    key: OUTPUT_KEYS.AUTOMATION_OU_ID,
+    description: "Unique identifier for the organizational unit",
+  },
+];
+
+export const g1CreateAutomationOu: StepDefinition = {
+  // ...
+  inputs: G1_INPUTS,
+  outputs: G1_OUTPUTS,
+};
+```
+
+### Accessing Step Information
+Use the registry helpers to retrieve information about a step:
+
+```typescript
+import { getStep, getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+const step = getStep(STEP_IDS.CREATE_AUTOMATION_OU);
+const inputs = getStepInputs(STEP_IDS.CREATE_AUTOMATION_OU);
+```

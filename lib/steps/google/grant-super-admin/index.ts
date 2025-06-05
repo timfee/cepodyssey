@@ -1,11 +1,31 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkSuperAdmin } from "./check";
 import { executeGrantSuperAdmin } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const G3_OUTPUTS: StepOutput[] = [
+  {
+    key: OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID,
+    description: "Role assignment ID for Super Admin",
+  },
+];
+
+export const G3_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+      description: "Email of the provisioning user",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_USER,
+    },
+    stepTitle: "Create Provisioning User",
+  },
+];
 
 export const g3GrantSuperAdmin: StepDefinition = {
-  id: "G-3",
+  id: STEP_IDS.GRANT_SUPER_ADMIN,
   title: "Grant Super Admin Privileges to Provisioning User",
   description: "Give the sync user admin permissions",
   details:
@@ -18,8 +38,10 @@ export const g3GrantSuperAdmin: StepDefinition = {
   automatability: "automated",
   automatable: true,
 
-  requires: ["G-2"],
-  nextStep: { id: "G-4", description: "Verify your domain for federation" },
+  inputs: G3_INPUTS,
+  outputs: G3_OUTPUTS,
+  requires: [STEP_IDS.CREATE_PROVISIONING_USER],
+  nextStep: { id: STEP_IDS.VERIFY_DOMAIN, description: "Verify your domain for federation" },
 
   actions: ["POST /admin/directory/v1/customer/{customerId}/roleassignments"],
   adminUrls: {

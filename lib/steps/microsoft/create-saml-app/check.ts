@@ -7,7 +7,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkCreateSamlApp(
   context: StepContext,
@@ -17,7 +18,10 @@ export async function checkCreateSamlApp(
     return {
       completed: false,
       message: "SAML SSO App ID not found.",
-      outputs: { inputs: getStepInputs("M-6"), expectedOutputs: getStepOutputs("M-6") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP),
+        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP),
+      },
     };
   }
   const result = await checkMicrosoftServicePrincipal(appId);
@@ -31,11 +35,11 @@ export async function checkCreateSamlApp(
       ...result,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs("M-6").map((o) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP).map((o) => ({
           ...o,
           value: outputs[o.key as keyof typeof outputs],
         })),
-        inputs: getStepInputs("M-6").map((inp) => ({
+        inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),
@@ -46,8 +50,8 @@ export async function checkCreateSamlApp(
     ...result,
     outputs: {
       ...(result.outputs || {}),
-      inputs: getStepInputs("M-6"),
-      expectedOutputs: getStepOutputs("M-6"),
+      inputs: getStepInputs(STEP_IDS.CREATE_SAML_APP),
+      expectedOutputs: getStepOutputs(STEP_IDS.CREATE_SAML_APP),
     },
   };
 }

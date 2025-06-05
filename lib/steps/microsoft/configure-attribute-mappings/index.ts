@@ -1,11 +1,49 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAttributeMappings } from "./check";
 import { executeConfigureAttributeMappings } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const M4_OUTPUTS: StepOutput[] = [
+  {
+    key: OUTPUT_KEYS.FLAG_M4_PROV_MAPPINGS_CONFIGURED,
+    description: "Attribute mappings configured",
+  },
+];
+
+export const M4_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      description: "Service principal object ID",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_APP,
+    },
+    stepTitle: "Create Provisioning App",
+  },
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_JOB_ID,
+      description: "Provisioning job ID",
+      producedBy: STEP_IDS.AUTHORIZE_PROVISIONING,
+    },
+    stepTitle: "Authorize Provisioning",
+  },
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_APP_ID,
+      description: "Provisioning app ID",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_APP,
+    },
+    stepTitle: "Create Provisioning App",
+  },
+];
 
 export const m4ConfigureAttributeMappings: StepDefinition = {
-  id: "M-4",
+  id: STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
   title: "Configure Attribute Mappings (Provisioning)",
   description: "Set up how user data syncs between systems",
   details:
@@ -17,8 +55,10 @@ export const m4ConfigureAttributeMappings: StepDefinition = {
 
   automatability: "manual",
   automatable: true,
-  requires: ["M-3"],
-  nextStep: { id: "M-5", description: "Start synchronization job" },
+  inputs: M4_INPUTS,
+  outputs: M4_OUTPUTS,
+  requires: [STEP_IDS.AUTHORIZE_PROVISIONING],
+  nextStep: { id: STEP_IDS.START_PROVISIONING, description: "Start synchronization job" },
   actions: ["Manual: Edit attribute mappings in portal"],
   adminUrls: {
     configure: (outputs) => {

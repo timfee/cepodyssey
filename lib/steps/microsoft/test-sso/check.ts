@@ -1,7 +1,8 @@
 "use server";
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkTestSso(
   context: StepContext,
@@ -11,8 +12,8 @@ export async function checkTestSso(
       completed: true,
       message: "SSO sign-in tested.",
       outputs: {
-        producedOutputs: getStepOutputs("M-10"),
-        inputs: getStepInputs("M-10").map((inp) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.TEST_SSO),
+        inputs: getStepInputs(STEP_IDS.TEST_SSO).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),
@@ -22,6 +23,9 @@ export async function checkTestSso(
   return {
     completed: false,
     message: "Manual testing required.",
-    outputs: { inputs: getStepInputs("M-10"), expectedOutputs: getStepOutputs("M-10") },
+    outputs: {
+      inputs: getStepInputs(STEP_IDS.TEST_SSO),
+      expectedOutputs: getStepOutputs(STEP_IDS.TEST_SSO),
+    },
   };
 }

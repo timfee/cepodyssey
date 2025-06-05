@@ -7,7 +7,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftServicePrincipalEnabled } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkEnableProvisioningSp(
   context: StepContext,
@@ -18,8 +19,8 @@ export async function checkEnableProvisioningSp(
       completed: false,
       message: "Service Principal ID not found.",
       outputs: {
-        inputs: getStepInputs("M-2"),
-        expectedOutputs: getStepOutputs("M-2"),
+        inputs: getStepInputs(STEP_IDS.ENABLE_PROVISIONING_SP),
+        expectedOutputs: getStepOutputs(STEP_IDS.ENABLE_PROVISIONING_SP),
       },
     };
   }
@@ -29,16 +30,16 @@ export async function checkEnableProvisioningSp(
     outputs: {
       ...(result.outputs || {}),
       producedOutputs: result.completed
-        ? getStepOutputs("M-2").map((o) => ({
+        ? getStepOutputs(STEP_IDS.ENABLE_PROVISIONING_SP).map((o) => ({
             ...o,
             value: result.outputs?.spId,
           }))
         : undefined,
-      inputs: getStepInputs("M-2").map((inp) => ({
+      inputs: getStepInputs(STEP_IDS.ENABLE_PROVISIONING_SP).map((inp) => ({
         ...inp,
         data: { ...inp.data, value: context.outputs[inp.data.key!] },
       })),
-      expectedOutputs: getStepOutputs("M-2"),
+      expectedOutputs: getStepOutputs(STEP_IDS.ENABLE_PROVISIONING_SP),
     },
   };
 }

@@ -4,6 +4,7 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
@@ -35,6 +36,6 @@ export async function executeVerifyDomain(
       outputs: { customerId: user.customerId },
     };
   } catch (e) {
-    return handleExecutionError(e, "G-4");
+    return handleExecutionError(e, STEP_IDS.VERIFY_DOMAIN);
   }
 }

@@ -4,7 +4,8 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Verify the provisioning user has Super Admin privileges.
@@ -18,8 +19,8 @@ export async function checkSuperAdmin(
       completed: false,
       message: "Provisioning user not found.",
       outputs: {
-        inputs: getStepInputs("G-3"),
-        expectedOutputs: getStepOutputs("G-3"),
+        inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN),
+        expectedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN),
       },
     };
   }
@@ -32,8 +33,8 @@ export async function checkSuperAdmin(
         completed: false,
         message: `Service account '${email}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-3"),
-          expectedOutputs: getStepOutputs("G-3"),
+          inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN),
+          expectedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN),
         },
       };
     }
@@ -42,11 +43,11 @@ export async function checkSuperAdmin(
         completed: true,
         message: `Service account '${email}' has admin privileges.`,
         outputs: {
-          producedOutputs: getStepOutputs("G-3").map((o) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map((o) => ({
             ...o,
             value: o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
           })),
-          inputs: getStepInputs("G-3").map((inp) => ({
+          inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
@@ -61,11 +62,11 @@ export async function checkSuperAdmin(
         message: `Service account has Super Admin role assigned.`,
         outputs: {
           [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3",
-          producedOutputs: getStepOutputs("G-3").map((o) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN).map((o) => ({
             ...o,
             value: o.key === OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID ? "3" : undefined,
           })),
-          inputs: getStepInputs("G-3").map((inp) => ({
+          inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
@@ -76,8 +77,8 @@ export async function checkSuperAdmin(
       completed: false,
       message: `Service account exists but lacks admin privileges.`,
       outputs: {
-        inputs: getStepInputs("G-3"),
-        expectedOutputs: getStepOutputs("G-3"),
+        inputs: getStepInputs(STEP_IDS.GRANT_SUPER_ADMIN),
+        expectedOutputs: getStepOutputs(STEP_IDS.GRANT_SUPER_ADMIN),
       },
     };
   } catch (e) {

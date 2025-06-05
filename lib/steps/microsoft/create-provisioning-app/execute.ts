@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Create the Azure Enterprise application used for user provisioning.
@@ -69,6 +70,6 @@ export async function executeCreateProvisioningApp(
       },
     };
   } catch (e) {
-    return handleExecutionError(e, "M-1");
+    return handleExecutionError(e, STEP_IDS.CREATE_PROVISIONING_APP);
   }
 }

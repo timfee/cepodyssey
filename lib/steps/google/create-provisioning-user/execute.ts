@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
@@ -18,7 +19,7 @@ export async function executeCreateProvisioningUser(
     const validation = validateRequiredOutputs(
       context,
       [OUTPUT_KEYS.AUTOMATION_OU_PATH],
-      "G-1 (Create Automation OU)",
+      STEP_IDS.CREATE_AUTOMATION_OU,
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -75,6 +76,6 @@ export async function executeCreateProvisioningUser(
       resourceUrl: portalUrls.google.users.details(result.primaryEmail),
     };
   } catch (e) {
-    return handleExecutionError(e, "G-2");
+    return handleExecutionError(e, STEP_IDS.CREATE_PROVISIONING_USER);
   }
 }

@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Enable the provisioning service principal in Azure AD.
@@ -45,6 +46,6 @@ export async function executeEnableProvisioningSp(
       resourceUrl: portalUrls.azure.enterpriseApp.overview(spId, appId),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-2");
+    return handleExecutionError(e, STEP_IDS.ENABLE_PROVISIONING_SP);
   }
 }

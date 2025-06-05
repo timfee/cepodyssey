@@ -7,6 +7,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Configure default attribute mappings for the provisioning connection.
@@ -137,6 +138,6 @@ export async function executeConfigureAttributeMappings(
       ),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-4");
+    return handleExecutionError(e, STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS);
   }
 }

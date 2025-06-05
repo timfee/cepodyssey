@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from './use-redux';
 import { updateStep } from '@/lib/redux/slices/setup-steps';
 import { addOutputs } from '@/lib/redux/slices/app-config';
 import { executeStepAction } from '@/app/actions/step-actions';
+import type { StepId } from '@/lib/steps/step-refs';
 import { ErrorManager } from '@/lib/error-handling/error-manager';
 import { allStepDefinitions } from '@/lib/steps';
 import { toast } from 'sonner';
@@ -12,7 +13,7 @@ export function useStepExecution() {
   const appConfig = useAppSelector((state) => state.appConfig);
 
   const executeStep = useCallback(
-    async (stepId: string) => {
+    async (stepId: StepId) => {
       const definition = allStepDefinitions.find((s) => s.id === stepId);
       if (!definition) {
         ErrorManager.dispatch(new Error(`Step ${stepId} not found`), { stepId });

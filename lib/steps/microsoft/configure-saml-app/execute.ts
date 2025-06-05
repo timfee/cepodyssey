@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Configure Identifier URI and Reply URL settings on the Azure SAML app.
@@ -76,6 +77,6 @@ export async function executeConfigureSamlApp(
       ),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-7");
+    return handleExecutionError(e, STEP_IDS.CONFIGURE_SAML_APP);
   }
 }

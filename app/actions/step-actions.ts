@@ -8,6 +8,7 @@ import type {
   StepExecutionResult,
 } from "@/lib/types";
 import { checkStep, executeStep } from "@/lib/steps/registry";
+import type { StepId } from "@/lib/steps/step-refs";
 
 async function validateSession(): Promise<{ valid: boolean; error?: StepCheckResult }> {
   const session = await auth();
@@ -73,7 +74,7 @@ async function validateSession(): Promise<{ valid: boolean; error?: StepCheckRes
   return { valid: true };
 }
 export async function executeStepCheck(
-  stepId: string,
+  stepId: StepId,
   context: StepContext,
 ): Promise<StepCheckResult> {
   const sessionValidation = await validateSession();
@@ -121,7 +122,7 @@ export async function executeStepCheck(
 }
 
 export async function executeStepAction(
-  stepId: string,
+  stepId: StepId,
   context: StepContext,
 ): Promise<StepExecutionResult> {
   const sessionValidation = await validateSession();

@@ -1,10 +1,15 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkDomain } from "./check";
 import { executeVerifyDomain } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const G4_OUTPUTS: StepOutput[] = [];
+export const G4_INPUTS: StepInput[] = [];
 
 export const g4VerifyDomain: StepDefinition = {
-  id: "G-4",
+  id: STEP_IDS.VERIFY_DOMAIN,
   title: "Add & Verify Domain for Federation",
   description: "Verify your domain is ready for single sign-on",
   details:
@@ -17,8 +22,10 @@ export const g4VerifyDomain: StepDefinition = {
   automatability: "supervised",
   automatable: true,
 
+  inputs: G4_INPUTS,
+  outputs: G4_OUTPUTS,
   requires: [],
-  nextStep: { id: "G-5", description: "Create the SAML SSO profile" },
+  nextStep: { id: STEP_IDS.INITIATE_SAML_PROFILE, description: "Create the SAML SSO profile" },
 
   actions: ["POST /admin/directory/v1/customer/{customerId}/domains"],
   adminUrls: {

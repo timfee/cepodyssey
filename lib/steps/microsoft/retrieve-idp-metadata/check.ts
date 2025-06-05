@@ -6,7 +6,8 @@
 
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkIdpMetadata(
   context: StepContext,
@@ -20,8 +21,8 @@ export async function checkIdpMetadata(
         completed: true,
         message: "Azure AD IdP metadata retrieved.",
         outputs: {
-          producedOutputs: getStepOutputs("M-8"),
-          inputs: getStepInputs("M-8").map((inp) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.RETRIEVE_IDP_METADATA),
+          inputs: getStepInputs(STEP_IDS.RETRIEVE_IDP_METADATA).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
@@ -30,6 +31,9 @@ export async function checkIdpMetadata(
     : {
         completed: false,
         message: "Azure AD IdP metadata not retrieved.",
-        outputs: { inputs: getStepInputs("M-8"), expectedOutputs: getStepOutputs("M-8") },
+        outputs: {
+          inputs: getStepInputs(STEP_IDS.RETRIEVE_IDP_METADATA),
+          expectedOutputs: getStepOutputs(STEP_IDS.RETRIEVE_IDP_METADATA),
+        },
       };
 }

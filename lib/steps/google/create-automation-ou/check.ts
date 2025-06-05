@@ -7,7 +7,8 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Confirm the 'Automation' Organizational Unit exists in Google Workspace.
@@ -27,7 +28,7 @@ export async function checkAutomationOu(
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
           resourceUrl: portalUrls.google.orgUnits.details(orgUnit.orgUnitPath),
-          producedOutputs: getStepOutputs("G-1").map((o) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.CREATE_AUTOMATION_OU).map((o) => ({
             ...o,
             value:
               o.key === OUTPUT_KEYS.AUTOMATION_OU_ID
@@ -42,8 +43,8 @@ export async function checkAutomationOu(
       completed: false,
       message: `Organizational Unit '/Automation' not found.`,
       outputs: {
-        inputs: getStepInputs("G-1"),
-        expectedOutputs: getStepOutputs("G-1"),
+        inputs: getStepInputs(STEP_IDS.CREATE_AUTOMATION_OU),
+        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_AUTOMATION_OU),
       },
     };
   } catch (e) {
@@ -52,8 +53,8 @@ export async function checkAutomationOu(
         completed: false,
         message: `Organizational Unit '/Automation' not found.`,
         outputs: {
-          inputs: getStepInputs("G-1"),
-          expectedOutputs: getStepOutputs("G-1"),
+          inputs: getStepInputs(STEP_IDS.CREATE_AUTOMATION_OU),
+          expectedOutputs: getStepOutputs(STEP_IDS.CREATE_AUTOMATION_OU),
         },
       };
     }

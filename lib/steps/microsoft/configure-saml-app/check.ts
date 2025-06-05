@@ -7,7 +7,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftSamlAppSettingsApplied } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkConfigureSamlApp(
   context: StepContext,
@@ -23,7 +24,10 @@ export async function checkConfigureSamlApp(
     return {
       completed: false,
       message: "Missing required configuration.",
-      outputs: { inputs: getStepInputs("M-7"), expectedOutputs: getStepOutputs("M-7") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.CONFIGURE_SAML_APP),
+        expectedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_SAML_APP),
+      },
     };
   }
   const result = await checkMicrosoftSamlAppSettingsApplied(appObjectId, spEntityId, acsUrl);
@@ -31,15 +35,15 @@ export async function checkConfigureSamlApp(
     ...result,
     outputs: result.completed
       ? {
-          producedOutputs: getStepOutputs("M-7"),
-          inputs: getStepInputs("M-7").map((inp) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_SAML_APP),
+          inputs: getStepInputs(STEP_IDS.CONFIGURE_SAML_APP).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
         }
       : {
-          inputs: getStepInputs("M-7"),
-          expectedOutputs: getStepOutputs("M-7"),
+          inputs: getStepInputs(STEP_IDS.CONFIGURE_SAML_APP),
+          expectedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_SAML_APP),
         },
   };
 }

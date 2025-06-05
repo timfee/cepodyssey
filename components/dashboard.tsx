@@ -28,6 +28,7 @@ import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import { executeStepCheck } from "@/app/actions/step-actions";
 import { useAutoCheck } from "@/hooks/use-auto-check";
+import type { StepId } from "@/lib/steps/step-refs";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
   StepContext,
@@ -153,7 +154,7 @@ export function AutomationDashboard({
   const { executeStep } = useStepExecution();
 
   const handleExecute = useCallback(
-    async (stepId: string) => {
+    async (stepId: StepId) => {
       if (!canRunAutomation) {
         dispatch(
           setError({ message: 'Please sign in to both Google and Microsoft to continue.' })
@@ -166,7 +167,7 @@ export function AutomationDashboard({
   );
 
   const executeCheck = useCallback(
-    async (stepId: string) => {
+    async (stepId: StepId) => {
       if (!appConfig.domain || !appConfig.tenantId) return;
 
       const context: StepContext = {
@@ -293,7 +294,7 @@ export function AutomationDashboard({
           currentStepState.status === "pending" ||
           currentStepState.status === "failed")
       ) {
-        await handleExecute(step.id);
+        await handleExecute(step.id as StepId);
         if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
           // toast.error("Automation paused", {
           //   description: `Check the error in ${step.title}`,

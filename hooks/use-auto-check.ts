@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useAppSelector } from "./use-redux";
 import { Logger } from "@/lib/utils/logger";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+import type { StepId } from "@/lib/steps/step-refs";
 
 /**
  * Automatically runs step checks once configuration is available.
  * Only executes lightweight check functions for predefined steps.
  */
 export function useAutoCheck(
-  executeCheck: (stepId: string) => Promise<void>,
+  executeCheck: (stepId: StepId) => Promise<void>,
 ): void {
   const appConfig = useAppSelector((state) => state.appConfig);
   const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
@@ -20,7 +22,13 @@ export function useAutoCheck(
     hasChecked.current = true;
     Logger.info("[Hook]", "Running auto-checks for steps");
 
-    const autoCheckSteps = ["G-1", "G-4", "G-5", "M-1", "M-6"];
+    const autoCheckSteps = [
+      STEP_IDS.CREATE_AUTOMATION_OU,
+      STEP_IDS.VERIFY_DOMAIN,
+      STEP_IDS.INITIATE_SAML_PROFILE,
+      STEP_IDS.CREATE_PROVISIONING_APP,
+      STEP_IDS.CREATE_SAML_APP,
+    ];
 
     for (const stepId of autoCheckSteps) {
       const status = stepsStatus[stepId];

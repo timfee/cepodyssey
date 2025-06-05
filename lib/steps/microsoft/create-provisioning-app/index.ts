@@ -1,11 +1,26 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkProvisioningApp } from "./check";
 import { executeCreateProvisioningApp } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const M1_OUTPUTS: StepOutput[] = [
+  { key: OUTPUT_KEYS.PROVISIONING_APP_ID, description: "App (Client) ID" },
+  {
+    key: OUTPUT_KEYS.PROVISIONING_APP_OBJECT_ID,
+    description: "Application Object ID",
+  },
+  {
+    key: OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+    description: "Service Principal Object ID",
+  },
+];
+
+export const M1_INPUTS: StepInput[] = [];
 
 export const m1CreateProvisioningApp: StepDefinition = {
-  id: "M-1",
+  id: STEP_IDS.CREATE_PROVISIONING_APP,
   title: "Create Azure AD Enterprise App for Provisioning",
   description: "Add Google sync app from Microsoft's gallery",
   details:
@@ -18,8 +33,13 @@ export const m1CreateProvisioningApp: StepDefinition = {
   automatability: "automated",
   automatable: true,
 
+  inputs: M1_INPUTS,
+  outputs: M1_OUTPUTS,
   requires: [],
-  nextStep: { id: "M-2", description: "Enable the service principal" },
+  nextStep: {
+    id: STEP_IDS.ENABLE_PROVISIONING_SP,
+    description: "Enable the service principal",
+  },
   actions: ["POST /applicationTemplates/{templateId}/instantiate"],
   adminUrls: {
     configure: (outputs) => {

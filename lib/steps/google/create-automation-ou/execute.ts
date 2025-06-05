@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
@@ -22,7 +23,7 @@ export async function executeCreateAutomationOu(
     }
     const ouName = "Automation";
     const parentPath = "/";
-    const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;
+    const customerId = (context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string })?.customerId;
     if (!customerId) {
       return { success: false, error: { message: "Customer ID not found" } };
     }
@@ -65,6 +66,6 @@ export async function executeCreateAutomationOu(
       resourceUrl: portalUrls.google.orgUnits.details(result.orgUnitPath),
     };
   } catch (e) {
-    return handleExecutionError(e, "G-1");
+    return handleExecutionError(e, STEP_IDS.CREATE_AUTOMATION_OU);
   }
 }

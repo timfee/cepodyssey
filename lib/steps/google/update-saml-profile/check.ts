@@ -6,7 +6,8 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Confirm the Google SAML profile is configured with the expected IdP details.
@@ -26,8 +27,8 @@ export async function checkSamlProfileUpdate(
       completed: false,
       message: "Missing required configuration.",
       outputs: {
-        inputs: getStepInputs("G-6"),
-        expectedOutputs: getStepOutputs("G-6"),
+        inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE),
+        expectedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE),
       },
     };
   }
@@ -48,8 +49,8 @@ export async function checkSamlProfileUpdate(
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-6"),
-          expectedOutputs: getStepOutputs("G-6"),
+          inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE),
+          expectedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE),
         },
       };
     }
@@ -83,8 +84,8 @@ export async function checkSamlProfileUpdate(
         completed: false,
         message: `SAML Profile '${profile.displayName}' found but is not fully configured with IdP details or not enabled.`,
         outputs: {
-          inputs: getStepInputs("G-6"),
-          expectedOutputs: getStepOutputs("G-6"),
+          inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE),
+          expectedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE),
         },
       };
     }
@@ -95,8 +96,8 @@ export async function checkSamlProfileUpdate(
         completed: false,
         message: `SAML Profile '${profile.displayName}' is configured with IdP '${currentIdp}', not the expected '${expectedIdpEntityId}'.`,
         outputs: {
-          inputs: getStepInputs("G-6"),
-          expectedOutputs: getStepOutputs("G-6"),
+          inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE),
+          expectedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE),
         },
       };
     }
@@ -106,11 +107,11 @@ export async function checkSamlProfileUpdate(
       message: `SAML Profile '${profile.displayName}' is correctly configured with IdP '${expectedIdpEntityId}'.`,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs("G-6").map((o) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.UPDATE_SAML_PROFILE).map((o) => ({
           ...o,
           value: outputs[o.key as keyof typeof outputs],
         })),
-        inputs: getStepInputs("G-6").map((inp) => ({
+        inputs: getStepInputs(STEP_IDS.UPDATE_SAML_PROFILE).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),

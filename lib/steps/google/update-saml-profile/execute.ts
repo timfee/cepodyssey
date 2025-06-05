@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Update the Google SAML profile with Azure AD IdP metadata.
@@ -56,6 +57,6 @@ export async function executeUpdateSamlProfile(
       resourceUrl: portalUrls.google.sso.main(),
     };
   } catch (e) {
-    return handleExecutionError(e, "G-6");
+    return handleExecutionError(e, STEP_IDS.UPDATE_SAML_PROFILE);
   }
 }

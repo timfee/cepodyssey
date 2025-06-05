@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Create the initial "Azure AD SSO" SAML profile in Google Workspace.
@@ -79,6 +80,6 @@ export async function executeInitiateSamlProfile(
       },
     };
   } catch (e) {
-    return handleExecutionError(e, "G-5");
+    return handleExecutionError(e, STEP_IDS.INITIATE_SAML_PROFILE);
   }
 }

@@ -5,6 +5,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
@@ -20,7 +21,7 @@ export async function executeGrantSuperAdmin(
       return { success: false, error: validation.error };
     }
     const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
-    const customerId = (context.outputs["G-4"] as { customerId?: string })?.customerId;
+    const customerId = (context.outputs[STEP_IDS.VERIFY_DOMAIN] as { customerId?: string })?.customerId;
     if (!email) {
       return {
         success: false,
@@ -62,6 +63,6 @@ export async function executeGrantSuperAdmin(
       resourceUrl: portalUrls.google.users.details(email),
     };
   } catch (e) {
-    return handleExecutionError(e, "G-3");
+    return handleExecutionError(e, STEP_IDS.GRANT_SUPER_ADMIN);
   }
 }

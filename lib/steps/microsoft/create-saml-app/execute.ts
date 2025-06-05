@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Create the Azure SAML SSO application.
@@ -71,6 +72,6 @@ export async function executeCreateSamlApp(
       },
     };
   } catch (e) {
-    return handleExecutionError(e, "M-6");
+    return handleExecutionError(e, STEP_IDS.CREATE_SAML_APP);
   }
 }

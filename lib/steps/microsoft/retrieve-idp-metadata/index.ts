@@ -1,11 +1,39 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkIdpMetadata } from "./check";
 import { executeRetrieveIdpMetadata } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const M8_OUTPUTS: StepOutput[] = [
+  { key: OUTPUT_KEYS.IDP_CERTIFICATE_BASE64, description: "IdP certificate" },
+  { key: OUTPUT_KEYS.IDP_SSO_URL, description: "IdP SSO URL" },
+  { key: OUTPUT_KEYS.IDP_ENTITY_ID, description: "IdP entity ID" },
+];
+
+export const M8_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID,
+      description: "SAML SP object ID",
+      producedBy: STEP_IDS.CREATE_SAML_APP,
+    },
+    stepTitle: "Create SAML App",
+  },
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.SAML_SSO_APP_ID,
+      description: "SAML app ID",
+      producedBy: STEP_IDS.CREATE_SAML_APP,
+    },
+    stepTitle: "Create SAML App",
+  },
+];
 
 export const m8RetrieveIdpMetadata: StepDefinition = {
-  id: "M-8",
+  id: STEP_IDS.RETRIEVE_IDP_METADATA,
   title: "Retrieve Azure AD IdP SAML Metadata for Google",
   description: "Get Microsoft's sign-on details for Google",
   details:
@@ -18,8 +46,10 @@ export const m8RetrieveIdpMetadata: StepDefinition = {
   automatability: "automated",
   automatable: true,
 
-  requires: ["M-7"],
-  nextStep: { id: "M-9", description: "Assign users to SSO app" },
+  inputs: M8_INPUTS,
+  outputs: M8_OUTPUTS,
+  requires: [STEP_IDS.CONFIGURE_SAML_APP],
+  nextStep: { id: STEP_IDS.ASSIGN_USERS_SSO, description: "Assign users to SSO app" },
   actions: ["GET /federationmetadata/2007-06/federationmetadata.xml"],
   adminUrls: {
     configure: (outputs) => {

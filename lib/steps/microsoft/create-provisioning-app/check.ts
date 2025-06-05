@@ -3,7 +3,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Verify the provisioning enterprise application exists in Azure AD.
@@ -17,8 +18,8 @@ export async function checkProvisioningApp(
       completed: false,
       message: "Provisioning App ID not found.",
       outputs: {
-        inputs: getStepInputs("M-1"),
-        expectedOutputs: getStepOutputs("M-1"),
+        inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_APP),
+        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_APP),
       },
     };
   }
@@ -33,11 +34,11 @@ export async function checkProvisioningApp(
       ...result,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs("M-1").map((o) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_APP).map((o) => ({
           ...o,
           value: outputs[o.key as keyof typeof outputs],
         })),
-        inputs: getStepInputs("M-1").map((inp) => ({
+        inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_APP).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),
@@ -48,8 +49,8 @@ export async function checkProvisioningApp(
     ...result,
     outputs: {
       ...(result.outputs || {}),
-      inputs: getStepInputs("M-1"),
-      expectedOutputs: getStepOutputs("M-1"),
+      inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_APP),
+      expectedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_APP),
     },
   };
 }
