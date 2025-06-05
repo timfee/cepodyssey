@@ -1,22 +1,70 @@
 # AI Agent Instructions for the Step Engine (`lib/steps/`)
 
-When creating or modifying any automation step, you **MUST** follow these rules to maintain the integrity of the framework.
+## Purpose of this Directory
 
-## Rules for `check.ts` files
+This directory is the core of the automation logic. Each sub-folder represents a self-contained automation step with its own definition (`index.ts`), a status-checking function (`check.ts`), and an execution function (`execute.ts`). The `registry.ts` file serves as the single public API for this system, ensuring that all steps are called in a consistent manner.
 
-1. **Use the Factory**: Every `check.ts` file must export a single constant defined with the `createStepCheck` factory. Do not write a standalone `async function`.
-2. **Define Dependencies**: In the `createStepCheck` options, accurately list all necessary keys from `context.outputs` in the `requiredOutputs: []` array. The factory handles the boilerplate of checking for them.
-3. **Focus on Logic**: The `checkLogic` function you provide should contain only the unique logic for checking the step's status. It should return a `StepCheckResult` (`{ completed: boolean, message: string, outputs?: {...} }`).
+## Core Principles
 
-### Rules for `execute.ts` files
+- **Modularity:** Steps should be entirely self-contained and not depend on the internal logic of other steps.
+- **Data Flow:** Data should only be passed between steps via the `context.outputs` object, using keys defined in `lib/types.ts`.
+- **Abstraction:** All boilerplate logic (validation, error handling) must be handled by the provided wrappers and factories in `lib/steps/utils/`.
 
-1. **Use the Wrapper**: Every `execute.ts` file must export a single constant defined with the `withExecutionHandling` wrapper.
-2. **Define Dependencies**: In the `withExecutionHandling` options, accurately list all necessary keys from `context.outputs` in the `requiredOutputs: []` array. The wrapper handles validation.
-3. **Pass the Logger**: Inside your `executeLogic` function, you have access to `context.logger`. You **MUST** pass this logger instance to any `lib/api/` function you call.
-    * **Correct:** `await google.someFunction(token, data, context.logger);`
-    * **Incorrect:** `await google.someFunction(token, data);`
-4. **Handle `customerId`**: If the step calls a Google Admin SDK function, you **MUST** include `OUTPUT_KEYS.GOOGLE_CUSTOMER_ID` in `requiredOutputs` and pass it to the API call.
+---
 
-### Rules for `index.ts` (Step Definition) files
+### 🚨 CRITICAL WARNING: The Google `customerId` Requirement 🚨
 
-1. **Define `requires`**: If a step's `execute` function depends on the successful completion of another step, you must define the `requires: [STEP_IDS.SOME_OTHER_STEP]` array in the step definition.
+**THIS IS THE MOST COMMON CAUSE OF REGRESSIONS. YOU MUST PAY ATTENTION TO THIS RULE.**
+
+Several Google Admin SDK API calls are scoped to a specific customer account. Calling them without the `customerId` will result in a **runtime 403 Forbidden error**, even if the code passes type checks.
+
+- **Source:** The `customerId` is produced by the `verify-domain` step (`G-4`).
+- **Key:** `OUTPUT_KEYS.GOOGLE_CUSTOMER_ID`
+- **Rule:** Any `execute` function that calls an admin-level Google API **MUST** require and pass the `customerId`.
+
+**EXAMPLE OF A REGRESSION (INCORRECT):**
+
+```typescript
+// This code is WRONG. It will cause runtime errors.
+export const executeGrantSuperAdmin = withExecutionHandling({
+  stepId: STEP_IDS.GRANT_SUPER_ADMIN,
+  requiredOutputs: [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL], // FORGOT to require customerId
+  executeLogic: async (context) => {
+    // ...
+    // The customerId is NOT retrieved from context.
+    await google.assignAdminRole(token, email, '3', undefined, context.logger); // ERROR: Passing undefined
+    // ...
+  },
+});
+```
+
+**EXAMPLE OF THE CORRECT PATTERN:**
+
+```typescript
+// This code is CORRECT.
+export const executeGrantSuperAdmin = withExecutionHandling({
+  stepId: STEP_IDS.GRANT_SUPER_ADMIN,
+  requiredOutputs: [
+    OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+    OUTPUT_KEYS.GOOGLE_CUSTOMER_ID, // 1. Dependency is declared here.
+  ],
+  executeLogic: async (context) => {
+    // ...
+    // 2. Value is retrieved from context.
+    const customerId = context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID] as string; 
+    
+    // 3. Value is passed to the API call.
+    await google.assignAdminRole(token, email, '3', customerId, context.logger); 
+    // ...
+  },
+});
+```
+
+---
+
+### General Rules for Modifying Steps
+
+1. **Use the Abstractions**: All `check.ts` files must use `createStepCheck`. All `execute.ts` files must use `withExecutionHandling`.
+2. **Define Dependencies**: Accurately list all required keys from `context.outputs` in the `requiredOutputs: []` array for every check and execute function.
+3. **Pass the Logger**: Inside your `executeLogic` and `checkLogic`, pass `context.logger` to any `lib/api/` function you call.
+4. **Define `requires` in `index.ts`**: If a step's `execute` function depends on the successful completion of another step, define the `requires: [STEP_IDS.SOME_OTHER_STEP]` array in the step definition.
