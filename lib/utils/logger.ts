@@ -15,11 +15,13 @@ export interface LogEntry {
   stackTrace?: string;
 }
 
+import { config } from "@/lib/config";
+
 export class Logger {
   private static level: LogLevel = LogLevel.INFO;
   private static logLevelToShowInToasts: LogLevel = LogLevel.WARN;
   private static isDevelopment = process.env.NODE_ENV === "development";
-  private static isEnabled = process.env.NEXT_PUBLIC_LOG_TO_CONSOLE !== "false";
+  private static isEnabled = config.NEXT_PUBLIC_LOG_TO_CONSOLE !== "false";
   private static history: LogEntry[] = [];
   private static maxHistorySize = 100;
 
@@ -27,11 +29,11 @@ export class Logger {
    * Initialize logger from environment variables.
    */
   static initialize(): void {
-    const envLevel = process.env.NEXT_PUBLIC_LOG_LEVEL?.toUpperCase();
+    const envLevel = config.NEXT_PUBLIC_LOG_LEVEL?.toUpperCase();
     if (envLevel && LogLevel[envLevel as keyof typeof LogLevel] !== undefined) {
       this.level = LogLevel[envLevel as keyof typeof LogLevel];
     }
-    const toastLevel = process.env.NEXT_PUBLIC_LOG_LEVEL_TO_SHOW_IN_TOASTS;
+    const toastLevel = config.NEXT_PUBLIC_LOG_LEVEL_TO_SHOW_IN_TOASTS;
     if (toastLevel === "-1" || toastLevel === "undefined") {
       this.logLevelToShowInToasts = LogLevel.OFF;
     } else if (toastLevel && !isNaN(parseInt(toastLevel))) {

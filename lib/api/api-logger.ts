@@ -1,5 +1,6 @@
-import { isApiDebugEnabled } from '@/lib/utils';
-import { serverLogger } from '@/lib/logging/server-logger';
+import type { ApiLogEntry } from "@/lib/redux/slices/debug-panel";
+import { isApiDebugEnabled } from "@/lib/utils";
+import { config } from "@/lib/config";
 
 export class ApiLogger {
   /**
@@ -75,11 +76,11 @@ export class ApiLogger {
 
   private detectProvider(url: string): 'google' | 'microsoft' | undefined {
     if (
-      url.startsWith(process.env.GOOGLE_API_BASE!) ||
-      url.startsWith(process.env.GOOGLE_IDENTITY_BASE!)
+      url.startsWith(config.GOOGLE_API_BASE) ||
+      url.startsWith(config.GOOGLE_IDENTITY_BASE)
     )
-      return 'google';
-    if (url.startsWith(process.env.GRAPH_API_BASE!)) return 'microsoft';
-    return undefined;
+      return "google";
+    if (url.startsWith(config.GRAPH_API_BASE)) return "microsoft";
+    return "other";
   }
 }

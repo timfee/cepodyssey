@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type {
   AutomatabilityDisplayConfig,
   StatusDisplayConfig,
-} from "./config";
+} from "../config";
 
 interface StepCardHeaderProps {
   stepId: string;

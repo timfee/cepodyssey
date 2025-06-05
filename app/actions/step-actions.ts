@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
+import { SessionManager } from "@/lib/auth/session-manager";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { ApiLogger } from "@/lib/api/api-logger";
 import { allStepDefinitions } from "@/lib/steps";
@@ -20,14 +20,18 @@ async function validateSession(): Promise<{
   valid: boolean;
   error?: StepCheckResult;
 }> {
-  const session = await auth();
-  if (!session?.user || !session.googleToken || !session.microsoftToken) {
+  const validation = await SessionManager.validate();
+  if (!validation.valid) {
     return {
       valid: false,
       error: {
         completed: false,
-        message: "Your session is invalid. Please sign in to both services.",
-        outputs: { errorCode: "AUTH_EXPIRED", requiresFullReauth: true },
+        message: validation.error?.message,
+        outputs: {
+          errorCode: validation.error?.code ?? "AUTH_EXPIRED",
+          requiresFullReauth: true,
+          errorProvider: validation.error?.provider,
+        },
       },
     };
   }
