@@ -1,6 +1,4 @@
 import { ApiLogger } from "./api-logger";
-import { store } from "@/lib/redux/store";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
 
 /**
  * Error thrown when an API call fails.
@@ -110,19 +108,9 @@ export async function handleApiResponse<T>(
     };
     const message =
       errorBody.error?.message ?? `Connection failed. Please try again.`;
-    const errorLogId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    store.dispatch(
-      addApiLog({
-        id: errorLogId,
-        timestamp: new Date().toISOString(),
-        method: "ERROR",
-        url: "API Error",
-        error: `${res.status}: ${message}`,
-        responseStatus: res.status,
-        responseBody: errorBody,
-        provider: "other",
-      }),
-    );
+
+    // API errors will be logged by ApiLogger which is already tracking this response
+
     throw new APIError(message, res.status, errorBody.error?.code);
   }
   if (res.status === 204) {

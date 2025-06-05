@@ -16,7 +16,6 @@ import {
 } from "@/lib/redux/slices/debug-panel";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
 import { Bug, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
 
 export function DebugPanel() {
   const dispatch = useAppDispatch();
@@ -40,12 +39,12 @@ export function DebugPanel() {
 
   const handleClearLogs = () => {
     dispatch(clearLogs());
-    toast.success("Logs cleared");
+    console.log("Logs cleared");
   };
 
   const handleCopyLog = (log: ApiLogEntry) => {
     navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-    toast.success("Log copied to clipboard");
+    console.log("Log copied to clipboard");
   };
 
   return (

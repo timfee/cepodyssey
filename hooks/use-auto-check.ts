@@ -46,12 +46,18 @@ export function useAutoCheck(
           status?.status === "pending";
 
         if (shouldCheck && !recentlyChecked) {
+          console.log(`[AutoCheck] Checking step ${stepId}`);
           const checkResult = await executeCheck(stepId);
+
           if (checkResult && 'apiLogs' in checkResult && checkResult.apiLogs) {
+            console.log(
+              `[AutoCheck] Adding ${checkResult.apiLogs.length} API logs for step ${stepId}`,
+            );
             checkResult.apiLogs.forEach((log) => {
               store.dispatch(addApiLog(log));
             });
           }
+
           checkedSteps.current.add(stepId);
           await new Promise((r) => setTimeout(r, 300));
         }
@@ -69,7 +75,6 @@ export function useAutoCheck(
     if (appConfig.domain && appConfig.tenantId) {
       debouncedRunChecks.current();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appConfig.domain, appConfig.tenantId]);
 
   const manualRefresh = useCallback(async () => {

@@ -80,63 +80,67 @@ export async function executeStepCheck(
   context: StepContext,
 ): Promise<StepCheckResult> {
   const requestId = `check-${stepId}-${Date.now()}`;
-  ApiLogger.setRequestId(requestId);
 
-  try {
-    const sessionValidation = await validateSession();
-    if (!sessionValidation.valid) {
-      return sessionValidation.error!;
-    }
+  return ApiLogger.runWithRequestId(requestId, async () => {
+    try {
+      console.log(`[StepCheck] Executing check for step ${stepId}`);
 
-    const result = await checkStep(stepId, context);
+      const sessionValidation = await validateSession();
+      if (!sessionValidation.valid) {
+        return sessionValidation.error!;
+      }
 
-    const collector = getLogCollector(requestId);
-    const apiLogs = collector.getLogs();
+      const result = await checkStep(stepId, context);
 
-    return {
-      ...result,
-      apiLogs,
-    };
-  } catch (error) {
-    // For authentication errors, return a proper StepCheckResult instead of throwing
-    if (isAuthenticationError(error)) {
+      const collector = getLogCollector(requestId);
+      const apiLogs = collector.getLogs();
+
+      console.log(
+        `[StepCheck] Collected ${apiLogs.length} API logs for step ${stepId}`,
+      );
+
       return {
-        completed: false,
-        message: error.message,
-        outputs: {
-          errorCode: "AUTH_EXPIRED",
-          errorProvider: error.provider,
-          errorMessage: error.message,
-        },
+        ...result,
+        apiLogs,
       };
-    }
+    } catch (error) {
+      console.error(`[StepCheck] Error in step ${stepId}:`, error);
 
-    // For other errors, convert to StepCheckResult
-    if (error instanceof Error) {
+      if (isAuthenticationError(error)) {
+        return {
+          completed: false,
+          message: error.message,
+          outputs: {
+            errorCode: "AUTH_EXPIRED",
+            errorProvider: error.provider,
+            errorMessage: error.message,
+          },
+        };
+      }
+
+      if (error instanceof Error) {
+        return {
+          completed: false,
+          message: error.message,
+          outputs: {
+            errorCode: "UNKNOWN_ERROR",
+            errorMessage: error.message,
+          },
+        };
+      }
+
       return {
         completed: false,
-        message: error.message,
+        message: "Something went wrong. Please try again.",
         outputs: {
           errorCode: "UNKNOWN_ERROR",
-          errorMessage: error.message,
+          errorMessage: String(error),
         },
       };
+    } finally {
+      clearLogCollector(requestId);
     }
-
-    // Fallback for non-Error objects
-    return {
-      completed: false,
-      message: "Something went wrong. Please try again.",
-      outputs: {
-        errorCode: "UNKNOWN_ERROR",
-        errorMessage: String(error),
-      },
-    };
-  }
-  finally {
-    clearLogCollector(requestId);
-    ApiLogger.clearRequestId();
-  }
+  });
 }
 
 export async function executeStepAction(
@@ -144,32 +148,41 @@ export async function executeStepAction(
   context: StepContext,
 ): Promise<StepExecutionResult> {
   const requestId = `execute-${stepId}-${Date.now()}`;
-  ApiLogger.setRequestId(requestId);
 
-  try {
-    const sessionValidation = await validateSession();
-    if (!sessionValidation.valid && sessionValidation.error) {
+  return ApiLogger.runWithRequestId(requestId, async () => {
+    try {
+      console.log(`[StepAction] Executing action for step ${stepId}`);
+
+      const sessionValidation = await validateSession();
+      if (!sessionValidation.valid && sessionValidation.error) {
+        return {
+          success: false,
+          error: {
+            message: sessionValidation.error.message || "Authentication required",
+            code: "AUTH_EXPIRED",
+          },
+          outputs: sessionValidation.error.outputs,
+        };
+      }
+
+      const result = await executeStep(stepId, context);
+
+      const collector = getLogCollector(requestId);
+      const apiLogs = collector.getLogs();
+
+      console.log(
+        `[StepAction] Collected ${apiLogs.length} API logs for step ${stepId}`,
+      );
+
       return {
-        success: false,
-        error: {
-          message: sessionValidation.error.message || "Authentication required",
-          code: "AUTH_EXPIRED",
-        },
-        outputs: sessionValidation.error.outputs,
+        ...result,
+        apiLogs,
       };
+    } catch (error) {
+      console.error(`[StepAction] Error in step ${stepId}:`, error);
+      throw error;
+    } finally {
+      clearLogCollector(requestId);
     }
-
-    const result = await executeStep(stepId, context);
-
-    const collector = getLogCollector(requestId);
-    const apiLogs = collector.getLogs();
-
-    return {
-      ...result,
-      apiLogs,
-    };
-  } finally {
-    clearLogCollector(requestId);
-    ApiLogger.clearRequestId();
-  }
+  });
 }
