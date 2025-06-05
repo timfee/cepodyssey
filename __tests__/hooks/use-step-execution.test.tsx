@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useStepExecution } from '@/hooks/use-step-execution'
 import { Provider } from 'react-redux'
 import { store } from '@/lib/redux/store'
-import * as stepActions from '@/app/actions/step-actions'
+import { executeStepAction } from '@/app/actions/step-actions'
 import type { StepId } from '@/lib/steps/step-refs'
 
 jest.mock('@/app/actions/step-actions')
@@ -18,7 +18,7 @@ describe('useStepExecution', () => {
       message: 'Step completed',
       outputs: { testOutput: 'value' },
     }
-    ;(stepActions.executeStepAction as jest.Mock).mockResolvedValue(mockResult)
+    ;(executeStepAction as jest.Mock).mockResolvedValue(mockResult)
 
     const { result } = renderHook(() => useStepExecution(), { wrapper })
 

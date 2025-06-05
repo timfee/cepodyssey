@@ -5,6 +5,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { getRequiredOutput } from "../../utils/get-output";
+import { getTokens } from "../../utils/auth";
 
 export const executeEnableProvisioningSp = withExecutionHandling({
   stepId: STEP_IDS.ENABLE_PROVISIONING_SP,

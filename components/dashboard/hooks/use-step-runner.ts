@@ -7,7 +7,6 @@ import { StepStatus } from "@/lib/constants/enums";
 import { addOutputs, updateStep } from "@/lib/redux/slices/app-state";
 import { setError } from "@/lib/redux/slices/ui-state";
 import type { RootState } from "@/lib/redux/store";
-import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { useCallback, useMemo } from "react";
@@ -185,6 +184,7 @@ export function useStepRunner() {
 
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) return;
+    const { allStepDefinitions } = await import("@/lib/steps");
     let anyStepFailed = false;
     for (const step of allStepDefinitions) {
       const current = store.getState().app.steps[step.id];
