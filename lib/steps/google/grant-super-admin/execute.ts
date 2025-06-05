@@ -9,6 +9,7 @@ import { validateRequiredOutputs } from '../../utils/validation';
 
 export const executeGrantSuperAdmin = withExecutionHandling({
   stepId: STEP_IDS.GRANT_SUPER_ADMIN,
+
   requiredOutputs: [
     OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
     OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
@@ -59,7 +60,9 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
+    
     await google.assignAdminRole(token, email, '3', customerId, context.logger);
+
     return {
       success: true,
       message: `Super Admin role assigned to '${email}'.`,
