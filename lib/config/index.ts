@@ -40,6 +40,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_LOG_TO_CONSOLE: z.enum(["true", "false"]).optional(),
   NEXT_PUBLIC_LOG_LEVEL: z.string().optional(),
   NEXT_PUBLIC_LOG_LEVEL_TO_SHOW_IN_TOASTS: z.string().optional(),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("production"),
 });
 
 export const config = envSchema.parse(process.env);

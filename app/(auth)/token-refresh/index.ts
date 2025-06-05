@@ -1,4 +1,5 @@
 import { googleOAuthUrls, microsoftAuthUrls } from "@/lib/api/url-builder";
+import { config } from "@/lib/config";
 import type { JWT } from "next-auth/jwt";
 import { refreshTokenBase } from "./base-refresher";
 
@@ -7,8 +8,8 @@ export async function refreshGoogleToken(token: JWT): Promise<JWT> {
     provider: "Google",
     url: googleOAuthUrls.token(),
     params: {
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id: config.GOOGLE_CLIENT_ID,
+      client_secret: config.GOOGLE_CLIENT_SECRET,
       grant_type: "refresh_token",
       refresh_token: token.googleRefreshToken as string,
     },
@@ -36,16 +37,16 @@ export async function refreshGoogleToken(token: JWT): Promise<JWT> {
 
 export async function refreshMicrosoftToken(token: JWT): Promise<JWT> {
   const tenantForRefresh =
-    token.microsoftTenantId || process.env.MICROSOFT_TENANT_ID || "common";
+    token.microsoftTenantId || config.MICROSOFT_TENANT_ID || "common";
   return refreshTokenBase(token, {
     provider: "Microsoft",
     url: microsoftAuthUrls.token(tenantForRefresh),
     params: {
-      client_id: process.env.MICROSOFT_CLIENT_ID!,
-      client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
+      client_id: config.MICROSOFT_CLIENT_ID,
+      client_secret: config.MICROSOFT_CLIENT_SECRET,
       grant_type: "refresh_token",
       refresh_token: token.microsoftRefreshToken as string,
-      scope: process.env.MICROSOFT_GRAPH_SCOPES!,
+      scope: config.MICROSOFT_GRAPH_SCOPES,
     },
     onSuccess: (t, refreshed) => {
       const data = refreshed as {

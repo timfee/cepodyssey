@@ -1,8 +1,4 @@
-import {
-  getUser,
-  listRoleAssignments,
-  assignAdminRole,
-} from "@/lib/api/google";
+import { googleApi } from "@/lib/api/google";
 
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
@@ -52,7 +48,7 @@ export const executeGrantSuperAdmin = withExecutionHandling({
       };
     }
 
-    const user = await getUser(token, email);
+    const user = await googleApi.users.get(email, context.logger);
 
     if (user?.isAdmin) {
       return {
@@ -62,10 +58,9 @@ export const executeGrantSuperAdmin = withExecutionHandling({
         resourceUrl: portalUrls.google.users.details(email),
       };
     }
-    const roles = await listRoleAssignments(
-      token,
+    const roles = await googleApi.roles.listAssignments(
       email,
-      undefined,
+      customerId,
       context.logger,
     );
     if (roles.some((r) => r.roleId === "3")) {
@@ -77,12 +72,7 @@ export const executeGrantSuperAdmin = withExecutionHandling({
       };
     }
 
-    await googleApi.roles.assign(
-      email,
-      "3",
-      customerId,
-      context.logger,
-    );
+    await googleApi.roles.assign(email, "3", customerId, context.logger);
 
     return {
       success: true,

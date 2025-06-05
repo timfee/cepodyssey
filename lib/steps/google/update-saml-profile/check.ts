@@ -1,9 +1,7 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
 import {
-  getSamlProfile,
-  listSamlProfiles,
-  listIdpCredentials,
+  googleApi,
   type InboundSamlSsoProfile,
 } from "@/lib/api/google";
 
@@ -27,16 +25,14 @@ export const checkSamlProfileUpdate = createStepCheck({
     );
     try {
 
-      const token = await getGoogleToken();
       let profile: InboundSamlSsoProfile | null = null;
       if (profileName.startsWith("inboundSamlSsoProfiles/")) {
-        profile = await getSamlProfile(
-          token,
+        profile = await googleApi.saml.getProfile(
           profileName,
           context.logger,
         );
       } else {
-        const profiles = await listSamlProfiles(token, context.logger);
+        const profiles = await googleApi.saml.listProfiles(context.logger);
         profile = profiles.find((p) => p.displayName === profileName) ?? null;
       }
       if (!profile?.name) {
@@ -60,8 +56,7 @@ export const checkSamlProfileUpdate = createStepCheck({
         outputs[OUTPUT_KEYS.GOOGLE_SAML_SP_ACS_URL] =
           profile.spConfig.assertionConsumerServiceUri;
       }
-      const idpCreds = await listIdpCredentials(
-        token,
+      const idpCreds = await googleApi.saml.listIdpCredentials(
         profile.name,
         context.logger,
       );

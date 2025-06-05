@@ -6,11 +6,12 @@ import microsoftProvider from "./providers/microsoft";
 import signInCallback from "./callbacks/signin";
 import jwt from "./callbacks/jwt";
 import session from "./callbacks/session";
+import { config } from "@/lib/config";
 export { cleanupInvalidSession } from "./utils/session-store";
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
+  secret: config.AUTH_SECRET,
   providers: [googleProvider, microsoftProvider],
   session: { strategy: "jwt" },
   pages: {

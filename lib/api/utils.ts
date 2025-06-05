@@ -1,6 +1,3 @@
-import { ApiLogger } from "./api-logger";
-import { requestCache } from "./request-cache";
-
 export class APIError extends Error {
   constructor(
     message: string,
@@ -37,12 +34,7 @@ export async function withRetry<T>(
 }
 
 
-export async function handleApiResponse<T>(
-  res: Response,
-): Promise<T | { alreadyExists: true }> {
-  if (res.status === 409) {
-    return { alreadyExists: true };
-  }
+export async function handleApiResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const errorBody = (await res.json().catch(() => ({}))) as {
       error?: { message?: string; code?: string };

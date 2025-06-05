@@ -22,7 +22,7 @@ export const executeCreateProvisioningApp = withExecutionHandling({
       servicePrincipal: ServicePrincipal;
     };
     try {
-      result = await microsoftApi.applications.createFromTemplate(
+      result = await microsoftApi.templates.createEnterpriseApp(
         TEMPLATE_ID,
         appName,
         context.logger,

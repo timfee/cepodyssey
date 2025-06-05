@@ -36,11 +36,18 @@ export const servicePrincipals = {
     body: Partial<ServicePrincipal>,
     logger?: ApiLogger,
   ): Promise<void | { alreadyExists: true }> {
-    return microsoftApiClient.patch<void | { alreadyExists: true }>(
-      microsoftGraphUrls.servicePrincipals.update(spObjectId),
-      body,
-      logger,
-    );
+    try {
+      await microsoftApiClient.patch<void>(
+        microsoftGraphUrls.servicePrincipals.update(spObjectId),
+        body,
+        logger,
+      );
+    } catch (error) {
+      if (error instanceof APIError && error.status === 409) {
+        return { alreadyExists: true };
+      }
+      throw error;
+    }
   },
 
   async assignUsers(

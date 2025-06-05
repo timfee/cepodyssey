@@ -53,11 +53,18 @@ export const saml = {
     const updateMaskPaths: string[] = [];
     if (config.idpConfig) updateMaskPaths.push("idpConfig");
     const updateMask = updateMaskPaths.join(",");
-    return googleApiClient.patch<InboundSamlSsoProfile | { alreadyExists: true }>(
-      googleIdentityUrls.samlProfiles.update(profileFullName, updateMask),
-      config,
-      logger,
-    );
+    try {
+      return await googleApiClient.patch<InboundSamlSsoProfile>(
+        googleIdentityUrls.samlProfiles.update(profileFullName, updateMask),
+        config,
+        logger,
+      );
+    } catch (error) {
+      if (error instanceof APIError && error.status === 409) {
+        return { alreadyExists: true };
+      }
+      throw error;
+    }
   },
 
   async assignToOrgUnits(
