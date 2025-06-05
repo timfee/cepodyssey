@@ -5,6 +5,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeRetrieveIdpMetadata = withExecutionHandling({
   stepId: STEP_IDS.RETRIEVE_IDP_METADATA,
@@ -14,8 +15,8 @@ export const executeRetrieveIdpMetadata = withExecutionHandling({
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const { tenantId } = await getTokens();
-    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    const spId = context.outputs[OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID] as string;
+    const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
+    const spId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID);
     const { certificate, ssoUrl, entityId } = await microsoft.getSamlMetadata(
       tenantId,
       appId,

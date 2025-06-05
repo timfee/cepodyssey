@@ -3,11 +3,15 @@ import { createStepCheck } from "../../utils/check-factory";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const checkSuperAdmin = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL],
   checkLogic: async (context) => {
-    const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
+    const email = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+    );
     try {
       const token = await getGoogleToken();
       const user = await google.getUser(token, email, context.logger);

@@ -4,13 +4,15 @@ import { getGoogleToken } from "../../utils/auth";
 import * as google from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
 import { handleCheckError } from "../../utils/error-handling";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const checkAssignSamlProfile = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME],
   checkLogic: async (context) => {
-    const profileName = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-    ] as string;
+    const profileName = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    );
     try {
       const token = await getGoogleToken();
       let profile: google.InboundSamlSsoProfile | null = null;
