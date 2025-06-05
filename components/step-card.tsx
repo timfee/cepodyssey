@@ -16,7 +16,7 @@ import {
 } from "@/lib/redux/slices/setup-steps";
 import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
 import type { StepId } from "@/lib/steps/step-refs";
-import type { ManagedStep, StepInput, StepOutput } from "@/lib/types";
+import type { ManagedStep } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -50,11 +50,11 @@ export function StepCard({
 
   const statusDisplay = useMemo(
     () => getStatusDisplayConfig(step.status, step.completionType),
-    [step.status, step.completionType],
+    [step.status, step.completionType]
   );
   const automatabilityDisplay = useMemo(
     () => getAutomatabilityDisplayConfig(step.automatability),
-    [step.automatability],
+    [step.automatability]
   );
 
   const isProcessing = step.status === "in_progress";
@@ -82,7 +82,7 @@ export function StepCard({
 
   const displayApiActions = useMemo(() => {
     return (step.actions ?? []).map((action) =>
-      parseApiAction(action, outputs),
+      parseApiAction(action, outputs)
     );
   }, [step.actions, outputs]);
 
@@ -97,9 +97,7 @@ export function StepCard({
       className={cn(
         "w-full transition-all duration-200 ease-in-out shadow-sm hover:shadow-md",
         isProcessing && "animate-pulse",
-        isBlocked
-          ? "opacity-70 border-border"
-          : "hover:border-primary/50",
+        isBlocked ? "opacity-70 border-border" : "hover:border-primary/50"
       )}
     >
       <Accordion
@@ -112,7 +110,9 @@ export function StepCard({
           <AccordionTrigger
             className={cn(
               "p-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card data-[state=open]:pb-2 group rounded-t-lg",
-              canExecuteStep && isHeaderHovered && "bg-primary/5 dark:bg-primary/10",
+              canExecuteStep &&
+                isHeaderHovered &&
+                "bg-primary/5 dark:bg-primary/10"
             )}
             onMouseEnter={() => setIsHeaderHovered(true)}
             onMouseLeave={() => setIsHeaderHovered(false)}
@@ -200,7 +200,7 @@ export function StepCard({
       <CardFooter
         className={cn(
           "p-3 border-t flex flex-wrap gap-2 items-center justify-between",
-          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card",
+          isBlocked ? "bg-slate-50/50 dark:bg-slate-800/30" : "bg-card"
         )}
       >
         <StepCardFooterActions

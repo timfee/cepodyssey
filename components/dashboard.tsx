@@ -1,41 +1,40 @@
 "use client";
 
+import { useSessionSync } from "@/hooks/use-session-sync";
+import { useStepExecution } from "@/hooks/use-step-execution";
 import {
   AlertTriangleIcon,
   Loader2Icon,
-  PlayIcon,
   LogInIcon,
+  PlayIcon,
   RefreshCw,
 } from "lucide-react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
-import { useSessionSync } from "@/hooks/use-session-sync";
-import { useStepExecution } from "@/hooks/use-step-execution";
-import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useStore } from "react-redux";
 
+import { executeStepCheck } from "@/app/actions/step-actions";
+import { useAutoCheck } from "@/hooks/use-auto-check";
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import { setError } from "@/lib/redux/slices/errors";
 import {
   loadProgress,
   saveProgress,
   type PersistedProgress,
 } from "@/lib/redux/persistence";
 import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
+import { setError } from "@/lib/redux/slices/errors";
 import {
+  clearAllCheckTimestamps,
   initializeSteps,
   updateStep,
-  clearAllCheckTimestamps,
 } from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
-import { executeStepCheck } from "@/app/actions/step-actions";
-import { useAutoCheck } from "@/hooks/use-auto-check";
 import type { StepId } from "@/lib/steps/step-refs";
-import type { StepCheckResult } from "@/lib/types";
 import type {
   AppConfigState as AppConfigTypeFromTypes,
+  StepCheckResult,
   StepContext,
 } from "@/lib/types";
 
@@ -44,9 +43,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AuthStatus } from "./auth";
@@ -67,13 +66,12 @@ export function AutomationDashboard({
   initialConfig,
 }: AutomationDashboardProps) {
   const { session, status } = useSessionSync();
-  const router = useRouter();
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps,
+    (state: RootState) => state.setupSteps.steps
   );
 
   const isLoadingSession = status === "loading";
@@ -91,18 +89,18 @@ export function AutomationDashboard({
     ) {
       console.log(
         "AutomationDashboard: Initializing Redux with config from server session props:",
-        initialConfig,
+        initialConfig
       );
       dispatch(
         initializeConfig({
           domain: initialConfig.domain ?? null,
           tenantId: initialConfig.tenantId ?? null,
           outputs: initialConfig.outputs ?? {},
-        }),
+        })
       );
     } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
       console.log(
-        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant.",
+        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant."
       );
     }
   }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
@@ -111,7 +109,7 @@ export function AutomationDashboard({
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain,
+        appConfig.domain
       );
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
@@ -151,7 +149,7 @@ export function AutomationDashboard({
       currentSession?.hasMicrosoftAuth,
       appConfig.domain,
       appConfig.tenantId,
-    ],
+    ]
   );
 
   const { executeStep } = useStepExecution();
@@ -160,7 +158,9 @@ export function AutomationDashboard({
     async (stepId: StepId) => {
       if (!canRunAutomation) {
         dispatch(
-          setError({ message: 'Please sign in to both Google and Microsoft to continue.' })
+          setError({
+            message: "Please sign in to both Google and Microsoft to continue.",
+          })
         );
         return;
       }
@@ -181,7 +181,7 @@ export function AutomationDashboard({
           id: stepId,
           status: "in_progress",
           message: "Checking status...",
-        }),
+        })
       );
 
       const context: StepContext = {
@@ -203,7 +203,7 @@ export function AutomationDashboard({
               message:
                 checkResult.message ||
                 "Your session has expired. Please sign in again.",
-            }),
+            })
           );
 
           dispatch(
@@ -216,7 +216,7 @@ export function AutomationDashboard({
                 errorProvider: checkResult.outputs.errorProvider,
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
           return checkResult;
         }
@@ -231,21 +231,25 @@ export function AutomationDashboard({
               error: errorMessage,
               metadata: checkResult.outputs,
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
 
           if (checkResult.outputs.errorCode === "API_NOT_ENABLED") {
             dispatch(
               setError({
                 message: errorMessage,
-                details: { apiUrl: errorMessage.match(/https:\/\/[^\s]+/)?[0]: undefined },
-              }),
+                details: {
+                  apiUrl: errorMessage.match(/https:\/\/[^\s]+/)
+                    ? [0]
+                    : undefined,
+                },
+              })
             );
           } else {
             dispatch(
               setError({
                 message: `Check Failed: ${errorMessage}`,
-              }),
+              })
             );
           }
           return checkResult;
@@ -263,7 +267,7 @@ export function AutomationDashboard({
                 ...(checkResult.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            }),
+            })
           );
         } else {
           // Reset to pending if check shows it's not completed
@@ -274,7 +278,7 @@ export function AutomationDashboard({
               message: checkResult.message || "Not completed",
               error: null,
               metadata: checkResult.outputs || {},
-            }),
+            })
           );
         }
         return checkResult;
@@ -287,7 +291,7 @@ export function AutomationDashboard({
             status: "failed",
             error: error instanceof Error ? error.message : "Check failed",
             lastCheckedAt: new Date().toISOString(),
-          }),
+          })
         );
 
         dispatch(
@@ -296,12 +300,12 @@ export function AutomationDashboard({
               error instanceof Error
                 ? error.message
                 : "An unexpected error occurred",
-          }),
+          })
         );
         return { completed: false } as StepCheckResult;
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store],
+    [appConfig.domain, appConfig.tenantId, dispatch, store]
   );
 
   const { manualRefresh, isChecking } = useAutoCheck(executeCheck);
@@ -335,7 +339,7 @@ export function AutomationDashboard({
   const ProgressSummary = () => {
     const totalSteps = allStepDefinitions.length;
     const completedSteps = Object.values(stepsStatusMap).filter(
-      (s) => s.status === "completed",
+      (s) => s.status === "completed"
     ).length;
     const progressPercent = (completedSteps / totalSteps) * 100;
 
@@ -349,7 +353,7 @@ export function AutomationDashboard({
       await manualRefresh();
 
       console.log("Status refreshed");
-    }, [canRunAutomation, manualRefresh, dispatch]);
+    }, []);
 
     return (
       <Card>
@@ -410,9 +414,10 @@ export function AutomationDashboard({
 
   if (
     status === "authenticated" &&
-    ((!session?.hasGoogleAuth || !session?.hasMicrosoftAuth) ||
-      (session?.error as unknown as string) === 'MissingTokens' ||
-      session?.error === 'RefreshTokenError') &&
+    (!session?.hasGoogleAuth ||
+      !session?.hasMicrosoftAuth ||
+      (session?.error as unknown as string) === "MissingTokens" ||
+      session?.error === "RefreshTokenError") &&
     (appConfig.domain || appConfig.tenantId)
   ) {
     return (
@@ -421,19 +426,19 @@ export function AutomationDashboard({
           <Alert variant="destructive">
             <AlertTriangleIcon className="h-5 w-5" />
             <AlertTitle>Authentication Required</AlertTitle>
-          <AlertDescription>
-            Your session is invalid. Please sign out completely and sign in
-            again with both Google and Microsoft.
-          </AlertDescription>
-        </Alert>
-        <Button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="mt-4 w-full"
-          size="lg"
-        >
-          <LogInIcon className="mr-2 h-5 w-5" />
-          Sign Out and Start Over
-        </Button>
+            <AlertDescription>
+              Your session is invalid. Please sign out completely and sign in
+              again with both Google and Microsoft.
+            </AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="mt-4 w-full"
+            size="lg"
+          >
+            <LogInIcon className="mr-2 h-5 w-5" />
+            Sign Out and Start Over
+          </Button>
         </div>
       </div>
     );
@@ -464,14 +469,10 @@ export function AutomationDashboard({
             <AlertDescription>
               <ul className="list-disc space-y-1 pl-5 mt-1">
                 {!appConfig.domain && !session?.authFlowDomain && (
-                  <li>
-                    Sign in with Google to detect your domain
-                  </li>
+                  <li>Sign in with Google to detect your domain</li>
                 )}
                 {!appConfig.tenantId && !session?.microsoftTenantId && (
-                  <li>
-                    Sign in with Microsoft to detect your Tenant ID
-                  </li>
+                  <li>Sign in with Microsoft to detect your Tenant ID</li>
                 )}
                 {(appConfig.domain || session?.authFlowDomain) &&
                   (appConfig.tenantId || session?.microsoftTenantId) &&

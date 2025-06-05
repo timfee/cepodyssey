@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
@@ -18,10 +18,9 @@ import {
   selectFilteredLogs,
   setFilter,
   toggleDebugPanel,
-  type ApiLogEntry,
 } from "@/lib/redux/slices/debug-panel";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
-import { Bug, Trash2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Bug, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
 export function DebugPanel() {
   const dispatch = useAppDispatch();
@@ -47,11 +46,6 @@ export function DebugPanel() {
   const handleClearLogs = () => {
     dispatch(clearLogs());
     console.log("Logs cleared");
-  };
-
-  const handleCopyLog = (log: ApiLogEntry) => {
-    navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-    console.log("Log copied to clipboard");
   };
 
   const toggleLogExpansion = (logId: string) => {

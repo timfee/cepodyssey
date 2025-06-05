@@ -1,8 +1,6 @@
-import type { StepDefinition } from "@/lib/types";
-
 export function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>,
+  outputs: Record<string, unknown>
 ): { method: string; path: string; isManual: boolean } {
   let trimmed = action.trim();
   let isManual = false;
@@ -35,7 +33,7 @@ export function formatValue(value: unknown): string {
     try {
       const str = JSON.stringify(value);
       return str.length > 50 ? `${str.slice(0, 47)}...` : str;
-    } catch (e) {
+    } catch {
       return "[object]";
     }
   }
