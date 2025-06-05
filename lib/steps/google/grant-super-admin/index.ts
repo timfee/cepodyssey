@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkSuperAdmin } from "./check";
 import { executeGrantSuperAdmin } from "./execute";
@@ -13,7 +14,7 @@ export const g3GrantSuperAdmin = defineStep({
     category: "Google",
     activity: "Foundation",
     provider: "Google",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
     requires: [STEP_IDS.CREATE_PROVISIONING_USER, STEP_IDS.VERIFY_DOMAIN],
   },
   io: {

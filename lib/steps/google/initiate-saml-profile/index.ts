@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkSamlProfile } from "./check";
 import { executeInitiateSamlProfile } from "./execute";
@@ -13,7 +14,7 @@ export const g5InitiateSamlProfile = defineStep({
     category: "Google",
     activity: "SSO",
     provider: "Google",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
     requires: [STEP_IDS.VERIFY_DOMAIN],
   },
   io: {

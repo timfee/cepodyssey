@@ -8,6 +8,7 @@ import { useAutoCheck } from "@/hooks/use-auto-check";
 import { addOutputs } from "@/lib/redux/slices/app-config";
 import { setError } from "@/lib/redux/slices/errors";
 import { updateStep } from "@/lib/redux/slices/setup-steps";
+import { StepStatus } from "@/lib/constants/enums";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
@@ -53,7 +54,11 @@ export function useStepRunner() {
       }
 
       dispatch(
-        updateStep({ id: stepId, status: "in_progress", message: "Checking status..." })
+        updateStep({
+          id: stepId,
+          status: StepStatus.IN_PROGRESS,
+          message: "Checking status...",
+        })
       );
 
       const context: StepContext = {
@@ -78,7 +83,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: "Authentication expired",
               metadata: {
                 errorCode: "AUTH_EXPIRED",
@@ -96,7 +101,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: errorMessage,
               metadata: checkResult.outputs,
               lastCheckedAt: new Date().toISOString(),
@@ -120,7 +125,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "completed",
+              status: StepStatus.COMPLETED,
               message: checkResult.message || "Check passed",
               metadata: {
                 preExisting: true,
@@ -134,7 +139,7 @@ export function useStepRunner() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "pending",
+              status: StepStatus.PENDING,
               message: checkResult.message || "Not completed",
               error: null,
               metadata: checkResult.outputs || {},
@@ -146,7 +151,7 @@ export function useStepRunner() {
         dispatch(
           updateStep({
             id: stepId,
-            status: "failed",
+            status: StepStatus.FAILED,
             error: error instanceof Error ? error.message : "Check failed",
             lastCheckedAt: new Date().toISOString(),
           })
@@ -171,10 +176,15 @@ export function useStepRunner() {
       const current = store.getState().setupSteps.steps[step.id];
       if (
         step.automatable &&
-        (!current || current.status === "pending" || current.status === "failed")
+        (!current ||
+          current.status === StepStatus.PENDING ||
+          current.status === StepStatus.FAILED)
       ) {
         await handleExecute(step.id as StepId);
-        if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
+        if (
+          store.getState().setupSteps.steps[step.id]?.status ===
+          StepStatus.FAILED
+        ) {
           anyStepFailed = true;
           break;
         }

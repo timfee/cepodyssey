@@ -7,6 +7,7 @@ import { useErrorHandler } from "@/hooks/use-error-handler";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, LogInIcon } from "lucide-react";
+import { Provider } from "@/lib/constants/enums";
 
 interface AuthErrorBoundaryProps {
   error: Error;
@@ -40,7 +41,9 @@ export function AuthErrorBoundary({
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Your{" "}
-            {error.provider === "google" ? "Google Workspace" : "Microsoft"}{" "}
+            {error.provider === Provider.GOOGLE
+              ? "Google Workspace"
+              : "Microsoft"}{" "}
             session has expired. Please sign in again to continue.
           </p>
           <div className="flex gap-2">

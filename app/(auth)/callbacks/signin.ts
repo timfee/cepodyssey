@@ -1,5 +1,6 @@
 import type { Account, Profile, User } from "next-auth";
 import { checkGoogleAdmin, checkMicrosoftAdmin } from "../utils/admin-checks";
+import { Provider } from "@/lib/constants/enums";
 
 export default async function signIn({
   user,
@@ -14,7 +15,7 @@ export default async function signIn({
     return "/login?error=SignInInformationMissing";
   }
   let isAdmin = false;
-  if (account.provider === "google") {
+  if (account.provider === Provider.GOOGLE) {
     isAdmin = await checkGoogleAdmin(account.access_token!, user.email);
     if (!isAdmin) return "/login?error=GoogleAdminRequired";
   } else if (account.provider === "microsoft-entra-id") {

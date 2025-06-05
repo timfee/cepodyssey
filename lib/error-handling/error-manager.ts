@@ -2,6 +2,7 @@ import { AuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import { setError } from "@/lib/redux/slices/errors";
 import { store } from "@/lib/redux/store";
+import type { ProviderType } from "@/lib/constants/enums";
 
 export type ErrorCategory = "auth" | "api" | "validation" | "system";
 
@@ -9,7 +10,7 @@ export interface ManagedError {
   category: ErrorCategory;
   message: string;
   code?: string;
-  provider?: "google" | "microsoft";
+  provider?: ProviderType;
   recoverable: boolean;
 }
 

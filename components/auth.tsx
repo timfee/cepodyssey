@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useErrorHandler } from "@/hooks/use-error-handler";
+import { Provider } from "@/lib/constants/enums";
 
 /**
  * Displays the connection status for each provider and triggers sign-in.
@@ -39,7 +40,7 @@ export function AuthStatus() {
       return;
     }
     const options: { hd?: string; tenant?: string } = {};
-    if (provider === "google") options.hd = domain!;
+    if (provider === Provider.GOOGLE) options.hd = domain!;
     if (provider === "microsoft-entra-id") options.tenant = tenantId!;
 
     signIn(provider, { callbackUrl: "/" }, options);

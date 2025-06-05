@@ -6,6 +6,7 @@ import {
 } from "./api-enablement-error";
 import type { ApiLogger } from "./api-logger";
 import { wrapAuthError } from "./auth-interceptor";
+import { Provider } from "@/lib/constants/enums";
 import {
   API_BASES,
   googleDirectoryUrls,
@@ -97,7 +98,7 @@ function handleGoogleError(error: unknown): never {
     (error.status === 401 ||
       error.message?.includes("invalid authentication credentials"))
   ) {
-    throw wrapAuthError(error, "google");
+    throw wrapAuthError(error, Provider.GOOGLE);
   }
 
   // Handle API enablement errors specially

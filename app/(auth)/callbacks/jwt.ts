@@ -5,6 +5,7 @@ import type { MicrosoftEntraIDProfile } from "next-auth/providers/microsoft-entr
 import { getStoredToken, setStoredToken } from "../utils/session-store";
 
 import { Logger } from "@/lib/utils/logger";
+import { Provider } from "@/lib/constants/enums";
 import { refreshGoogleToken, refreshMicrosoftToken } from "../token-refresh";
 export default async function jwtCallback({
   token,
@@ -28,7 +29,7 @@ export default async function jwtCallback({
 
   if (account && profile) {
     finalToken.error = undefined;
-    if (account.provider === "google") {
+    if (account.provider === Provider.GOOGLE) {
       Logger.debug("[Auth]", "Google Profile in JWT callback:", profile);
       finalToken.googleAccessToken = account.access_token;
       finalToken.googleRefreshToken = account.refresh_token;

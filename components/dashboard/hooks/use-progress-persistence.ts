@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import { loadProgress, saveProgress, type PersistedProgress } from "@/lib/redux/persistence";
 import { addOutputs } from "@/lib/redux/slices/app-config";
 import { initializeSteps } from "@/lib/redux/slices/setup-steps";
+import { StepStatus, type StepStatusType } from "@/lib/constants/enums";
 import { allStepDefinitions } from "@/lib/steps";
 import type { RootState } from "@/lib/redux/store";
 
@@ -20,9 +21,9 @@ export function useProgressPersistence() {
         dispatch(initializeSteps(persisted.steps));
         dispatch(addOutputs(persisted.outputs || {}));
       } else {
-        const initialStatuses: Record<string, { status: "pending" }> = {};
+        const initialStatuses: Record<string, { status: StepStatusType }> = {};
         allStepDefinitions.forEach((def) => {
-          initialStatuses[def.id] = { status: "pending" };
+          initialStatuses[def.id] = { status: StepStatus.PENDING };
         });
         dispatch(initializeSteps(initialStatuses));
       }

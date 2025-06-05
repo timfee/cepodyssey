@@ -31,6 +31,7 @@ import {
 } from "./config";
 import { StepCardApiActionsDisplay } from "./displays/api-actions";
 import { StepCardDetailsSection } from "./step-card/details";
+import { StepStatus } from "@/lib/constants/enums";
 import { StepCardFooterActions } from "./step-card/actions";
 import { StepCardHeader } from "./step-card/header";
 import { StepCardInputsDisplay } from "./displays/inputs";
@@ -57,9 +58,9 @@ export function WorkflowStepCard({
     [step.automatability],
   );
 
-  const isProcessing = step.status === "in_progress";
-  const isCompleted = step.status === "completed";
-  const isBlocked = step.status === "blocked";
+  const isProcessing = step.status === StepStatus.IN_PROGRESS;
+  const isCompleted = step.status === StepStatus.COMPLETED;
+  const isBlocked = step.status === StepStatus.BLOCKED;
 
   const canExecuteStep = useMemo(() => {
     if (!canRunGlobal || isProcessing || isCompleted || isBlocked) return false;

@@ -8,6 +8,7 @@ import type {
   StepExecutionResult,
 } from "@/lib/types";
 import type { StepId } from "../step-refs";
+import { Automatability } from "@/lib/constants/enums";
 
 export type CheckFn = (context: StepContext) => Promise<StepCheckResult>;
 export type ExecuteFn = (context: StepContext) => Promise<StepExecutionResult>;
@@ -39,7 +40,8 @@ export function defineStep<TInputs extends StepInput[], TOutputs extends StepOut
 ): StepDefinition {
   const enhancement: StepContent = stepContentEnhancements[config.id] || { details: "", actions: [] };
   const provider = config.metadata.provider ?? inferProvider(config.id);
-  const automatability = config.metadata.automatability ?? "automated";
+  const automatability =
+    config.metadata.automatability ?? Automatability.AUTOMATED;
 
   return {
     id: config.id,
@@ -50,7 +52,7 @@ export function defineStep<TInputs extends StepInput[], TOutputs extends StepOut
     activity: config.metadata.activity,
     provider,
     automatability,
-    automatable: automatability !== "manual",
+    automatable: automatability !== Automatability.MANUAL,
     requires: config.metadata.requires,
     inputs: config.io.inputs,
     outputs: config.io.outputs,

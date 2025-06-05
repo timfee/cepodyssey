@@ -18,6 +18,7 @@ import {
 import { AlertTriangleIcon, ExternalLinkIcon, LogInIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Provider } from "@/lib/constants/enums";
 
 export function GlobalErrorModal() {
   const dispatch = useAppDispatch();
@@ -80,7 +81,7 @@ export function GlobalErrorModal() {
           {isAuthError && details?.provider && (
             <p className="mt-2 text-sm text-muted-foreground">
               Provider:{" "}
-              {details.provider === "google"
+              {details.provider === Provider.GOOGLE
                 ? "Google Workspace"
                 : "Microsoft Entra ID"}
             </p>

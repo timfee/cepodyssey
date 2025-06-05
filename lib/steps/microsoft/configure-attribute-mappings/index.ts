@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkAttributeMappings } from "./check";
 import { executeConfigureAttributeMappings } from "./execute";
@@ -13,7 +14,7 @@ export const m4ConfigureAttributeMappings = defineStep({
     category: "Microsoft",
     activity: "Provisioning",
     provider: "Microsoft",
-    automatability: "manual",
+    automatability: Automatability.MANUAL,
     requires: [STEP_IDS.AUTHORIZE_PROVISIONING],
   },
   io: {

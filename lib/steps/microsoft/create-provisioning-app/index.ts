@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkProvisioningApp } from "./check";
 import { executeCreateProvisioningApp } from "./execute";
@@ -13,7 +14,7 @@ export const m1CreateProvisioningApp = defineStep({
     category: "Microsoft",
     activity: "Provisioning",
     provider: "Microsoft",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
   },
   io: {
     inputs: [],

@@ -4,6 +4,7 @@ import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
+import { StepStatus } from "@/lib/constants/enums";
 
 /**
  * Automatically checks step status when configuration is available.
@@ -40,8 +41,8 @@ export function useAutoCheck(
         const shouldCheck =
           force ||
           !checkedSteps.current.has(stepId) ||
-          status?.status === "failed" ||
-          status?.status === "pending";
+          status?.status === StepStatus.FAILED ||
+          status?.status === StepStatus.PENDING;
 
         if (shouldCheck && !recentlyChecked) {
           console.log(`[AutoCheck] Checking step ${stepId}`);

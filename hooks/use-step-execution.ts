@@ -5,6 +5,7 @@ import {
   clearCheckTimestamp,
   updateStep,
 } from "@/lib/redux/slices/setup-steps";
+import { StepStatus } from "@/lib/constants/enums";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
@@ -28,7 +29,7 @@ export function useStepExecution() {
       dispatch(
         updateStep({
           id: stepId,
-          status: "in_progress",
+          status: StepStatus.IN_PROGRESS,
           error: null,
           message: undefined,
         }),
@@ -51,7 +52,7 @@ export function useStepExecution() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "completed",
+              status: StepStatus.COMPLETED,
               completionType: "server-verified",
               message: result.message,
               metadata: {
@@ -69,7 +70,7 @@ export function useStepExecution() {
           dispatch(
             updateStep({
               id: stepId,
-              status: "failed",
+              status: StepStatus.FAILED,
               error: errorMessage,
               message: result.message,
               metadata: result.outputs || {},
@@ -88,7 +89,7 @@ export function useStepExecution() {
         dispatch(
           updateStep({
             id: stepId,
-            status: "failed",
+            status: StepStatus.FAILED,
             error: errorMessage,
             lastCheckedAt: new Date().toISOString(),
           }),

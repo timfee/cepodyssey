@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkExcludeAutomationOu } from "./check";
 import { executeExcludeAutomationOu } from "./execute";
@@ -13,7 +14,7 @@ export const g8ExcludeAutomationOu = defineStep({
     category: "SSO",
     activity: "SSO",
     provider: "Google",
-    automatability: "supervised",
+    automatability: Automatability.SUPERVISED,
     requires: [STEP_IDS.ASSIGN_SAML_PROFILE],
   },
   io: {

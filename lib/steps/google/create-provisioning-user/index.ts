@@ -1,6 +1,7 @@
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { defineStep } from "@/lib/steps/utils/step-factory";
+import { Automatability } from "@/lib/constants/enums";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkProvisioningUser } from "./check";
 import { executeCreateProvisioningUser } from "./execute";
@@ -13,7 +14,7 @@ export const g2CreateProvisioningUser = defineStep({
     category: "Google",
     activity: "Foundation",
     provider: "Google",
-    automatability: "automated",
+    automatability: Automatability.AUTOMATED,
     requires: [STEP_IDS.CREATE_AUTOMATION_OU],
   },
   io: {
