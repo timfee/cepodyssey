@@ -11,36 +11,31 @@ import {
   type ApiLogEntry,
 } from "@/lib/redux/slices/debug-panel"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  BugIcon,
-  TrashIcon,
-  AlertTriangleIcon,
-  MinimizeIcon,
-} from "lucide-react"
+import { Bug, Trash2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ApiLogCard } from "./api-log-card"
 import { toast } from "sonner"
-import { useEffect } from "react"
+import { isApiDebugEnabled } from "@/lib/utils"
 
 export function DebugPanel() {
   const dispatch = useAppDispatch()
   const { isOpen, filter } = useAppSelector(selectDebugPanel)
   const logs = useAppSelector(selectFilteredLogs)
 
-  const debugDisabled = !process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
+  const debugDisabled = !isApiDebugEnabled()
 
-  const errorCount = logs.filter(
-    (log) => log.error || (log.responseStatus && log.responseStatus >= 400)
-  ).length
+  if (debugDisabled || !isOpen) {
+    return null
+  }
 
-  const handleCopyLog = (log: ApiLogEntry) => {
-    navigator.clipboard.writeText(JSON.stringify(log, null, 2))
-    toast.success("Log copied to clipboard")
+  const getLogCount = (filterType: DebugPanelState["filter"]) => {
+    if (filterType === "all") return logs.length
+    if (filterType === "errors")
+      return logs.filter(
+        (log) => log.error || (log.responseStatus && log.responseStatus >= 400)
+      ).length
+    return logs.filter((log) => log.provider === filterType).length
   }
 
   const handleClearLogs = () => {
@@ -48,112 +43,101 @@ export function DebugPanel() {
     toast.success("Logs cleared")
   }
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        dispatch(toggleDebugPanel())
-      }
-    }
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [dispatch])
-
-  if (debugDisabled || !isOpen) {
-    return null
+  const handleCopyLog = (log: ApiLogEntry) => {
+    navigator.clipboard.writeText(JSON.stringify(log, null, 2))
+    toast.success("Log copied to clipboard")
   }
 
-  const showProdWarning =
-    process.env.NODE_ENV === "production" &&
-    process.env.NEXT_PUBLIC_ENABLE_API_DEBUG
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 h-[60vh] flex flex-col bg-background border-t shadow-2xl">
-      {showProdWarning && (
-        <Alert className="rounded-none border-x-0 border-t-0">
-          <AlertTriangleIcon className="h-4 w-4" />
-          <AlertDescription className="text-xs">
-            Debug mode is enabled in production
-          </AlertDescription>
-        </Alert>
-      )}
+    <Card className="fixed bottom-0 left-0 right-0 h-[40vh] flex flex-col z-50 shadow-2xl rounded-t-lg border-t border-border">
+      <CardHeader className="flex flex-row items-center justify-between p-3 border-b bg-slate-50 rounded-t-lg">
+        <div className="flex items-center gap-2">
+          <Bug className="h-5 w-5 text-foreground" />
+          <CardTitle className="text-md font-semibold">API Debug Panel</CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleClearLogs} aria-label="Clear logs">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => dispatch(toggleDebugPanel())} aria-label="Close panel">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
       
-      <Card className="flex-1 rounded-none border-0">
-        <CardHeader className="border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BugIcon className="h-5 w-5" />
-                API Debug Panel
-              </CardTitle>
-              
-              <Tabs
-                value={filter}
-                onValueChange={(v) =>
-                  dispatch(setFilter(v as DebugPanelState["filter"]))
-                }
-              >
-                <TabsList className="h-8">
-                  <TabsTrigger value="all" className="text-xs">
-                    All ({logs.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="google" className="text-xs">
-                    Google
-                  </TabsTrigger>
-                  <TabsTrigger value="microsoft" className="text-xs">
-                    Microsoft
-                  </TabsTrigger>
-                  <TabsTrigger value="errors" className="text-xs">
-                    Errors ({errorCount})
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleClearLogs}
-                disabled={logs.length === 0}
-              >
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => dispatch(toggleDebugPanel())}
-              >
-                <MinimizeIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="p-0">
-          <ScrollArea className="h-[calc(60vh-8rem)]">
-            <div className="p-6 space-y-3">
-              {logs.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    No API requests logged yet
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    API calls will appear here as they are made
-                  </p>
-                </div>
-              ) : (
-                logs.map((log) => (
-                  <ApiLogCard
-                    key={log.id}
-                    log={log}
-                    onCopyLog={handleCopyLog}
-                  />
-                ))
+      <div className="p-3 border-b">
+        <div className="flex gap-2 flex-wrap">
+          {(["all", "google", "microsoft", "errors"] as const).map((filterType) => (
+            <Button
+              key={filterType}
+              variant={filter === filterType ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => dispatch(setFilter(filterType))}
+              className={cn(
+                "text-xs px-2.5 py-1 h-auto capitalize",
+                filter === filterType && "bg-primary/10 text-primary border-primary/50"
               )}
+            >
+              {filterType} ({getLogCount(filterType)})
+            </Button>
+          ))}
+        </div>
+      </div>
+      
+      <CardContent className="p-0 flex-grow overflow-hidden">
+        <ScrollArea className="h-full p-3">
+          {logs.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              No API requests logged{filter !== "all" ? " for this filter" : ""}.
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
+          ) : (
+            <div className="space-y-2 text-xs font-mono">
+              {logs.map((log) => {
+                const isError = log.error || (log.responseStatus && log.responseStatus >= 400)
+                return (
+                  <div
+                    key={log.id}
+                    className={cn(
+                      "p-2 rounded-sm border cursor-pointer hover:bg-accent/50",
+                      isError ? "border-destructive/50 bg-destructive/5" : "border-border bg-slate-50/50"
+                    )}
+                    onClick={() => handleCopyLog(log)}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={cn("font-semibold", isError ? "text-destructive" : "text-primary")}> 
+                        {log.method} {log.url}
+                      </span>
+                      <span className="text-muted-foreground text-[11px]">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div className="flex gap-x-3 items-center text-muted-foreground text-[11px]">
+                      <span>
+                        Provider: <span className="text-foreground/80 capitalize">{log.provider || "unknown"}</span>
+                      </span>
+                      {log.responseStatus && (
+                        <span className={cn(log.responseStatus >= 400 ? "text-destructive" : "text-success")}>
+                          Status: {log.responseStatus}
+                        </span>
+                      )}
+                      {log.duration && (
+                        <span>
+                          Duration: <span className="text-foreground/80">{log.duration}ms</span>
+                        </span>
+                      )}
+                    </div>
+                    {log.error && (
+                      <div className="mt-1 text-destructive text-[11px]">
+                        Error: {log.error}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </ScrollArea>
+      </CardContent>
+    </Card>
   )
 }
