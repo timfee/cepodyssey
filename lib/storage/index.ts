@@ -1,10 +1,12 @@
+import { Logger } from "@/lib/utils/logger";
+
 export class SecureStorage {
   private encrypt(data: unknown): string {
     try {
       const json = JSON.stringify(data);
       return btoa(json);
     } catch (err) {
-      console.error('Failed to encrypt data', err);
+      Logger.error('[SecureStorage]', 'Failed to encrypt data', err);
       return '';
     }
   }
@@ -14,7 +16,7 @@ export class SecureStorage {
       const json = atob(data);
       return JSON.parse(json);
     } catch (err) {
-      console.error('Failed to decrypt data', err);
+      Logger.error('[SecureStorage]', 'Failed to decrypt data', err);
       return null;
     }
   }
@@ -25,12 +27,12 @@ export class SecureStorage {
       const encrypted = this.encrypt(data);
       localStorage.setItem(key, encrypted);
     } catch (error) {
-      console.error('SecureStorage primary save failed', error);
+      Logger.error('[SecureStorage]', 'SecureStorage primary save failed', error);
       try {
         const encrypted = this.encrypt(data);
         sessionStorage.setItem(key, encrypted);
       } catch (storageError) {
-        console.error('SecureStorage save failed', storageError);
+        Logger.error('[SecureStorage]', 'SecureStorage save failed', storageError);
       }
     }
   }
@@ -42,7 +44,7 @@ export class SecureStorage {
       if (!encrypted) return null;
       return this.decrypt(encrypted) as T;
     } catch (err) {
-      console.error('SecureStorage load failed', err);
+      Logger.error('[SecureStorage]', 'SecureStorage load failed', err);
       return null;
     }
   }

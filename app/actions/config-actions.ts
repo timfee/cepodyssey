@@ -4,6 +4,7 @@ import { auth } from "@/app/(auth)/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import isFQDN from "validator/lib/isFQDN";
+import { Logger } from "@/lib/utils/logger";
 
 export interface ActionResult<TData = Record<string, unknown> | null> {
   success: boolean;
@@ -51,7 +52,8 @@ export async function saveConfig(data: AppConfig): Promise<ActionResult> {
   }
 
   serverSideConfigStore.set(CONFIG_STORE_KEY, result.data);
-  console.log(
+  Logger.info(
+    '[ConfigActions]',
     `Configuration saved with key '${CONFIG_STORE_KEY}':`,
     result.data,
   );
@@ -67,18 +69,23 @@ export async function saveConfig(data: AppConfig): Promise<ActionResult> {
 export async function getConfig(): Promise<AppConfig | null> {
   const session = await auth();
   if (!session?.user) {
-    console.log("getConfig: No session or user found. Cannot retrieve config.");
+    Logger.warn(
+      '[ConfigActions]',
+      'getConfig: No session or user found. Cannot retrieve config.',
+    );
     return null;
   }
   const config = serverSideConfigStore.get(CONFIG_STORE_KEY);
   if (config) {
-    console.log(
+    Logger.debug(
+      '[ConfigActions]',
       `getConfig: Configuration retrieved for key '${CONFIG_STORE_KEY}':`,
       config,
     );
     return config;
   } else {
-    console.log(
+    Logger.debug(
+      '[ConfigActions]',
       `getConfig: No configuration found in server-side store for key '${CONFIG_STORE_KEY}'.`,
     );
     return null;

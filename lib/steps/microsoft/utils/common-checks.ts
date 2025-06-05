@@ -6,6 +6,7 @@ import type { SynchronizationJob } from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
+import { HTTP_STATUS_NOT_FOUND } from "@/lib/constants/http-status";
 import { portalUrls } from "@/lib/api/url-builder";
 import { handleCheckError } from "../../utils/error-handling";
 
@@ -156,7 +157,7 @@ const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
     } catch (e) {
       if (
         e instanceof APIError &&
-        e.status === 404 &&
+        e.status === HTTP_STATUS_NOT_FOUND &&
         e.message?.includes("No synchronization configuration")
       ) {
         return {
@@ -292,7 +293,7 @@ const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
           "Key default attribute mappings not fully confirmed or schema/job not found.",
       } as StepCheckResult;
     } catch (e) {
-      if (e instanceof APIError && e.status === 404) {
+      if (e instanceof APIError && e.status === HTTP_STATUS_NOT_FOUND) {
         return {
           completed: false,
           message:
@@ -332,7 +333,7 @@ const checkMicrosoftAppAssignmentsInner = createCheckFunction(
           : "Application currently has no user/group assignments. Users must be assigned for SSO access.",
       } as StepCheckResult;
     } catch (e) {
-      if (e instanceof APIError && e.status === 404) {
+      if (e instanceof APIError && e.status === HTTP_STATUS_NOT_FOUND) {
         return {
           completed: false,
           message: `Service Principal '${servicePrincipalObjectId}' not found for checking assignments.`,

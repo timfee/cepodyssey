@@ -1,8 +1,11 @@
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
+  // eslint-disable-next-line no-magic-numbers
   WARN = 2,
+  // eslint-disable-next-line no-magic-numbers
   ERROR = 3,
+  // eslint-disable-next-line no-magic-numbers
   OFF = 999,
 }
 
@@ -23,6 +26,7 @@ export class Logger {
   private static isDevelopment = config.NODE_ENV === "development";
   private static isEnabled = config.NEXT_PUBLIC_LOG_TO_CONSOLE !== "false";
   private static history: LogEntry[] = [];
+  // eslint-disable-next-line no-magic-numbers
   private static maxHistorySize = 100;
 
   /**
@@ -66,6 +70,7 @@ export class Logger {
       data: args,
     };
     this.push(entry);
+    // eslint-disable-next-line custom/no-console-log
     console.debug(`[${category}]`, message, ...args);
   }
 
@@ -79,6 +84,7 @@ export class Logger {
       data: args,
     };
     this.push(entry);
+    // eslint-disable-next-line custom/no-console-log
     console.info(`[${category}]`, message, ...args);
   }
 
@@ -92,6 +98,7 @@ export class Logger {
       data: args,
     };
     this.push(entry);
+    // eslint-disable-next-line custom/no-console-log
     console.warn(`[${category}]`, message, ...args);
   }
 
@@ -111,27 +118,32 @@ export class Logger {
       stackTrace: error instanceof Error ? error.stack : undefined,
     };
     this.push(entry);
+    // eslint-disable-next-line custom/no-console-log
     console.error(`[${category}]`, message, error, ...args);
   }
 
   static group(label: string): void {
     if (!this.isEnabled) return;
+    // eslint-disable-next-line custom/no-console-log
     console.group(label);
   }
 
   static groupEnd(): void {
     if (!this.isEnabled) return;
+    // eslint-disable-next-line custom/no-console-log
     console.groupEnd();
   }
 
   static table(data: unknown): void {
     if (!this.isEnabled) return;
+    // eslint-disable-next-line custom/no-console-log
     console.table(data);
   }
 
   /**
    * Get recent log history for diagnostics.
    */
+  // eslint-disable-next-line no-magic-numbers
   static getHistory(count: number = 50): LogEntry[] {
     return this.history.slice(-count);
   }

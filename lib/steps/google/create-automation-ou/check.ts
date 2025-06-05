@@ -4,6 +4,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { createStepCheck } from "../../utils/check-factory";
 import { handleCheckError } from "../../utils/error-handling";
 import { APIError } from "@/lib/api/utils";
+import { HTTP_STATUS_NOT_FOUND } from "@/lib/constants/http-status";
 
 export const checkAutomationOu = createStepCheck({
   requiredOutputs: [],
@@ -32,7 +33,7 @@ export const checkAutomationOu = createStepCheck({
         message: `Organizational Unit '/Automation' not found.`,
       };
     } catch (e) {
-      if (e instanceof APIError && e.status === 404) {
+      if (e instanceof APIError && e.status === HTTP_STATUS_NOT_FOUND) {
         return {
           completed: false,
           message: `Organizational Unit '/Automation' not found.`,

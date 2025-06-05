@@ -1,6 +1,7 @@
 import { isApiDebugEnabled } from "@/lib/utils";
 import { config } from "@/lib/config";
 import { serverLogger } from "@/lib/logging/server-logger";
+import { Logger } from "@/lib/utils/logger";
 import { randomUUID } from "crypto";
 
 /**
@@ -26,7 +27,7 @@ export class ApiLogger {
     const id = `${Date.now()}-${randomUUID()}`;
     const provider = this.detectProvider(url);
 
-    console.log(`[API Request] ${init?.method || 'GET'} ${url}`);
+    Logger.info('[ApiLogger]', `[API Request] ${init?.method || 'GET'} ${url}`);
     if (isApiDebugEnabled()) {
       serverLogger
         .log({
@@ -54,7 +55,7 @@ export class ApiLogger {
     responseBody?: unknown,
     duration?: number
   ) {
-    console.log(`[API Response] ${response.status} in ${duration}ms`);
+    Logger.info('[ApiLogger]', `[API Response] ${response.status} in ${duration}ms`);
     if (!isApiDebugEnabled()) return;
 
     serverLogger
@@ -73,7 +74,7 @@ export class ApiLogger {
   }
 
   logError(_id: string, error: unknown) {
-    console.error(`[API Error]`, error);
+    Logger.error('[ApiLogger]', '[API Error]', error);
     if (!isApiDebugEnabled()) return;
 
     serverLogger

@@ -11,7 +11,7 @@ describe('config', () => {
       MICROSOFT_GRAPH_SCOPES: 'mscope',
       NEXT_PUBLIC_MICROSOFT_TENANT_ID: '00000000-0000-0000-0000-000000000000',
       NODE_ENV: 'test',
-    } as any
+    } as NodeJS.ProcessEnv
     jest.resetModules()
   })
 
@@ -20,6 +20,7 @@ describe('config', () => {
   })
 
   it('parses environment variables', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { config } = require('@/lib/config')
     expect(config.NODE_ENV).toBe('test')
     expect(config.GOOGLE_CLIENT_ID).toBe('gid')

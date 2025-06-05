@@ -4,6 +4,7 @@ import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { StepStatus } from "@/lib/constants/enums";
+import { Logger } from "@/lib/utils/logger";
 
 /**
  * Automatically checks step status when configuration is available.
@@ -49,7 +50,7 @@ export function useAutoCheck(
           status?.status === StepStatus.PENDING;
 
         if (shouldCheck && !recentlyChecked) {
-          console.log(`[AutoCheck] Checking step ${stepId}`);
+          Logger.info('[AutoCheck]', `Checking step ${stepId}`);
           await executeCheck(stepId);
 
           // API logs are streamed via SSE; nothing to handle here

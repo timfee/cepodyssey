@@ -7,7 +7,7 @@ jest.mock('@/lib/api/url-builder', () => ({
 import { roles } from '@/lib/api/google/resources/roles'
 import { APIError } from '@/lib/api/utils'
 import { googleApiClient } from '@/lib/api/google/client'
-const client = googleApiClient as any
+const client = googleApiClient as jest.Mocked<typeof googleApiClient>
 beforeEach(() => jest.clearAllMocks())
 
 test('assign wraps 409', async () => {

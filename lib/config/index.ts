@@ -11,6 +11,10 @@ const envSchema = z.object({
   MICROSOFT_TENANT_ID: z.string().uuid().optional(),
   MICROSOFT_GRAPH_SCOPES: z.string(),
   NEXT_PUBLIC_MICROSOFT_TENANT_ID: z.string().uuid().optional(),
+  MICROSOFT_GLOBAL_ADMIN_ROLE_TEMPLATE_ID: z
+    .string()
+    .uuid()
+    .default("62e90394-69f5-4237-9190-012177145e10"),
 
   // API URLs (with defaults)
   GOOGLE_API_BASE: z.string().url().default("https://admin.googleapis.com"),

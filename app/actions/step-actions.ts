@@ -3,6 +3,7 @@
 import { SessionManager } from "@/lib/auth/session-manager";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { ApiLogger } from "@/lib/api/api-logger";
+import { Logger } from "@/lib/utils/logger";
 import type { StepId } from "@/lib/steps/step-refs";
 import type {
   StepCheckResult,
@@ -72,7 +73,7 @@ export async function executeStepCheck(
     };
     return enrichedResult;
   } catch (error) {
-    console.error(`[StepCheck] Unhandled exception for step ${stepId}:`, error);
+    Logger.error('[StepActions]', `[StepCheck] Unhandled exception for step ${stepId}:`, error);
     if (isAuthenticationError(error)) {
       return {
         completed: false,

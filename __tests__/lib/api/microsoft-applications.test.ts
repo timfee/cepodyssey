@@ -6,7 +6,7 @@ jest.mock('@/lib/api/url-builder', () => ({
 }))
 import { applications } from '@/lib/api/microsoft/resources/applications'
 import { microsoftApiClient } from '@/lib/api/microsoft/client'
-const client = microsoftApiClient as any
+const client = microsoftApiClient as jest.Mocked<typeof microsoftApiClient>
 
 beforeEach(() => jest.clearAllMocks())
 

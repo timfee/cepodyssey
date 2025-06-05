@@ -1,6 +1,7 @@
 /* eslint-disable security/detect-object-injection */
 import type { AppConfigState, StepStatusInfo } from "@/lib/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { Logger } from "@/lib/utils/logger";
 
 interface AppState extends AppConfigState {
   steps: Record<string, StepStatusInfo>;
@@ -46,7 +47,7 @@ export const appStateSlice = createSlice({
     },
     resetAuthState(state) {
       state.outputs = {};
-      console.log("Auth state reset due to session expiration");
+      Logger.info('[AppState]', 'Auth state reset due to session expiration');
     },
     clearAllData(state) {
       state.domain = null;

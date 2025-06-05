@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { config } from "@/lib/config";
+import { Logger } from "@/lib/utils/logger";
 import { cleanupInvalidSession } from "../auth";
 import { handleGoogleLogin, handleMicrosoftLogin } from "./actions";
 
@@ -48,8 +49,9 @@ function LoginPage() {
   // Redirect when both providers are authenticated
   useEffect(() => {
     if (session?.hasGoogleAuth && session.hasMicrosoftAuth) {
-      console.log(
-        "LoginPage: Both providers authenticated. Redirecting to dashboard.",
+      Logger.info(
+        '[LoginPage]',
+        'Both providers authenticated. Redirecting to dashboard.',
       );
       router.replace("/");
     }
@@ -71,7 +73,7 @@ function LoginPage() {
         errorMessage =
           "Your previous session was invalid. Please sign in again to both services.";
       }
-      console.error(errorMessage);
+      Logger.error('[LoginPage]', errorMessage);
     }
   }, [searchParams]);
 
@@ -82,9 +84,9 @@ function LoginPage() {
 
     if (authAttempt && !error && sessionStatus === "authenticated") {
       if (authAttempt === "google" && !session?.hasGoogleAuth) {
-        console.error("Google authentication failed. Please try again.");
+        Logger.error('[LoginPage]', 'Google authentication failed. Please try again.');
       } else if (authAttempt === "microsoft" && !session?.hasMicrosoftAuth) {
-        console.error("Microsoft authentication failed. Please try again.");
+        Logger.error('[LoginPage]', 'Microsoft authentication failed. Please try again.');
       }
     }
   }, [searchParams, session, sessionStatus]);
@@ -102,7 +104,7 @@ function LoginPage() {
 
   const onLookupTenant = async () => {
     if (!domain) {
-      console.error("Please enter a domain first to lookup Tenant ID.");
+      Logger.error('[LoginPage]', 'Please enter a domain first to lookup Tenant ID.');
       return;
     }
     setIsLookingUpTenant(true);
@@ -112,17 +114,17 @@ function LoginPage() {
       setTenantId(result.tenantId);
       setIsTenantDiscovered(true);
       setLookupMessage(`Tenant ID found: ${result.tenantId}`);
-      console.log("Tenant ID discovered!");
+      Logger.info('[LoginPage]', 'Tenant ID discovered!');
     } else {
       setLookupMessage(result.message || "Could not auto-discover Tenant ID.");
-      console.error(result.message || "Tenant ID lookup failed.");
+      Logger.error('[LoginPage]', result.message || 'Tenant ID lookup failed.');
     }
     setIsLookingUpTenant(false);
   };
 
   const onGoogleSignIn = () => {
     if (!domain) {
-      console.error("Please enter your domain first");
+      Logger.error('[LoginPage]', 'Please enter your domain first');
       return;
     }
     startGoogleLoginTransition(async () => {
@@ -136,7 +138,7 @@ function LoginPage() {
     const effectiveTenantId = tenantId || config.NEXT_PUBLIC_MICROSOFT_TENANT_ID;
     // Domain is optional for MS login but used as hint when provided
     if (!effectiveTenantId && !config.MICROSOFT_TENANT_ID) {
-      console.log("No Tenant ID found. Using default Microsoft sign-in.");
+      Logger.info('[LoginPage]', 'No Tenant ID found. Using default Microsoft sign-in.');
     }
     startMicrosoftLoginTransition(async () => {
       const formData = new FormData();

@@ -14,7 +14,7 @@ import { APIError } from '@/lib/api/utils'
 import { wrapAuthError } from '@/lib/api/auth-interceptor'
 import { createEnablementError } from '@/lib/api/api-enablement-error'
 
-const passed = (global as any).cfg
+const passed = (global as { cfg: { handleProviderError: (e: unknown) => void } }).cfg
 
 describe('googleApiClient handleProviderError', () => {
   it('wraps auth and enable errors', () => {

@@ -14,14 +14,16 @@ import { ApiLogger } from '@/lib/api/api-logger'
 describe('ApiLogger', () => {
   it('detects provider', () => {
     const logger = new ApiLogger()
-    // private method call via any
-    const provider = (logger as any).detectProvider('https://gapi/foo')
+    const privateLogger = logger as unknown as {
+      detectProvider: (url: string) => string | undefined
+    }
+    const provider = privateLogger.detectProvider('https://gapi/foo')
     expect(provider).toBe('google')
   })
 
   it('logs requests and errors', async () => {
     const logger = new ApiLogger()
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+    const logSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const reqId = logger.logRequest('https://gapi/test', { method: 'GET' })
     expect(typeof reqId).toBe('string')

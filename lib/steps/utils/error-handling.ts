@@ -2,6 +2,7 @@ import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import { serverLogger } from "@/lib/logging/server-logger";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
+import { Logger } from "@/lib/utils/logger";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 import { Provider } from "@/lib/constants/enums";
 
@@ -9,7 +10,7 @@ export function handleCheckError(
   error: unknown,
   defaultMessage: string,
 ): StepCheckResult {
-  console.error(`Check Action Error - ${defaultMessage}:`, error);
+  Logger.error('[StepError]', `Check Action Error - ${defaultMessage}:`, error);
 
   // eslint-disable-next-line promise/no-promise-in-callback
   serverLogger
@@ -67,7 +68,7 @@ export async function handleExecutionError(
   error: unknown,
   stepId: string,
 ): Promise<StepExecutionResult> {
-  console.error(`Execution Action Failed (Step ${stepId}):`, error);
+  Logger.error('[StepError]', `Execution Action Failed (Step ${stepId}):`, error);
 
   if (isAuthenticationError(error)) {
     return {

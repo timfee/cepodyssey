@@ -4,6 +4,7 @@ import { SessionManager } from "@/lib/auth/session-manager";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import { useErrorHandler } from "./use-error-handler";
+import { Logger } from "@/lib/utils/logger";
 import {
   resetAuthState,
   setDomain,
@@ -42,15 +43,17 @@ export function useSessionSync() {
   useEffect(() => {
     if (session && status === "authenticated") {
       if (session.authFlowDomain && !domain) {
-        console.log(
-          "Syncing domain from session to Redux:",
+        Logger.info(
+          '[SessionSync]',
+          'Syncing domain from session to Redux:',
           session.authFlowDomain,
         );
         dispatch(setDomain(session.authFlowDomain));
       }
       if (session.microsoftTenantId && !tenantId) {
-        console.log(
-          "Syncing tenant from session to Redux:",
+        Logger.info(
+          '[SessionSync]',
+          'Syncing tenant from session to Redux:',
           session.microsoftTenantId,
         );
         dispatch(setTenantId(session.microsoftTenantId));

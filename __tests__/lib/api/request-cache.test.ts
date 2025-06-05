@@ -1,8 +1,9 @@
 import { requestCache } from '@/lib/api/request-cache'
 
 beforeEach(() => {
-  // @ts-ignore clear private caches for deterministic tests
+  // @ts-expect-error accessing private members for tests
   requestCache['pending'].clear();
+  // @ts-expect-error accessing private members for tests
   requestCache['cache'].clear();
 })
 
@@ -10,7 +11,7 @@ test('deduplicates concurrent requests and caches result', async () => {
   let count = 0;
   const fetcher = jest.fn().mockImplementation(async () => {
     count++;
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     return `data${count}`;
   });
 

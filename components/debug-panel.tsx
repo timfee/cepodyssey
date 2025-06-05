@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
 import { cn, isApiDebugEnabled } from "@/lib/utils";
+import { Logger } from "@/lib/utils/logger";
 import { useDebugLogger } from "@/hooks/use-debug-logger";
 import { Bug, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
@@ -53,7 +54,7 @@ export function DebugPanel() {
 
   const handleClearLogs = () => {
     clearLogs();
-    console.log('Logs cleared');
+    Logger.info('[DebugPanel]', 'Logs cleared');
   };
 
   const toggleLogExpansion = (logId: string) => {

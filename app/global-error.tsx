@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon, HomeIcon, RefreshCwIcon } from "lucide-react";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { Logger } from "@/lib/utils/logger";
 
 export default function GlobalError({
   error,
@@ -14,7 +15,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Global error:", error);
+    Logger.error('[GlobalError]', 'Global error:', error);
   }, [error]);
 
   if (isAuthenticationError(error)) {
