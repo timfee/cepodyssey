@@ -1,31 +1,25 @@
-# Project Architecture Guidelines
+# Top-Level AI Agent Instructions
 
-This document outlines the core architectural principles of the Directory Setup Assistant.
+**Core Principle:** Your primary goal is to write clean, maintainable code that adheres to the established architectural patterns. Do not introduce new patterns without a compelling reason. Preventing regressions is paramount.
 
-## Core Principles
+## Critical Rules for All Code Changes
 
-1. **Clear Client/Server Separation**: This project uses the Next.js App Router. **Server Actions are the _only_ way the client communicates with the backend**. Server Actions must never throw exceptions; they always return a serializable result object (`{ success: true, ... }` or `{ success: false, error: {...} }`).
+1. **Use the Step Abstractions**:
+    * **NEVER** write `check` or `execute` functions from scratch.
+    * **ALWAYS** use the `createStepCheck` factory (`lib/steps/utils/check-factory.ts`) for all `check.ts` files.
+    * **ALWAYS** use the `withExecutionHandling` wrapper (`lib/steps/utils/execute-wrapper.ts`) for all `execute.ts` files. This handles boilerplate validation and `try/catch` logic automatically.
 
-2. **Request-Scoped Logic**: All server-side operations are stateless. For tasks like logging that require context through a call stack, a new `ApiLogger` instance is created at the start of the server action and passed down through all subsequent functions. This avoids race conditions and memory leaks associated with global singletons.
+2. **Pass the Logger**:
+    * The `ApiLogger` instance is critical for debugging.
+    * It is available in the `context` object as `context.logger`.
+    * **ALWAYS** pass `context.logger` as the final parameter to any function in `lib/api/` that makes an external network request (e.g., `google.getUser(..., context.logger)`).
 
-3. **Predictable State Management**: The client-side state is managed by Redux Toolkit and is considered the single source of truth for the UI. The UI is a reactive function of this state. State is only ever updated based on the data returned from Server Actions.
+3. **Handle the Google `customerId` Correctly**:
+    * Several Google Admin SDK calls require a `customerId`. This is not optional.
+    * The `customerId` is produced by the `verify-domain` step (`G-4`) and is available as `context.outputs[OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]`.
+    * Any `execute` function that calls an admin-level Google API **MUST** list `OUTPUT_KEYS.GOOGLE_CUSTOMER_ID` in its `requiredOutputs` and pass the value to the API function. Failure to do so will cause runtime errors.
 
-4. **Structured and Self-Contained Steps**: All automation logic is broken into discrete steps defined in `lib/steps/`. Each step is a self-contained module with its own definition, `check` function, and `execute` function. A central registry in `lib/steps/registry.ts` orchestrates these steps.
-
-5. **Modal-Based Error Handling**: All user-facing errors are handled by a global error modal, which is triggered by dispatching to a Redux `errors` slice. This provides a consistent and actionable way to inform the user of issues, especially for recoverable errors like session expiry. Toast notifications (`sonner`) have been entirely removed.
-
-## Directory Structure
-
-- **/app**: Next.js App Router, routing, pages, and layouts.
-  - **/app/actions**: All Server Actions. The application's backend lives here.
-  - **/app/(auth)**: Authentication-related routes and `next-auth` configuration.
-- **/components**: All React components.
-  - **/components/ui**: Core UI elements from `shadcn/ui`.
-  - **/components/workflow**: Custom components for the automation workflow, like the `WorkflowStepCard`.
-- **/hooks**: Reusable client-side React hooks.
-- **/lib**: Core application logic, shared utilities, and type definitions.
-  - **/lib/api**: API clients for Google and Microsoft. Contains the `ApiLogger`.
-  - **/lib/error-handling**: The global `ErrorManager`.
-  - **/lib/redux**: Redux Toolkit store, slices, and state management.
-  - **/lib/steps**: The heart of the automation logic, containing all step definitions.
-  - **/lib/types.ts**: Central TypeScript definitions.
+4. **Adhere to API Function Contracts**:
+    * All API functions in `lib/api/` must follow standardized return patterns.
+    * **`get` functions** must return `Promise<Resource | null>`.
+    * **`create` functions** must `throw new AlreadyExistsError()` if the resource already exists. They should **NOT** return special objects like `{ alreadyExists: true }`.
