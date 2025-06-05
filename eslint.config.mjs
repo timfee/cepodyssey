@@ -1,9 +1,9 @@
 import { FlatCompat } from "@eslint/eslintrc";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import tsdoc from "eslint-plugin-tsdoc";
 import security from "eslint-plugin-security";
 import sonar from "eslint-plugin-sonarjs";
+import tsdoc from "eslint-plugin-tsdoc";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import custom from "./eslint/custom-rules.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +33,7 @@ const eslintConfig = [
     "next/core-web-vitals",
     "next/typescript",
     "plugin:react-redux/recommended",
-    "plugin:promise/recommended",
+    "plugin:promise/recommended"
   ),
   security.configs.recommended,
   sonar.configs.recommended,
@@ -45,12 +45,13 @@ const eslintConfig = [
     rules: {
       "react-redux/useSelector-prefer-selectors": "off",
       "tsdoc/syntax": "warn",
+      // eslint-disable-next-line no-magic-numbers
       "sonarjs/cognitive-complexity": ["warn", 20],
       "custom/no-hardcoded-url": "error",
       "custom/no-raw-fetch": "error",
       "custom/no-console-log": "warn",
       "custom/no-hardcoded-admin-id": "warn",
-      "no-magic-numbers": ["warn", { "ignore": [-1, 0, 1] }],
+      "no-magic-numbers": ["warn", { ignore: [-1, 0, 1] }],
     },
   },
   {
