@@ -4,6 +4,14 @@
  */
 import { config } from "@/lib/config";
 
+// API version strings
+export const API_VERSIONS = {
+  GOOGLE_ADMIN: "v1",
+  GOOGLE_IDENTITY: "v1",
+  MICROSOFT_GRAPH: "v1.0",
+  MICROSOFT_GRAPH_BETA: "beta",
+} as const;
+
 // API Base URLs (from env)
 export const API_BASES = {
   googleDirectory: config.GOOGLE_API_BASE,
@@ -21,7 +29,8 @@ export const PORTAL_BASES = {
 
 // Google Directory API URLs
 export const googleDirectoryUrls = {
-  base: () => `${API_BASES.googleDirectory}/admin/directory/v1`,
+  base: () =>
+    `${API_BASES.googleDirectory}/admin/directory/${API_VERSIONS.GOOGLE_ADMIN}`,
 
   orgUnits: {
     list: (customerId: string) =>
@@ -79,7 +88,7 @@ export const googleDirectoryUrls = {
 
 // Google Cloud Identity API URLs
 export const googleIdentityUrls = {
-  base: () => `${API_BASES.googleIdentity}/v1`,
+  base: () => `${API_BASES.googleIdentity}/${API_VERSIONS.GOOGLE_IDENTITY}`,
 
   samlProfiles: {
     list: () => `${googleIdentityUrls.base()}/inboundSamlSsoProfiles`,
@@ -104,7 +113,7 @@ export const googleIdentityUrls = {
 
 // Microsoft Graph API URLs
 export const microsoftGraphUrls = {
-  base: () => API_BASES.microsoftGraph,
+  base: () => `${API_BASES.microsoftGraph}/${API_VERSIONS.MICROSOFT_GRAPH}`,
 
   applications: {
     list: (filter?: string) => {
