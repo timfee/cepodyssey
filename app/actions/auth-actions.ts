@@ -1,5 +1,7 @@
 "use server";
 
+import { microsoftAuthUrls } from "@/lib/api/url-builder";
+
 interface TenantLookupResult {
   success: boolean;
   tenantId?: string;
@@ -17,7 +19,7 @@ export async function lookupTenantId(
     return { success: false, message: "Domain is required." };
   }
 
-  const url = `https://login.microsoftonline.com/${domain}/.well-known/openid-configuration`;
+  const url = microsoftAuthUrls.openIdConfig(domain);
 
   try {
     const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour

@@ -9,7 +9,7 @@ import {
   UserCheck,
   Zap,
 } from "lucide-react";
-import type { ManagedStep } from "./workflow-types";
+import type { ManagedStep } from "../workflow-types";
 
 export function BlockedMessage() {
   return (
