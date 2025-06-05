@@ -2,7 +2,8 @@
 
 import { auth } from "@/app/(auth)/auth";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
-import { checkStep, executeStep } from "@/lib/steps/registry";
+import { allStepDefinitions } from "@/lib/steps";
+import { ApiLogger } from "@/lib/api/api-logger";
 import type { StepId } from "@/lib/steps/step-refs";
 import type {
   StepCheckResult,
@@ -39,8 +40,13 @@ export async function executeStepCheck(
       return sessionValidation.error!;
     }
 
-    // The registry now handles logger creation and log attachment
-    return await checkStep(stepId, context);
+    const step = allStepDefinitions.find((s) => s.id === stepId);
+    if (!step?.check) {
+      return { completed: false, message: 'No check available for this step.' };
+    }
+    const logger = new ApiLogger();
+    const result = await step.check({ ...context, logger });
+    return { ...result, apiLogs: logger.getLogs() };
   } catch (error) {
     console.error(`[StepCheck] Unhandled exception for step ${stepId}:`, error);
     // This catch block ensures we ALWAYS return a valid StepCheckResult
@@ -80,8 +86,19 @@ export async function executeStepAction(
       };
     }
 
-    // The registry now handles logger creation and log attachment
-    return await executeStep(stepId, context);
+    const step = allStepDefinitions.find((s) => s.id === stepId);
+    if (!step?.execute) {
+      return {
+        success: false,
+        error: {
+          message: 'No execution available for this step.',
+          code: 'NO_EXECUTE_FUNCTION',
+        },
+      };
+    }
+    const logger = new ApiLogger();
+    const result = await step.execute({ ...context, logger });
+    return { ...result, apiLogs: logger.getLogs() };
   } catch (error) {
     console.error(
       `[StepAction] Unhandled exception for step ${stepId}:`,

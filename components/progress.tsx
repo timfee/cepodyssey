@@ -117,8 +117,8 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
                   allOutputs={appConfig.outputs}
                   onExecute={onExecuteStep}
                   canRunGlobal={canRunGlobalSteps}
-                  stepInputDefs={getStepInputs(step.id as StepId)}
-                  stepOutputDefs={getStepOutputs(step.id as StepId)}
+                  stepInputDefs={getStepInputs(allStepDefinitions, step.id as StepId)}
+                  stepOutputDefs={getStepOutputs(allStepDefinitions, step.id as StepId)}
                 />
               ))}
             </div>
