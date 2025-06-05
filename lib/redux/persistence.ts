@@ -4,6 +4,7 @@ import type {
   StepDefinition,
 } from "@/lib/types";
 import { secureStorage } from "@/lib/storage";
+import { Logger } from "@/lib/utils/logger";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -71,7 +72,7 @@ export function loadProgress(domain: string): PersistedProgress | null {
       outputs: parsed.outputs || {},
     };
   } catch (error) {
-    console.error("Failed to load or parse progress from storage:", error);
+    Logger.error('[Persistence]', 'Failed to load or parse progress from storage:', error);
     return null;
   }
 }

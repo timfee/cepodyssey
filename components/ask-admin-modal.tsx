@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logger } from "@/lib/utils/logger";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangleIcon } from "lucide-react";
@@ -50,11 +51,12 @@ export function AskAdminModal() {
       return;
     }
     setIsSending(true);
-    console.log("Sending to:", adminEmail);
-    console.log("Step:", step.title);
-    console.log("Custom Message:", customMessage);
-    console.log(
-      "Generated Magic Link (example):",
+    Logger.info('[AskAdmin]', 'Sending to:', adminEmail);
+    Logger.info('[AskAdmin]', 'Step:', step.title);
+    Logger.info('[AskAdmin]', 'Custom Message:', customMessage);
+    Logger.info(
+      '[AskAdmin]',
+      'Generated Magic Link (example):',
       `https://yourapp.com/admin-assist?stepId=${step.id}&token=generated_token`,
     );
     await new Promise((resolve) => setTimeout(resolve, 1500));

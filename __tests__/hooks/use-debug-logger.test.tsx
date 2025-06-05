@@ -9,12 +9,12 @@ class FakeES {
   onmessage: ((e: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
   constructor(public url: string) {
-    ;(global as any).latestES = this
+    ;(global as { latestES?: FakeES }).latestES = this
   }
   close() {}
 }
 
-global.EventSource = FakeES as any
+global.EventSource = FakeES as unknown as typeof EventSource
 
 function emit(es: FakeES, log: LogEntry) {
   es.onmessage?.({ data: JSON.stringify(log) })
@@ -22,7 +22,7 @@ function emit(es: FakeES, log: LogEntry) {
 
 test('collects logs and clears', () => {
   const { result } = renderHook(() => useDebugLogger())
-  const es = (global as any).latestES as FakeES
+  const es = (global as { latestES?: FakeES }).latestES as FakeES
   act(() => {
     emit(es, { id: '1', timestamp: 't', level: 'info', metadata: {} })
   })

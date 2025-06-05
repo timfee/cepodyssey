@@ -17,7 +17,9 @@ jest.mock('next/headers', () => ({ cookies: () => cookieStore }))
 
 describe('serverLogger', () => {
   beforeEach(() => {
-    ;(serverLogger as any).logs.clear()
+    ;(
+      serverLogger as unknown as { logs: Map<string, unknown[]> }
+    ).logs.clear()
   })
 
   it('stores logs per session', async () => {

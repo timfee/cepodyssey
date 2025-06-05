@@ -5,7 +5,7 @@ import { GlobalErrorModal } from '@/components/global-error-modal'
 const mockDispatch = jest.fn()
 jest.mock('@/hooks/use-redux', () => ({
   useAppDispatch: () => mockDispatch,
-  useAppSelector: (sel: any) => sel(mockState),
+  useAppSelector: (sel: (state: typeof mockState) => unknown) => sel(mockState),
 }))
 
 jest.mock('next-auth/react', () => ({ signOut: jest.fn() }))

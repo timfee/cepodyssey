@@ -1,6 +1,7 @@
 "use server";
 
 import { microsoftAuthUrls } from "@/lib/api/url-builder";
+import { Logger } from "@/lib/utils/logger";
 
 interface TenantLookupResult {
   success: boolean;
@@ -43,7 +44,7 @@ export async function lookupTenantId(
       message: "Could not determine Tenant ID from the domain.",
     };
   } catch (error) {
-    console.error("Tenant ID lookup failed:", error);
+    Logger.error('[AuthActions]', 'Tenant ID lookup failed:', error);
     return { success: false, message: "An error occurred during lookup." };
   }
 }

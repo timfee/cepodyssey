@@ -2,6 +2,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
 import { googleApi } from "@/lib/api/google";
 import { APIError } from "@/lib/api/utils";
+import { HTTP_STATUS_NOT_FOUND } from "@/lib/constants/http-status";
 import { handleCheckError } from "../../utils/error-handling";
 import { portalUrls } from "@/lib/api/url-builder";
 
@@ -30,7 +31,7 @@ export const checkProvisioningUser = createStepCheck({
         message: `Service account '${email}' not found.`,
       };
     } catch (e) {
-      if (e instanceof APIError && e.status === 404) {
+      if (e instanceof APIError && e.status === HTTP_STATUS_NOT_FOUND) {
         return {
           completed: false,
           message: `Service account 'azuread-provisioning@${context.domain}' not found.`,

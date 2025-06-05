@@ -12,6 +12,10 @@ export function mockEnv() {
     GRAPH_API_BASE: 'https://graph.microsoft.com/v1.0',
     GOOGLE_ADMIN_SCOPES: 'test-scopes',
     MICROSOFT_GRAPH_SCOPES: 'test-scopes',
+    // eslint-disable-next-line custom/no-hardcoded-admin-id
+    MICROSOFT_GLOBAL_ADMIN_ROLE_TEMPLATE_ID:
+      process.env.MICROSOFT_GLOBAL_ADMIN_ROLE_TEMPLATE_ID ||
+      '62e90394-69f5-4237-9190-012177145e10',
     NEXT_PUBLIC_ENABLE_API_DEBUG: 'false',
   }
 }

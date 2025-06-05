@@ -1,6 +1,7 @@
 import { auth, cleanupInvalidSession } from "@/app/(auth)/auth";
 import { APIError } from "@/lib/api/utils";
 import type { Session } from "next-auth";
+import { Logger } from "@/lib/utils/logger";
 
 export interface SessionValidation {
   valid: boolean;
@@ -76,7 +77,7 @@ export class SessionManager {
         }
       return { valid: true, googleValid: true, microsoftValid: true };
     } catch (error) {
-      console.error("Session validation error:", error);
+      Logger.error('[SessionManager]', 'Session validation error:', error);
       return {
         valid: false,
         googleValid: false,

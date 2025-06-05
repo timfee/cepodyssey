@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangleIcon } from "lucide-react";
+import { Logger } from "@/lib/utils/logger";
 
 /**
  * Display a fallback UI when a child component throws an error.
@@ -17,7 +18,7 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    Logger.error('[ErrorBoundary]', 'Unhandled error', error);
   }, [error]);
 
   return (

@@ -11,6 +11,7 @@ import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { useCallback, useMemo } from "react";
 import { useStore } from "react-redux";
+import { Logger } from "@/lib/utils/logger";
 
 export function useStepRunner() {
   const { session, status } = useSessionSync();
@@ -202,7 +203,7 @@ export function useStepRunner() {
       }
     }
     if (!anyStepFailed) {
-      console.log("All steps completed");
+      Logger.info('[StepRunner]', 'All steps completed');
     }
   }, [handleExecute, store, canRunAutomation]);
 

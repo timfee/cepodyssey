@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import isFQDN from "validator/lib/isFQDN";
+import { Logger } from "@/lib/utils/logger";
 
 const configFormSchema = z.object({
   domain: z
@@ -52,10 +53,11 @@ export function ConfigForm() {
 
   // Reset form fields when Redux state changes.
   useEffect(() => {
-    console.log("ConfigForm: Resetting/populating form with Redux state:", {
-      domain,
-      tenantId,
-    });
+    Logger.debug(
+      '[ConfigForm]',
+      'Resetting/populating form with Redux state:',
+      { domain, tenantId },
+    );
     reset({
       domain: domain ?? "",
       tenantId: tenantId ?? "",

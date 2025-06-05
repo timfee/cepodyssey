@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { ReactElement } from "react";
 import { useAppDispatch } from "@/hooks/use-redux";
 import { setError } from "@/lib/redux/slices/ui-state";
+import { Logger } from "@/lib/utils/logger";
 
 export default function RouteError({
   error,
@@ -15,7 +16,7 @@ export default function RouteError({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    console.error("Route error:", error);
+    Logger.error('[RouteError]', 'Route error:', error);
 
     const message = error.message || "An unexpected error occurred";
     dispatch(setError({ message, details: { digest: error.digest } }));

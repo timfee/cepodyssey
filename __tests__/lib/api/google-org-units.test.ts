@@ -15,7 +15,7 @@ import { orgUnits } from '@/lib/api/google/resources/org-units'
 import { APIError } from '@/lib/api/utils'
 import { googleApiClient } from '@/lib/api/google/client'
 
-const mockClient = googleApiClient as any
+const mockClient = googleApiClient as jest.Mocked<typeof googleApiClient>
 
 beforeEach(() => jest.clearAllMocks())
 

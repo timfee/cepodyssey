@@ -1,38 +1,43 @@
 import '@testing-library/jest-dom'
 import 'cross-fetch/polyfill'
 
-/* eslint-disable @typescript-eslint/no-var-requires */
+import { TextDecoder, TextEncoder } from 'util'
+import { TransformStream } from 'stream/web'
+
 if (typeof global.TextEncoder === 'undefined') {
-  const { TextEncoder, TextDecoder } = require('util') as typeof import('util')
-  ;(global as any).TextEncoder = TextEncoder
-  ;(global as any).TextDecoder = TextDecoder
+  Object.assign(global as unknown as Record<string, unknown>, {
+    TextEncoder,
+    TextDecoder,
+  })
 }
 
-if (typeof (global as any).TransformStream === 'undefined') {
-  const { TransformStream } = require('stream/web') as typeof import('stream/web')
+if (typeof (global as { TransformStream?: unknown }).TransformStream === 'undefined') {
   // @ts-expect-error stream/web types not available in test env
-  ;(global as any).TransformStream = TransformStream
+  ;(global as { TransformStream?: unknown }).TransformStream = TransformStream
 }
 
-if (typeof (global as any).BroadcastChannel === 'undefined') {
+  if (typeof (global as { BroadcastChannel?: unknown }).BroadcastChannel === 'undefined') {
   class BroadcastChannelMock {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     constructor() {}
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     postMessage() {}
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     close() {}
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     addEventListener() {}
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     removeEventListener() {}
   }
   // @ts-expect-error BroadcastChannel not implemented in jsdom
-  ;(global as any).BroadcastChannel = BroadcastChannelMock
+  ;(global as { BroadcastChannel?: unknown }).BroadcastChannel = BroadcastChannelMock
 }
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { server } = require('./test/mocks/server') as typeof import('./test/mocks/server')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { mockEnv } = require('./test/utils/mock-env') as typeof import('./test/utils/mock-env')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require('./test/mocks/next-auth')
 
 beforeAll(() => {
