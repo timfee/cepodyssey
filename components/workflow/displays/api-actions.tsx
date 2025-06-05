@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { DisplayApiAction } from "./workflow-types";
+import type { DisplayApiAction } from "../workflow-types";
 
 const getMethodColor = (method: string): string => {
   switch (method?.toUpperCase()) {

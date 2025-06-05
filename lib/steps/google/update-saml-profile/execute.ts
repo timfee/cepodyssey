@@ -5,6 +5,7 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeUpdateSamlProfile = withExecutionHandling({
   stepId: STEP_IDS.UPDATE_SAML_PROFILE,
@@ -16,12 +17,16 @@ export const executeUpdateSamlProfile = withExecutionHandling({
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
     const token = await getGoogleToken();
-    const profileName = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-    ] as string;
-    const idpSsoUrl = context.outputs[OUTPUT_KEYS.IDP_SSO_URL] as string;
-    const idpEntityId = context.outputs[OUTPUT_KEYS.IDP_ENTITY_ID] as string;
-    const cert = context.outputs[OUTPUT_KEYS.IDP_CERTIFICATE_BASE64] as string;
+    const profileName = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    );
+    const idpSsoUrl = getRequiredOutput<string>(context, OUTPUT_KEYS.IDP_SSO_URL);
+    const idpEntityId = getRequiredOutput<string>(context, OUTPUT_KEYS.IDP_ENTITY_ID);
+    const cert = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.IDP_CERTIFICATE_BASE64,
+    );
 
     await google.updateSamlProfile(
       token,

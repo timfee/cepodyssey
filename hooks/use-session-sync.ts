@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { SessionManager } from "@/lib/auth/session-manager";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import { useErrorHandler } from "./use-error-handler";
@@ -21,8 +22,8 @@ export function useSessionSync() {
     const checkInterval = setInterval(async () => {
       if (Date.now() - lastCheckRef.current > 5 * 60 * 1000) {
         lastCheckRef.current = Date.now();
-        const updated = await update();
-        if (updated?.error === "RefreshTokenError") {
+        const valid = await SessionManager.refreshIfNeeded(() => update());
+        if (!valid) {
           handleError(new Error("Session expired. Please sign in again."), {
             stepTitle: "Session",
           });

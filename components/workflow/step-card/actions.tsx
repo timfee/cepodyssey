@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import type { ManagedStep } from "./workflow-types";
+import type { ManagedStep } from "../workflow-types";
 import {
   BlockedMessage,
   CompletedButtons,
   ExecutionButtons,
   ConfigureLink,
-} from "./step-card-footer-elements";
+} from "./footer";
 
 interface StepCardFooterActionsProps {
   step: ManagedStep;
