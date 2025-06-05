@@ -5,7 +5,7 @@ import type { StepCheckResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { APIError } from "@/lib/api/utils";
 import { handleCheckError } from "../../utils/error-handling";
-import { getMicrosoftToken } from "./auth";
+import { getMicrosoftToken } from "../../utils/auth";
 
 /**
  * Ensure the Azure service principal for the given app client ID exists.

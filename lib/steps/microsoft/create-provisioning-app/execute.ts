@@ -1,30 +1,25 @@
-"use server";
+import * as microsoft from '@/lib/api/microsoft';
+import type { StepContext, StepExecutionResult } from '@/lib/types';
+import { OUTPUT_KEYS } from '@/lib/types';
+import { portalUrls } from '@/lib/api/url-builder';
+import { getTokens } from '../../utils/auth';
+import { STEP_IDS } from '@/lib/steps/step-refs';
+import { withExecutionHandling } from '../../utils/execute-wrapper';
 
-import * as microsoft from "@/lib/api/microsoft";
-import type { StepContext, StepExecutionResult } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
-import { portalUrls } from "@/lib/api/url-builder";
-import { getTokens } from "../utils/auth";
-import { handleExecutionError } from "../../utils/error-handling";
-import { STEP_IDS } from "@/lib/steps/step-refs";
-
-/**
- * Create the Azure Enterprise application used for user provisioning.
- */
-export async function executeCreateProvisioningApp(
-  _context: StepContext,
-): Promise<StepExecutionResult> {
-  try {
+export const executeCreateProvisioningApp = withExecutionHandling({
+  stepId: STEP_IDS.CREATE_PROVISIONING_APP,
+  requiredOutputs: [],
+  executeLogic: async (_context: StepContext): Promise<StepExecutionResult> => {
     const { microsoftToken } = await getTokens();
-    const TEMPLATE_ID = "8b1025e4-1dd2-430b-a150-2ef79cd700f5";
-    const appName = "Google Workspace User Provisioning";
+    const TEMPLATE_ID = '8b1025e4-1dd2-430b-a150-2ef79cd700f5';
+    const appName = 'Google Workspace User Provisioning';
 
     const result = await microsoft.createEnterpriseApp(
       microsoftToken,
       TEMPLATE_ID,
       appName,
     );
-    if (typeof result === "object" && "alreadyExists" in result) {
+    if (typeof result === 'object' && 'alreadyExists' in result) {
       const existingApps = await microsoft.listApplications(
         microsoftToken,
         `displayName eq '${appName}'`,
@@ -69,7 +64,5 @@ export async function executeCreateProvisioningApp(
         [OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID]: result.servicePrincipal.id,
       },
     };
-  } catch (e) {
-    return handleExecutionError(e, STEP_IDS.CREATE_PROVISIONING_APP);
-  }
-}
+  },
+});

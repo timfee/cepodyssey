@@ -1,97 +1,48 @@
-"use server";
+import { OUTPUT_KEYS } from '@/lib/types';
+import { STEP_IDS } from '@/lib/steps/step-refs';
+import * as google from '@/lib/api/google';
+import { portalUrls } from '@/lib/api/url-builder';
+import { getGoogleToken } from '../../utils/auth';
+import { createStepCheck } from '../../utils/check-factory';
+import { handleCheckError } from '../../utils/error-handling';
 
-import type { StepCheckResult, StepContext } from "@/lib/types";
-import { OUTPUT_KEYS } from "@/lib/types";
-import { portalUrls } from "@/lib/api/url-builder";
-import * as google from "@/lib/api/google";
-import { getGoogleToken } from "../utils/auth";
-import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
-import { STEP_IDS } from "@/lib/steps/step-refs";
-
-/**
- * Verify the SAML profile is configured; used as a proxy check for OU exclusion.
- */
-export async function checkExcludeAutomationOu(
-  context: StepContext,
-): Promise<StepCheckResult> {
-  const profileName = context.outputs[
-    OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-  ] as string;
-  if (!profileName) {
-    return {
-      completed: false,
-      message: "Manual verification needed for OU SSO exclusion.",
-      outputs: {
-        inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-        expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-      },
-    };
-  }
-  try {
-    const token = await getGoogleToken();
-    let profile: google.InboundSamlSsoProfile | null = null;
-    if (profileName.startsWith("inboundSamlSsoProfiles/")) {
-      profile = await google.getSamlProfile(token, profileName);
-    } else {
-      const profiles = await google.listSamlProfiles(token);
-      profile = profiles.find((p) => p.displayName === profileName) ?? null;
-    }
-    if (!profile?.name) {
-      return {
-        completed: false,
-        message: `SAML Profile '${profileName}' not found.`,
-        outputs: {
-          inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-          expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-        },
+export const checkExcludeAutomationOu = createStepCheck({
+  stepId: STEP_IDS.EXCLUDE_AUTOMATION_OU,
+  requiredOutputs: [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME],
+  checkLogic: async (context) => {
+    const profileName = context.outputs[
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
+    ] as string;
+    try {
+      const token = await getGoogleToken();
+      let profile: google.InboundSamlSsoProfile | null = null;
+      if (profileName.startsWith('inboundSamlSsoProfiles/')) {
+        profile = await google.getSamlProfile(token, profileName, context.logger);
+      } else {
+        const profiles = await google.listSamlProfiles(token, context.logger);
+        profile = profiles.find((p) => p.displayName === profileName) ?? null;
+      }
+      if (!profile?.name) {
+        return { completed: false, message: `SAML Profile '${profileName}' not found.` };
+      }
+      const outputs: Record<string, unknown> = {
+        [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
+        [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
+        idpEntityId: profile.idpConfig?.entityId,
+        ssoMode: profile.ssoMode,
+        resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
       };
+      const idpCreds = await google.listIdpCredentials(token, profile.name, context.logger);
+      const configured = !!(
+        profile.idpConfig?.entityId &&
+        profile.idpConfig?.singleSignOnServiceUri &&
+        idpCreds.length > 0
+      );
+      return configured
+        ? { completed: true, message: 'SAML profile configured.', outputs }
+        : { completed: false, message: 'SAML profile not yet configured.' };
+    } catch (e) {
+      return handleCheckError(e, `Couldn't verify SAML Profile '${profileName}'.`);
     }
-    const outputs: Record<string, unknown> = {
-      [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME]: profile.displayName,
-      [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME]: profile.name,
-      idpEntityId: profile.idpConfig?.entityId,
-      ssoMode: profile.ssoMode,
-      resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
-    };
-    const idpCreds = await google.listIdpCredentials(token, profile.name);
-    const configured = !!(
-      profile.idpConfig?.entityId &&
-      profile.idpConfig?.singleSignOnServiceUri &&
-      idpCreds.length > 0
-    );
-    return configured
-      ? {
-          completed: true,
-          message: "SAML profile configured.",
-          outputs: {
-            ...outputs,
-            producedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU).map(
-              (o) => ({
-                ...o,
-                value: outputs[o.key as keyof typeof outputs],
-              }),
-            ),
-            inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU).map(
-              (inp) => ({
-                ...inp,
-                data: { ...inp.data, value: context.outputs[inp.data.key!] },
-              }),
-            ),
-          },
-        }
-      : {
-          completed: false,
-          message: "SAML profile not yet configured.",
-          outputs: {
-            inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-            expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
-          },
-        };
-  } catch (e) {
-    return handleCheckError(
-      e,
-      `Couldn't verify SAML Profile '${profileName}'.`,
-    );
-  }
-}
+  },
+});
