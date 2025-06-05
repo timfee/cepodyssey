@@ -417,7 +417,7 @@ export function StepCard({
                     </div>
                   </div>
                 )}
-                {producedOutputs.length > 0 && (
+                {isCompleted && producedOutputs.length > 0 && (
                   <div>
                     <h4 className="font-medium text-sm mb-1 text-foreground/90">
                       Outputs

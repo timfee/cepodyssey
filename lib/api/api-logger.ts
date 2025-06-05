@@ -1,11 +1,15 @@
 import { isApiDebugEnabled } from "@/lib/utils";
 import { getLogCollector } from "./log-collector";
+interface AsyncLocalStorage<T> {
+  run<R>(store: T, fn: () => R): R;
+  getStore(): T | undefined;
+}
 
 // Resolve AsyncLocalStorage depending on environment
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const { AsyncLocalStorage: NodeAsyncLocalStorage } = (() => {
   try {
-    return require('node:async_hooks');
+    return require('async_hooks');
   } catch {
     return {
       AsyncLocalStorage: require('./async-local-storage-polyfill').AsyncLocalStorage,
@@ -14,7 +18,9 @@ const { AsyncLocalStorage: NodeAsyncLocalStorage } = (() => {
 })();
 /* eslint-enable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 
-const asyncLocalStorage = new NodeAsyncLocalStorage<{ requestId: string }>();
+const asyncLocalStorage = new (NodeAsyncLocalStorage as unknown as {
+  new (): AsyncLocalStorage<{ requestId: string }>;
+})();
 
 export class ApiLogger {
   static runWithRequestId<T>(requestId: string, fn: () => T): T {

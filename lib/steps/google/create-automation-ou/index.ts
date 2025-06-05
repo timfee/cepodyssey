@@ -34,7 +34,7 @@ export const g1CreateAutomationOu: StepDefinition = {
 
   inputs: G1_INPUTS,
   outputs: G1_OUTPUTS,
-  requires: [],
+  requires: [STEP_IDS.VERIFY_DOMAIN],
   nextStep: {
     id: STEP_IDS.CREATE_PROVISIONING_USER,
     description: "Create a dedicated provisioning user in the Automation OU",
