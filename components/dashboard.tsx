@@ -24,7 +24,11 @@ import {
   type PersistedProgress,
 } from "@/lib/redux/persistence";
 import { addOutputs, initializeConfig } from "@/lib/redux/slices/app-config";
-import { initializeSteps, updateStep } from "@/lib/redux/slices/setup-steps";
+import {
+  initializeSteps,
+  updateStep,
+  clearAllCheckTimestamps,
+} from "@/lib/redux/slices/setup-steps";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import { executeStepCheck } from "@/app/actions/step-actions";
@@ -202,6 +206,7 @@ export function AutomationDashboard({
                 errorCode: "AUTH_EXPIRED",
                 errorProvider: checkResult.outputs.errorProvider,
               },
+              lastCheckedAt: new Date().toISOString(),
             }),
           );
           return;
@@ -216,6 +221,7 @@ export function AutomationDashboard({
               status: "failed",
               error: errorMessage,
               metadata: checkResult.outputs,
+              lastCheckedAt: new Date().toISOString(),
             }),
           );
 
@@ -247,6 +253,7 @@ export function AutomationDashboard({
                 checkedAt: new Date().toISOString(),
                 ...(checkResult.outputs || {}),
               },
+              lastCheckedAt: new Date().toISOString(),
             }),
           );
         }
@@ -258,6 +265,7 @@ export function AutomationDashboard({
             id: stepId,
             status: "failed",
             error: error instanceof Error ? error.message : "Check failed",
+            lastCheckedAt: new Date().toISOString(),
           }),
         );
 
@@ -274,7 +282,7 @@ export function AutomationDashboard({
     [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
-  useAutoCheck(executeCheck);
+  const { manualRefresh, isChecking } = useAutoCheck(executeCheck);
 
   const runAllPending = useCallback(async () => {
     if (!canRunAutomation) {
@@ -324,20 +332,13 @@ export function AutomationDashboard({
       if (!canRunAutomation) {
         return;
       }
+      dispatch(clearAllCheckTimestamps());
       toast.info("Refreshing step status...", { duration: 2000 });
 
-      // Get all checkable steps
-      const checkableSteps = allStepDefinitions
-        .filter((step) => step.check !== undefined)
-        .map((step) => step.id as StepId);
-
-      for (const stepId of checkableSteps) {
-        await executeCheck(stepId);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
+      await manualRefresh();
 
       toast.success("Status refreshed", { duration: 2000 });
-    }, [canRunAutomation, executeCheck]);
+    }, [canRunAutomation, manualRefresh, dispatch]);
 
     return (
       <Card>
@@ -355,8 +356,13 @@ export function AutomationDashboard({
                 size="sm"
                 onClick={refreshChecks}
                 title="Refresh status from server"
+                disabled={isChecking}
               >
-                <RefreshCw className="h-4 w-4" />
+                {isChecking ? (
+                  <Loader2Icon className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
               </Button>
             )}
           </div>

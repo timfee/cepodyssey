@@ -1,5 +1,6 @@
 import { store } from "@/lib/redux/store";
-import { addApiLog, updateApiLog } from "@/lib/redux/slices/debug-panel";
+import { addApiLog, updateApiLog, type ApiLogEntry } from "@/lib/redux/slices/debug-panel";
+import { forwardApiLog } from "@/app/actions/debug-actions";
 import { Logger } from "@/lib/utils/logger";
 
 export class ApiLogger {
@@ -91,6 +92,15 @@ export class ApiLogger {
       }),
     );
 
+    if (typeof window === "undefined") {
+      const entry = store
+        .getState()
+        .debugPanel.logs.find((l) => l.id === id) as ApiLogEntry | undefined;
+      if (entry) {
+        forwardApiLog(entry);
+      }
+    }
+
     Logger.debug(
       "[ApiLogger]",
       `Response ${response.status} for request ${id}`,
@@ -115,6 +125,15 @@ export class ApiLogger {
         },
       }),
     );
+
+    if (typeof window === "undefined") {
+      const entry = store
+        .getState()
+        .debugPanel.logs.find((l) => l.id === id) as ApiLogEntry | undefined;
+      if (entry) {
+        forwardApiLog(entry);
+      }
+    }
 
     Logger.error("[ApiLogger]", `Error for request ${id}`, error);
   }
