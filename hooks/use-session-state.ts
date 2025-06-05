@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { SessionManager } from "@/lib/auth/session-manager";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import {
   setDomain,
@@ -40,8 +41,8 @@ export function useSessionState(): SessionState {
     const interval = setInterval(async () => {
       if (Date.now() - lastValidation.current > 5 * 60 * 1000) {
         lastValidation.current = Date.now();
-        const updated = await update();
-        if (updated?.error === "RefreshTokenError") {
+        const valid = await SessionManager.refreshIfNeeded(() => update());
+        if (!valid) {
           ErrorManager.dispatch(
             new Error("Session expired. Please sign in again."),
             {
