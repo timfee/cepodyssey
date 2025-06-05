@@ -2,7 +2,7 @@
 
 When creating or modifying any automation step, you **MUST** follow these rules to maintain the integrity of the framework.
 
-### Rules for `check.ts` files
+## Rules for `check.ts` files
 
 1. **Use the Factory**: Every `check.ts` file must export a single constant defined with the `createStepCheck` factory. Do not write a standalone `async function`.
 2. **Define Dependencies**: In the `createStepCheck` options, accurately list all necessary keys from `context.outputs` in the `requiredOutputs: []` array. The factory handles the boilerplate of checking for them.
