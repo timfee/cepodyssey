@@ -22,13 +22,8 @@ import {
   saveProgress,
   type PersistedProgress,
 } from "@/lib/redux/persistence";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { setError } from "@/lib/redux/slices/errors";
-import {
-  clearAllCheckTimestamps,
-  initializeSteps,
-  updateStep,
-} from "@/lib/redux/slices/setup-steps";
+import { addOutputs, initializeSteps, updateStep, clearAllCheckTimestamps } from "@/lib/redux/slices/app-state";
+import { setError } from "@/lib/redux/slices/ui-state";
 import type { RootState } from "@/lib/redux/store";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
@@ -63,9 +58,9 @@ export function AutomationDashboard({
 
   const dispatch = useAppDispatch();
   const store = useStore<RootState>();
-  const appConfig = useAppSelector((state: RootState) => state.appConfig);
+  const appConfig = useAppSelector((state: RootState) => state.appState);
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps,
+    (state: RootState) => state.appState.steps,
   );
 
   const isLoadingSession = status === "loading";
@@ -153,7 +148,7 @@ export function AutomationDashboard({
       const context: StepContext = {
         domain: appConfig.domain,
         tenantId: appConfig.tenantId,
-        outputs: store.getState().appConfig.outputs,
+        outputs: store.getState().appState.outputs,
       };
 
       try {
@@ -283,7 +278,7 @@ export function AutomationDashboard({
     console.log("Running automation...");
     let anyStepFailed = false;
     for (const step of allStepDefinitions) {
-      const currentStepState = store.getState().setupSteps.steps[step.id];
+      const currentStepState = store.getState().appState.steps[step.id];
       if (
         step.automatable &&
         (!currentStepState ||
@@ -291,7 +286,7 @@ export function AutomationDashboard({
           currentStepState.status === "failed")
       ) {
         await handleExecute(step.id as StepId);
-        if (store.getState().setupSteps.steps[step.id]?.status === "failed") {
+        if (store.getState().appState.steps[step.id]?.status === "failed") {
           anyStepFailed = true;
           break;
         }

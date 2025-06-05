@@ -4,14 +4,14 @@ import { useAppSelector, useAppDispatch } from "@/hooks/use-redux";
 import {
   toggleDebugPanel,
   selectFilteredLogs,
-} from "@/lib/redux/slices/debug-panel";
+} from "@/lib/redux/slices/ui-state";
 import { Button } from "@/components/ui/button";
 import { Terminal } from "lucide-react";
 import { isApiDebugEnabled } from "@/lib/utils";
 
 export function DebugPanelNub() {
   const dispatch = useAppDispatch();
-  const isOpen = useAppSelector((state) => state.debugPanel.isOpen);
+  const isOpen = useAppSelector((state) => state.uiState.debugPanel.isOpen);
   const logs = useAppSelector(selectFilteredLogs);
 
   const debugDisabled = !isApiDebugEnabled();

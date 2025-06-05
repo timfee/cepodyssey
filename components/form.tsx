@@ -35,7 +35,7 @@ type ConfigFormData = z.infer<typeof configFormSchema>;
 
 export function ConfigForm() {
   const currentAppConfig = useAppSelector(
-    (state: RootState) => state.appConfig,
+    (state: RootState) => state.appState,
   );
 
   const {

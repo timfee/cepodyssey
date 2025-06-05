@@ -1,4 +1,4 @@
-import type { ApiLogEntry } from "@/lib/redux/slices/debug-panel";
+import type { ApiLogEntry } from "@/lib/redux/slices/ui-state";
 import { isApiDebugEnabled } from "@/lib/utils";
 
 export class ApiLogger {

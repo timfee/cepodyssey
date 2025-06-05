@@ -1,7 +1,7 @@
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { APIError } from "@/lib/api/utils";
 import { store } from "@/lib/redux/store";
-import { addAppError, addApiLog } from "@/lib/redux/slices/debug-panel";
+import { addAppError, addApiLog } from "@/lib/redux/slices/ui-state";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
 import type { StepCheckResult, StepExecutionResult } from "@/lib/types";
 

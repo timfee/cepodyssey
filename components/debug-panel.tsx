@@ -18,7 +18,7 @@ import {
   selectFilteredLogs,
   setFilter,
   toggleDebugPanel,
-} from "@/lib/redux/slices/debug-panel";
+} from "@/lib/redux/slices/ui-state";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
 import { Bug, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 

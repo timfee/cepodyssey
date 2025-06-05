@@ -4,7 +4,7 @@ import { useAppSelector } from "@/hooks/use-redux";
 import {
   selectStepDetailsModal,
   selectAskAdminModal,
-} from "@/lib/redux/slices/modals";
+} from "@/lib/redux/slices/ui-state";
 import { StepDetailsModal } from "./step-details-modal";
 import { AskAdminModal } from "./ask-admin-modal";
 

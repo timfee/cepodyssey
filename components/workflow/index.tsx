@@ -9,11 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter } from "@/components/ui/card";
 import { useAppDispatch } from "@/hooks/use-redux";
-import { openAskAdminModal } from "@/lib/redux/slices/modals";
+import { openAskAdminModal } from "@/lib/redux/slices/ui-state";
 import {
   markStepComplete as markStepCompleteAction,
   markStepIncomplete as markStepIncompleteAction,
-} from "@/lib/redux/slices/setup-steps";
+} from "@/lib/redux/slices/app-state";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";

@@ -7,7 +7,7 @@ import {
   resetAuthState,
   setDomain,
   setTenantId,
-} from "@/lib/redux/slices/app-config";
+} from "@/lib/redux/slices/app-state";
 
 export function useSessionSync() {
   const { data: session, status, update } = useSession();
@@ -15,7 +15,7 @@ export function useSessionSync() {
   const dispatch = useAppDispatch();
   const { handleError } = useErrorHandler();
   const lastCheckRef = useRef<number>(Date.now());
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const appConfig = useAppSelector((state) => state.appState);
 
   useEffect(() => {
     const checkInterval = setInterval(async () => {

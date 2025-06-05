@@ -5,7 +5,7 @@ import type { StepId } from "@/lib/steps/step-refs";
 import type { StepCheckResult } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { store } from "@/lib/redux/store";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
+import { addApiLog } from "@/lib/redux/slices/ui-state";
 
 /**
  * Automatically checks step status when configuration is available.
@@ -14,8 +14,8 @@ import { addApiLog } from "@/lib/redux/slices/debug-panel";
 export function useAutoCheck(
   executeCheck: (stepId: StepId) => Promise<StepCheckResult>,
 ) {
-  const appConfig = useAppSelector((state) => state.appConfig);
-  const stepsStatus = useAppSelector((state) => state.setupSteps.steps);
+  const appConfig = useAppSelector((state) => state.appState);
+  const stepsStatus = useAppSelector((state) => state.appState.steps);
 
   const checkedSteps = useRef(new Set<StepId>());
   const isCheckingRef = useRef(false);
