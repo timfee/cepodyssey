@@ -167,12 +167,20 @@ export const OUTPUT_KEYS = {
   // Google - G-1: Create 'Automation' Organizational Unit
   GOOGLE_OU_PATH: "googleOuPath",
   GOOGLE_OU_ID: "googleOuId",
+  AUTOMATION_OU_PATH: "googleOuPath",
+  AUTOMATION_OU_ID: "googleOuId",
   // Google - G-2: Create Provisioning User
   GOOGLE_USER_EMAIL: "googleUserEmail",
   GOOGLE_USER_ID: "googleUserId",
   GOOGLE_USER_PASSWORD: "googleUserPassword",
+  SERVICE_ACCOUNT_EMAIL: "googleUserEmail",
+  SERVICE_ACCOUNT_ID: "googleUserId",
+  SERVICE_ACCOUNT_PASSWORD: "googleUserPassword",
   // Google - G-3: Grant Admin Privileges to Provisioning User
   GOOGLE_SUPERADMIN_ROLE_ID: "googleSuperAdminRoleId",
+  SUPER_ADMIN_ROLE_ID: "googleSuperAdminRoleId",
+  // Google - G-4: Verify Domain
+  GWS_CUSTOMER_ID: "g4GwsCustomerId",
   // Google - G-5: Initiate Google SAML Profile
   GOOGLE_SAML_PROFILE_NAME: "googleSamlProfileName",
   GOOGLE_SAML_PROFILE_FULL_NAME: "googleSamlProfileFullName",
@@ -183,20 +191,36 @@ export const OUTPUT_KEYS = {
   MS_APP_ID: "msAppId",
   MS_APP_OBJECT_ID: "msAppObjectId",
   MS_SP_OBJECT_ID: "msSpObjectId",
+  PROVISIONING_APP_ID: "msAppId",
+  PROVISIONING_APP_OBJECT_ID: "msAppObjectId",
+  PROVISIONING_SP_OBJECT_ID: "msSpObjectId",
   // Microsoft - M-3: Authorize Enterprise App
   MS_JOB_ID: "msJobId",
+  PROVISIONING_JOB_ID: "msJobId",
   // Microsoft - M-6: Create SAML SSO App
   MS_SAML_APP_ID: "msSamlAppId",
   MS_SAML_APP_OBJECT_ID: "msSamlAppObjectId",
   MS_SAML_SP_OBJECT_ID: "msSamlSpObjectId",
+  SAML_SSO_APP_ID: "msSamlAppId",
+  SAML_SSO_APP_OBJECT_ID: "msSamlAppObjectId",
+  SAML_SSO_SP_OBJECT_ID: "msSamlSpObjectId",
   // Microsoft - M-8: Retrieve IdP Metadata
   MS_IDP_CERT_BASE64: "msIdpCertBase64",
   MS_IDP_SSO_URL: "msIdpSsoUrl",
   MS_IDP_ENTITY_ID: "msIdpEntityId",
+  IDP_CERTIFICATE_BASE64: "msIdpCertBase64",
+  IDP_SSO_URL: "msIdpSsoUrl",
+  IDP_ENTITY_ID: "msIdpEntityId",
   // Flags for configuration steps
   MS_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
   MS_CREDS_CONFIGURED: "msCredsConfigured",
   MS_MAPPINGS_CONFIGURED: "msMappingsConfigured",
   MS_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
   MS_SSO_TESTED: "msSsoTested",
+  FLAG_M2_PROV_APP_PROPS_CONFIGURED: "msAppPropsConfigured",
+  FLAG_M3_PROV_CREDS_CONFIGURED: "msCredsConfigured",
+  FLAG_M4_PROV_MAPPINGS_CONFIGURED: "msMappingsConfigured",
+  FLAG_M7_SAML_APP_SETTINGS_CONFIGURED: "msSamlAppSettingsConfigured",
+  FLAG_M10_SSO_TESTED: "msSsoTested",
+  GOOGLE_SAML_ACS_URL: "googleSamlAcsUrl",
 };
