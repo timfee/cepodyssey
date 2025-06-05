@@ -1,317 +1,34 @@
-# API Contracts and Integration Guidelines
+# API Client Guidelines
 
-## Overview
+This directory contains clients for communicating with external APIs (Google Workspace and Microsoft Graph).
 
-This document describes the API contracts and integration patterns used in the Directory Setup Assistant for automating Google Workspace and Microsoft Entra ID integration.
+## Core Concepts
 
-## Google Workspace APIs
+1.  **`ApiLogger`**: A simple class instantiated by a server action to track all API calls within that action's lifecycle. It is passed down through the call stack to `fetchWithAuth`. **It is not a singleton.**
+2.  **`APIError`**: A custom error class used to wrap all failed API responses. It includes the HTTP status and an error code from the API, allowing for specific error handling upstream.
+3.  **`fetchWithAuth`**: The primary function for making authenticated API calls. It handles adding the `Authorization` header, setting `Content-Type`, and invoking the `ApiLogger`.
+4.  **`withRetry`**: A simple exponential backoff wrapper for `fetchWithAuth` to handle transient network or server (5xx) errors.
+5.  **URL Builder**: All endpoint URLs are constructed via `lib/api/url-builder.ts` to ensure consistency and prevent hardcoded strings.
 
-### Directory API
+## Function Signature Pattern
 
-**Base URL**: `https://admin.googleapis.com/admin/directory/v1`
-**Authentication**: OAuth 2.0 Bearer Token with admin scopes
-
-#### Key Endpoints
-
-- `GET/POST /customer/{customerId}/orgunits` - Manage organizational units
-- `GET/POST /users` - Manage users
-- `GET/POST /customer/{customerId}/domains` - Manage domains
-- `GET/POST /customer/{customerId}/roles` - Manage admin roles
-
-#### Required Scopes
-
-```
-https://www.googleapis.com/auth/admin.directory.orgunit
-https://www.googleapis.com/auth/admin.directory.user
-https://www.googleapis.com/auth/admin.directory.domain
-https://www.googleapis.com/auth/admin.directory.rolemanagement
-```
-
-### Cloud Identity API
-
-**Base URL**: `https://cloudidentity.googleapis.com/v1`
-**Authentication**: OAuth 2.0 Bearer Token
-
-#### Key Endpoints
-
-- `GET/POST /inboundSamlSsoProfiles` - Manage SAML SSO profiles
-- `POST /{profileName}:assignToOrgUnits` - Assign SAML profiles to OUs
-
-#### Important Notes
-
-- Customer ID is typically "my_customer" for the authenticated admin's domain
-- SAML profile names follow format: `inboundSamlSsoProfiles/{profileId}`
-- Automated user provisioning setup with Azure AD's gallery app involves an OAuth consent flow initiated from Azure, using a dedicated Google admin user. This tool guides that manual authorization step (M-3) rather than directly handling a Google-side provisioning token for it.
-
-## Microsoft Graph API
-
-### Base Configuration
-
-**Base URL**: `https://graph.microsoft.com/v1.0`
-**Authentication**: OAuth 2.0 Bearer Token
-
-### Application Management
-
-#### App Registration vs Enterprise Application
-
-- **App Registration**: The application object (`/applications`)
-- **Enterprise Application**: The service principal (`/servicePrincipals`)
-- Gallery apps create both objects simultaneously
-
-#### Key Endpoints
-
-- `POST /applicationTemplates/{templateId}/instantiate` - Create gallery app
-- `GET/PATCH /applications/{id}` - Manage app registrations
-- `GET/PATCH /servicePrincipals/{id}` - Manage enterprise apps
-- `POST /servicePrincipals/{id}/synchronization/jobs` - Create provisioning job
-
-### Provisioning Configuration
-
-#### Synchronization Jobs
+All functions that make an API call must accept an optional `ApiLogger` instance and pass it to `fetchWithAuth`.
 
 ```typescript
-interface SynchronizationJob {
-  id: string;
-  templateId: "GoogleApps"; // For Google Workspace provisioning
-  status: {
-    state: "Active" | "Paused" | "Disabled";
-  };
-  synchronizationJobSettings: Array<{
-    name: string;
-    value: string;
-  }>;
+import { ApiLogger } from './api-logger';
+
+export async function someApiFunction(
+  token: string,
+  params: SomeParams,
+  logger?: ApiLogger // Accept the logger
+): Promise<SomeResult> {
+  // ...
+  const res = await fetchWithAuth(
+    someUrl,
+    token,
+    { method: 'POST', body: JSON.stringify(payload) },
+    logger // Pass it to the fetch client
+  );
+  // ...
 }
-```
-
-#### Required Credentials
-
-```typescript
-[
-  // This OAuth token is obtained by Azure AD after an administrator completes
-  // the consent flow from the enterprise app's provisioning settings using the
-  // dedicated Google provisioning user (e.g., azuread-provisioning@<your-domain>).
-  { key: "SecretToken", value: "<Google_OAuth_Token>" },
-  {
-    key: "BaseAddress",
-    value: "https://www.googleapis.com/admin/directory/v1.12/scim",
-  },
-];
-```
-
-### SAML Configuration
-
-#### Metadata Endpoint
-
-```
-GET https://login.microsoftonline.com/{tenantId}/federationmetadata/2007-06/federationmetadata.xml?appid={appId}
-```
-
-#### Required App Configuration
-
-```typescript
-{
-  identifierUris: ["<Google_SP_Entity_ID>", "https://<domain>"],
-  web: {
-    redirectUris: ["<Google_ACS_URL>"],
-    implicitGrantSettings: {
-      enableIdTokenIssuance: false,
-      enableAccessTokenIssuance: false
-    }
-  }
-}
-```
-
-## Data Flow Between Systems
-
-### Step Output Keys (Constants)
-
-All data exchange between steps uses predefined output keys:
-
-```typescript
-OUTPUT_KEYS = {
-  // Google Outputs
-  AUTOMATION_OU_ID: "googleOuId",
-  GOOGLE_SAML_SP_ENTITY_ID: "googleSamlEntityId",
-  GOOGLE_SAML_ACS_URL: "googleSamlAcsUrl",
-
-  // Microsoft Outputs
-  PROVISIONING_APP_ID: "msAppId",
-  PROVISIONING_SP_OBJECT_ID: "msSpObjectId",
-  SAML_SSO_APP_ID: "msSamlAppId",
-
-  // Cross-System Outputs
-  IDP_ENTITY_ID: "msIdpEntityId",
-  IDP_SSO_URL: "msIdpSsoUrl",
-  IDP_CERTIFICATE_BASE64: "msIdpCertBase64",
-};
-```
-
-### Critical Integration Points
-
-1. **Google → Azure**:
-
-   - SP Entity ID and ACS URL from Google SAML profile
-   - Authorization for provisioning: achieved via manual OAuth consent in the Azure Portal using the dedicated Google admin user (step M-3)
-
-2. **Azure → Google**:
-   - IdP metadata (Entity ID, SSO URL, Certificate)
-   - User provisioning via SCIM protocol
-
-## Error Handling Patterns
-
-### API Error Class
-
-```typescript
-class APIError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string
-  )
-}
-```
-
-### Retry Logic
-
-- Exponential backoff for 5xx errors
-- No retry for 4xx errors (except 429)
-- Max 3 retries with increasing delays
-
-### Conflict Resolution
-
-- 409 responses return `{ alreadyExists: true }`
-- Idempotent operations continue without error
-- Resource existence is verified before creation
-
-## Security Considerations
-
-1. **Token Management**:
-
-   - Tokens are never stored in Redux state
-   - Server-only actions handle all API calls
-   - Automatic token refresh via NextAuth
-
-2. **Scope Limitations**:
-
-   - Request minimum required scopes
-   - Admin privileges verified during sign-in
-   - Separate apps for provisioning and SSO
-
-3. **Data Validation**:
-   - Domain format: `/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i`
-   - Tenant ID: Valid UUID format
-   - All inputs sanitized before API calls
-
-## Known Limitations
-
-1. **Google Workspace**:
-
-   - Cannot automate provisioning token retrieval
-   - Domain verification requires DNS changes
-   - SAML profile assignment is OU-based, not granular
-
-2. **Microsoft Entra ID**:
-
-   - Gallery app templates have fixed configurations
-   - Provisioning scope must be set manually
-   - User assignments require manual intervention
-
-3. **Cross-Platform**:
-   - No real-time sync status from Google's side
-   - SAML testing requires actual user accounts
-   - Rollback capabilities are limited
-
-## Portal URL Patterns
-
-### Azure Portal Deep Links
-
-```
-# App Registration View
-https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/{appId}/isMSAApp~/false
-
-# Enterprise Application View
-https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/servicePrincipalId/{spId}/appId/{appId}
-
-# Provisioning Configuration
-https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/ProvisioningManagement/appId/{appId}/objectId/{spId}
-
-# SAML Configuration
-https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SingleSignOn/appId/{appId}/objectId/{spId}
-```
-
-### Google Admin Console Links
-
-```
-# Organizational Units
-https://admin.google.com/ac/orgunits
-
-# Domain Management
-https://admin.google.com/ac/domains/manage
-
-# SAML/SSO Configuration
-https://admin.google.com/ac/sso
-
-# SCIM Provisioning Settings
-https://admin.google.com/ac/apps/unified#/settings/scim
-```
-
-## URL Management
-
-### Environment-Based Configuration
-
-All API base URLs are now configurable through environment variables:
-
-```env
-# API Endpoints
-GOOGLE_API_BASE=https://admin.googleapis.com
-GOOGLE_IDENTITY_BASE=https://cloudidentity.googleapis.com
-GRAPH_API_BASE=https://graph.microsoft.com/v1.0
-
-# Authentication Endpoints
-GOOGLE_OAUTH_BASE=https://oauth2.googleapis.com
-MICROSOFT_LOGIN_BASE=https://login.microsoftonline.com
-
-# Portal URLs
-GOOGLE_ADMIN_CONSOLE_BASE=https://admin.google.com
-AZURE_PORTAL_BASE=https://portal.azure.com
-```
-
-### URL Construction Standards
-
-All URLs must be constructed using the centralized URL builder:
-
-```typescript
-import { googleDirectoryUrls, microsoftGraphUrls } from "./url-builder";
-
-// Good: Using URL builder
-const response = await fetchWithAuth(
-  googleDirectoryUrls.users.get(userEmail),
-  token,
-);
-
-// Bad: Hardcoding URLs
-const response = await fetchWithAuth(
-  `${GOOGLE_API_BASE}/admin/directory/v1/users/${userEmail}`,
-  token,
-);
-```
-
-### Encoding Best Practices
-
-1. **Path Parameters**: Always use `encodeURIComponent()`
-2. **Query Parameters**: Use the URL class for automatic encoding
-3. **Special Characters**: Let the URL builder handle encoding
-4. **Portal URLs**: Be aware of platform-specific encoding requirements
-
-Example:
-
-```typescript
-// Automatic encoding of path parameters
-users.get: (userKey: string) =>
-  `${base}/users/${encodeURIComponent(userKey)}`
-
-// Query parameters with URL class
-const url = new URL(base);
-url.searchParams.append("domain", domain);
-return url.toString();
 ```

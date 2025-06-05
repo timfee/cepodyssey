@@ -1,42 +1,73 @@
 # Directory Setup Assistant
 
-A Next.js application that automates connecting Google Workspace and Microsoft Entra ID. It uses NextAuth for authentication and Redux Toolkit for client state.
-
-## Prerequisites
-- Node.js 18+
-- pnpm package manager
-- Google Workspace admin account
-- Microsoft Global Administrator account
-
-## Quick Start
-1. `pnpm install`
-2. Copy `.env.example` to `.env.local` and fill in credentials
-3. `pnpm dev:test` to ensure the dev server starts
-4. Open `http://localhost:3000` and sign in with both providers
-5. Follow the step list to complete the setup
-
-## Environment Variables
-| Name | Description |
-| ---- | ----------- |
-| `GOOGLE_CLIENT_ID` | OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | OAuth client secret |
-| `MICROSOFT_CLIENT_ID` | Azure app client ID |
-| `MICROSOFT_CLIENT_SECRET` | Azure app client secret |
-| `GOOGLE_ADMIN_SCOPES` | Space separated admin scopes |
-| `MICROSOFT_GRAPH_SCOPES` | Space separated Graph scopes |
-| `AUTH_SECRET` | NextAuth secret |
-
-## Common Issues
-- **Invalid session**: sign out completely and sign in again.
-- **API not enabled**: enable the required Google API using the provided link.
-
-## Development
-See [AGENTS.md](AGENTS.md) for architecture guidelines and testing commands.
+This Next.js application automates the integration of Google Workspace and Microsoft Entra ID using a step-by-step workflow. It features a React-based frontend, a robust server-action backend, and uses NextAuth.js for dual-provider authentication.
 
 ## Architecture Highlights
 
-### Type-Safe Step References
-All step IDs are centralized in `lib/steps/step-refs.ts` to prevent hardcoded strings across the codebase. Steps reference one another using these constants for easier refactoring and validation.
+This project follows modern Next.js App Router conventions:
 
-### Self-Contained Step Modules
-Each step folder contains the step definition plus its inputs, outputs, check, and execute functions. This keeps related logic together and improves maintainability.
+-   **Server Actions**: All backend logic, including API calls, resides in Server Actions (`app/actions/`). These actions are designed to be robust and **never throw exceptions** to the client. Instead, they always return a structured object containing either the successful result or a detailed error.
+-   **Request-Scoped Logging**: API logging is handled by creating a new logger instance for every server request. This instance is passed down through the function calls to collect a complete trace of the operation, which is then returned to the client for debugging. This avoids the pitfalls of global state in a serverless environment.
+-   **Client-Side State**: The client uses Redux Toolkit to manage UI state, step progress, and configuration. It reacts to the data returned from Server Actions.
+-   **Modal-Based Error Handling**: All user-facing errors, especially for authentication, are handled through a global error modal rather than temporary toasts, providing clear and actionable feedback.
+
+## Getting Started
+
+### Prerequisites
+
+-   Node.js 20+
+-   `pnpm` package manager
+-   A Google Workspace Super Admin account
+-   A Microsoft Entra ID Global Administrator account
+
+### Environment Setup
+
+1.  **Install Dependencies:**
+    ```bash
+    pnpm install
+    ```
+
+2.  **Create Environment File:**
+    Copy the example environment file to create your local configuration:
+    ```bash
+    cp .env.example .env.local
+    ```
+
+3.  **Populate `.env.local`:**
+    Fill in the following values from your Google Cloud and Azure App Registrations. **Crucially, the scopes must match exactly** to ensure token refresh and API permissions work correctly.
+
+    ```env
+    # NextAuth.js - Generate with: openssl rand -base64 32
+    AUTH_SECRET="your_secret_here"
+
+    # Google Workspace
+    GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
+    GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
+    GOOGLE_ADMIN_SCOPES="openid email profile https://www.googleapis.com/auth/admin.directory.user https://www.googleapis.com/auth/admin.directory.orgunit https://www.googleapis.com/auth/admin.directory.domain https://www.googleapis.com/auth/admin.directory.rolemanagement https://www.googleapis.com/auth/cloud-identity"
+
+    # Microsoft Entra ID
+    MICROSOFT_CLIENT_ID="YOUR_AZURE_APP_CLIENT_ID"
+    MICROSOFT_CLIENT_SECRET="YOUR_AZURE_APP_CLIENT_SECRET"
+    MICROSOFT_TENANT_ID="YOUR_AZURE_TENANT_ID"
+    MICROSOFT_GRAPH_SCOPES="openid profile email offline_access User.Read Directory.Read.All Application.ReadWrite.All AppRoleAssignment.ReadWrite.All Synchronization.ReadWrite.All"
+    
+    # Enable API Debug Panel
+    NEXT_PUBLIC_ENABLE_API_DEBUG="true"
+    ```
+
+### Running the Application
+
+1.  **Run the development server:**
+    ```bash
+    pnpm dev
+    ```
+2.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+3.  Sign in with both your Google and Microsoft administrator accounts.
+4.  Follow the on-screen steps to configure and execute the automation.
+
+## Development and Testing
+
+-   **Linting & Type-Checking**: `pnpm lint` and `pnpm type-check`
+-   **Build Check**: `pnpm test:build`
+-   **Runtime Test**: `pnpm test:runtime` (starts server and runs a basic connection test)
+-   **All Tests**: `pnpm test:all`
