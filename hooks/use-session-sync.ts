@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { SessionManager } from "@/lib/auth/session-manager";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "./use-redux";
 import { useErrorHandler } from "./use-error-handler";
@@ -7,7 +8,7 @@ import {
   resetAuthState,
   setDomain,
   setTenantId,
-} from "@/lib/redux/slices/app-config";
+} from "@/lib/redux/slices/app-state";
 
 export function useSessionSync() {
   const { data: session, status, update } = useSession();
@@ -15,14 +16,15 @@ export function useSessionSync() {
   const dispatch = useAppDispatch();
   const { handleError } = useErrorHandler();
   const lastCheckRef = useRef<number>(Date.now());
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
 
   useEffect(() => {
     const checkInterval = setInterval(async () => {
       if (Date.now() - lastCheckRef.current > 5 * 60 * 1000) {
         lastCheckRef.current = Date.now();
-        const updated = await update();
-        if (updated?.error === "RefreshTokenError") {
+        const valid = await SessionManager.refreshIfNeeded(() => update());
+        if (!valid) {
           handleError(new Error("Session expired. Please sign in again."), {
             stepTitle: "Session",
           });
@@ -35,14 +37,14 @@ export function useSessionSync() {
 
   useEffect(() => {
     if (session && status === "authenticated") {
-      if (session.authFlowDomain && !appConfig.domain) {
+      if (session.authFlowDomain && !domain) {
         console.log(
           "Syncing domain from session to Redux:",
           session.authFlowDomain,
         );
         dispatch(setDomain(session.authFlowDomain));
       }
-      if (session.microsoftTenantId && !appConfig.tenantId) {
+      if (session.microsoftTenantId && !tenantId) {
         console.log(
           "Syncing tenant from session to Redux:",
           session.microsoftTenantId,
@@ -50,7 +52,7 @@ export function useSessionSync() {
         dispatch(setTenantId(session.microsoftTenantId));
       }
     }
-  }, [session, status, appConfig.domain, appConfig.tenantId, dispatch]);
+  }, [session, status, domain, tenantId, dispatch]);
 
   return { session, status };
 }

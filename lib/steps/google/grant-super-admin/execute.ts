@@ -6,6 +6,7 @@ import { getGoogleToken } from "../../utils/auth";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
 import { validateRequiredOutputs } from "../../utils/validation";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeGrantSuperAdmin = withExecutionHandling({
   stepId: STEP_IDS.GRANT_SUPER_ADMIN,
@@ -24,10 +25,14 @@ export const executeGrantSuperAdmin = withExecutionHandling({
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
-    const email = context.outputs[OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL] as string;
-    const customerId = context.outputs[
-      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID
-    ] as string;
+    const email = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL,
+    );
+    const customerId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_CUSTOMER_ID,
+    );
     if (!email) {
       return {
         success: false,

@@ -4,13 +4,15 @@ import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../../utils/auth";
 import { createStepCheck } from "../../utils/check-factory";
 import { handleCheckError } from "../../utils/error-handling";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const checkExcludeAutomationOu = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME],
   checkLogic: async (context) => {
-    const profileName = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-    ] as string;
+    const profileName = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    );
     try {
       const token = await getGoogleToken();
       let profile: google.InboundSamlSsoProfile | null = null;

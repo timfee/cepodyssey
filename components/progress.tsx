@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppSelector } from "@/hooks/use-redux";
 import { allStepDefinitions } from "@/lib/steps";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/metadata";
 import type { StepId } from "@/lib/steps/step-refs";
 import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import React from "react";
@@ -18,9 +18,11 @@ interface ProgressVisualizerProps {
 }
 
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
-  const stepsStatusMap = useAppSelector((state) => state.setupSteps.steps);
-  const appConfig = useAppSelector((state) => state.appConfig);
-  const canRunGlobalSteps = !!(appConfig.domain && appConfig.tenantId);
+  const stepsStatusMap = useAppSelector((state) => state.app.steps);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
+  const outputs = useAppSelector((state) => state.app.outputs);
+  const canRunGlobalSteps = !!(domain && tenantId);
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {
     return allStepDefinitions.map((definition) => {
@@ -114,7 +116,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
                 <WorkflowStepCard
                   key={step.id}
                   step={step}
-                  allOutputs={appConfig.outputs}
+                  allOutputs={outputs}
                   onExecute={onExecuteStep}
                   canRunGlobal={canRunGlobalSteps}
                   stepInputDefs={getStepInputs(

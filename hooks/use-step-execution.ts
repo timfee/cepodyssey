@@ -1,11 +1,6 @@
 import { executeStepAction } from "@/app/actions/step-actions";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import { addApiLog } from "@/lib/redux/slices/debug-panel";
-import {
-  clearCheckTimestamp,
-  updateStep,
-} from "@/lib/redux/slices/setup-steps";
+import { addOutputs, clearCheckTimestamp, updateStep } from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
@@ -13,7 +8,9 @@ import { useAppDispatch, useAppSelector } from "./use-redux";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const domain = useAppSelector((state) => state.app.domain);
+  const tenantId = useAppSelector((state) => state.app.tenantId);
+  const outputs = useAppSelector((state) => state.app.outputs);
 
   const executeStep = useCallback(
     async (stepId: StepId) => {
@@ -37,18 +34,12 @@ export function useStepExecution() {
 
       try {
         const context = {
-          domain: appConfig.domain!,
-          tenantId: appConfig.tenantId!,
-          outputs: appConfig.outputs,
+          domain: domain!,
+          tenantId: tenantId!,
+          outputs,
         };
 
         const result = await executeStepAction(stepId, context);
-
-        if (result.apiLogs && result.apiLogs.length > 0) {
-          result.apiLogs.forEach((log) => {
-            dispatch(addApiLog(log));
-          });
-        }
 
         if (result.outputs) {
           dispatch(addOutputs(result.outputs));
@@ -106,7 +97,7 @@ export function useStepExecution() {
         });
       }
     },
-    [dispatch, appConfig],
+    [dispatch, domain, tenantId, outputs],
   );
 
   return { executeStep };

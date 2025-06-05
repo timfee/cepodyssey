@@ -9,11 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter } from "@/components/ui/card";
 import { useAppDispatch } from "@/hooks/use-redux";
-import { openAskAdminModal } from "@/lib/redux/slices/modals";
+import { openAskAdminModal } from "@/lib/redux/slices/ui-state";
 import {
   markStepComplete as markStepCompleteAction,
   markStepIncomplete as markStepIncompleteAction,
-} from "@/lib/redux/slices/setup-steps";
+} from "@/lib/redux/slices/app-state";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -29,12 +29,12 @@ import {
   getAutomatabilityDisplayConfig,
   getStatusDisplayConfig,
 } from "./config";
-import { StepCardApiActionsDisplay } from "./step-card-api-actions-display";
-import { StepCardDetailsSection } from "./step-card-details-section";
-import { StepCardFooterActions } from "./step-card-footer-actions";
-import { StepCardHeader } from "./step-card-header";
-import { StepCardInputsDisplay } from "./step-card-inputs-display";
-import { StepCardOutputsDisplay } from "./step-card-outputs-display";
+import { StepCardApiActionsDisplay } from "./displays/api-actions";
+import { StepCardDetailsSection } from "./step-card/details";
+import { StepCardFooterActions } from "./step-card/actions";
+import { StepCardHeader } from "./step-card/header";
+import { StepCardInputsDisplay } from "./displays/inputs";
+import { StepCardOutputsDisplay } from "./displays/outputs";
 import { parseApiAction } from "./utils";
 
 export function WorkflowStepCard({

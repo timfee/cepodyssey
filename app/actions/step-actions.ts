@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
+import { SessionManager } from "@/lib/auth/session-manager";
 import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { ApiLogger } from "@/lib/api/api-logger";
 import { allStepDefinitions } from "@/lib/steps";
@@ -20,14 +20,18 @@ async function validateSession(): Promise<{
   valid: boolean;
   error?: StepCheckResult;
 }> {
-  const session = await auth();
-  if (!session?.user || !session.googleToken || !session.microsoftToken) {
+  const validation = await SessionManager.validate();
+  if (!validation.valid) {
     return {
       valid: false,
       error: {
         completed: false,
-        message: "Your session is invalid. Please sign in to both services.",
-        outputs: { errorCode: "AUTH_EXPIRED", requiresFullReauth: true },
+        message: validation.error?.message,
+        outputs: {
+          errorCode: validation.error?.code ?? "AUTH_EXPIRED",
+          requiresFullReauth: true,
+          errorProvider: validation.error?.provider,
+        },
       },
     };
   }
@@ -56,7 +60,6 @@ export async function executeStepCheck(
         inputs: step.inputs ?? [],
         expectedOutputs: step.outputs ?? [],
       },
-      apiLogs: logger.getLogs(),
     };
     return enrichedResult;
   } catch (error) {
@@ -98,7 +101,6 @@ export async function executeStepAction(
           code: "AUTH_EXPIRED",
         },
         outputs: sessionValidation.error.outputs,
-        apiLogs: logger.getLogs(),
       };
     }
 
@@ -110,12 +112,10 @@ export async function executeStepAction(
           message: "No execution logic for this step.",
           code: "NO_EXECUTE_FUNCTION",
         },
-        apiLogs: logger.getLogs(),
       };
     }
 
     const result = await step.execute(context);
-    result.apiLogs = logger.getLogs();
     return result;
   } catch (error) {
     logger.addLog(
@@ -134,7 +134,6 @@ export async function executeStepAction(
         errorMessage: String(error),
         errorProvider: isAuthError ? error.provider : undefined,
       },
-      apiLogs: logger.getLogs(),
     };
   }
 }

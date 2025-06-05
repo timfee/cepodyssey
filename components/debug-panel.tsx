@@ -10,42 +10,50 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
-import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
-import {
-  clearLogs,
-  DebugPanelState,
-  selectDebugPanel,
-  selectFilteredLogs,
-  setFilter,
-  toggleDebugPanel,
-} from "@/lib/redux/slices/debug-panel";
 import { cn, isApiDebugEnabled } from "@/lib/utils";
+import { useDebugLogger } from "@/hooks/use-debug-logger";
 import { Bug, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 
 export function DebugPanel() {
-  const dispatch = useAppDispatch();
-  const { isOpen, filter } = useAppSelector(selectDebugPanel);
-  const logs = useAppSelector(selectFilteredLogs);
+  const { logs, isConnected, clearLogs } = useDebugLogger();
+  const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'google' | 'microsoft' | 'errors'>(
+    'all',
+  );
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   const debugDisabled = !isApiDebugEnabled();
 
-  if (debugDisabled || !isOpen) {
+  if (debugDisabled) {
     return null;
   }
 
-  const getLogCount = (filterType: DebugPanelState["filter"]) => {
-    if (filterType === "all") return logs.length;
-    if (filterType === "errors")
+  if (!isOpen) {
+    return (
+      <Button
+        className="fixed bottom-4 right-4"
+        onClick={() => setIsOpen(true)}
+      >
+        API Logs ({logs.length})
+        {!isConnected && <span className="ml-2 text-yellow-500">●</span>}
+      </Button>
+    );
+  }
+
+  const getLogCount = (
+    filterType: 'all' | 'google' | 'microsoft' | 'errors',
+  ) => {
+    if (filterType === 'all') return logs.length;
+    if (filterType === 'errors')
       return logs.filter(
-        (log) => log.error || (log.responseStatus && log.responseStatus >= 400),
+        (log) => log.level === 'error' || (log.metadata.status && log.metadata.status >= 400),
       ).length;
     return logs.filter((log) => log.provider === filterType).length;
   };
 
   const handleClearLogs = () => {
-    dispatch(clearLogs());
-    console.log("Logs cleared");
+    clearLogs();
+    console.log('Logs cleared');
   };
 
   const toggleLogExpansion = (logId: string) => {
@@ -73,7 +81,7 @@ export function DebugPanel() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => dispatch(toggleDebugPanel())}
+            onClick={() => setIsOpen(false)}
             aria-label="Close panel"
           >
             <X className="h-4 w-4" />
@@ -89,7 +97,7 @@ export function DebugPanel() {
                 key={filterType}
                 variant={filter === filterType ? "secondary" : "outline"}
                 size="sm"
-                onClick={() => dispatch(setFilter(filterType))}
+                onClick={() => setFilter(filterType)}
                 className={cn(
                   "text-xs px-2.5 py-1 h-auto capitalize",
                   filter === filterType &&
@@ -114,8 +122,8 @@ export function DebugPanel() {
             <div className="space-y-1 text-xs font-mono">
               {logs.map((log) => {
                 const isError =
-                  log.error ||
-                  (log.responseStatus && log.responseStatus >= 400);
+                  log.level === 'error' ||
+                  (log.metadata.status && log.metadata.status >= 400);
                 return (
                   <Collapsible
                     key={log.id}
@@ -136,7 +144,7 @@ export function DebugPanel() {
                             isError ? "text-destructive" : "text-primary",
                           )}
                         >
-                          {log.method} {log.url}
+                          {log.metadata.method} {log.metadata.url}
                         </span>
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground text-[11px]">
@@ -156,55 +164,55 @@ export function DebugPanel() {
                             {log.provider || "unknown"}
                           </span>
                         </span>
-                        {log.responseStatus && (
+                        {log.metadata.status && (
                           <span
                             className={cn(
-                              log.responseStatus >= 400
+                              log.metadata.status >= 400
                                 ? "text-destructive"
                                 : "text-success",
                             )}
                           >
-                            Status: {log.responseStatus}
+                            Status: {log.metadata.status}
                           </span>
                         )}
-                        {log.duration && (
+                        {log.metadata.duration && (
                           <span>
                             Duration:{" "}
                             <span className="text-foreground/80">
-                              {log.duration}ms
+                              {log.metadata.duration}ms
                             </span>
                           </span>
                         )}
                       </div>
-                      {log.error && (
+                      {log.metadata.error && (
                         <div className="mt-1 text-destructive text-[11px]">
-                          Error: {log.error}
+                          Error: {log.metadata.error}
                         </div>
                       )}
                     </CollapsibleTrigger>
                     <CollapsibleContent className="px-2 pb-2 text-xs">
                       <div className="mt-1 pt-1 border-t border-dashed border-muted-foreground/30">
-                        {log.requestBody ? (
+                        {log.metadata.requestBody ? (
                           <div className="mt-1">
                             <p className="font-medium text-foreground/90 dark:text-foreground/80 mb-0.5">
                               Request Payload:
                             </p>
                             <pre className="p-1.5 bg-slate-200 dark:bg-slate-700/50 rounded text-[10px] overflow-x-auto max-h-32">
-                              {JSON.stringify(log.requestBody, null, 2) ?? ""}
+                              {JSON.stringify(log.metadata.requestBody, null, 2) ?? ''}
                             </pre>
                           </div>
                         ) : null}
-                        {log.responseBody ? (
+                        {log.metadata.responseBody ? (
                           <div className="mt-1.5">
                             <p className="font-medium text-foreground/90 dark:text-foreground/80 mb-0.5">
                               Response Payload:
                             </p>
                             <pre className="p-1.5 bg-slate-200 dark:bg-slate-700/50 rounded text-[10px] overflow-x-auto max-h-32">
-                              {JSON.stringify(log.responseBody, null, 2) ?? ""}
+                              {JSON.stringify(log.metadata.responseBody, null, 2) ?? ''}
                             </pre>
                           </div>
                         ) : null}
-                        {!log.requestBody && !log.responseBody && (
+                        {!log.metadata.requestBody && !log.metadata.responseBody && (
                           <p className="italic text-muted-foreground text-[10px] mt-1">
                             No payload data for this entry.
                           </p>

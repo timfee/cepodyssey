@@ -4,6 +4,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeEnableProvisioningSp = withExecutionHandling({
   stepId: STEP_IDS.ENABLE_PROVISIONING_SP,
@@ -12,10 +13,13 @@ export const executeEnableProvisioningSp = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_APP_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const spId = context.outputs[
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-    ] as string;
-    const appId = context.outputs[OUTPUT_KEYS.PROVISIONING_APP_ID] as string;
+
+    const { microsoftToken } = await getTokens();
+    const spId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+    );
+    const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_APP_ID);
 
     await microsoftApi.servicePrincipals.update(
       spId,

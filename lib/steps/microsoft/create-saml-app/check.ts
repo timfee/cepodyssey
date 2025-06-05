@@ -1,12 +1,15 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
 import { checkMicrosoftServicePrincipal } from "../utils/common-checks";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const checkCreateSamlApp = createStepCheck({
   requiredOutputs: [OUTPUT_KEYS.SAML_SSO_APP_ID],
   checkLogic: async (context) => {
-    const appId = context.outputs[OUTPUT_KEYS.SAML_SSO_APP_ID] as string;
-    const result = await checkMicrosoftServicePrincipal(appId, context.logger);
+    const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
+    const result = await checkMicrosoftServicePrincipal(appId);
+
+    
     if (result.completed && result.outputs) {
       return {
         completed: true,

@@ -14,7 +14,7 @@ import {
   clearError,
   selectError,
   selectHasError,
-} from "@/lib/redux/slices/errors";
+} from "@/lib/redux/slices/ui-state";
 import { AlertTriangleIcon, ExternalLinkIcon, LogInIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";

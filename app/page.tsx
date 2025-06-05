@@ -1,6 +1,7 @@
 import { auth } from "@/app/(auth)/auth";
 import { AutomationDashboard } from "@/components/dashboard";
 import { InitialConfigLoader } from "@/components/initial-config-loader";
+import { RouteGuard } from "@/components/route-guard";
 import { redirect } from "next/navigation";
 
 /**
@@ -11,7 +12,9 @@ export default async function Page() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/login?reason=unauthenticated");
+    // Client-side RouteGuard will handle the redirect and display a loading
+    // spinner while the authentication state resolves.
+    return <RouteGuard>{null}</RouteGuard>;
   }
 
   // Redirect if either provider is missing.
@@ -29,9 +32,9 @@ export default async function Page() {
   const tenantId = session.microsoftTenantId ?? null;
 
   return (
-    <>
+    <RouteGuard>
       <InitialConfigLoader domain={domain} tenantId={tenantId} />
       <AutomationDashboard serverSession={session} />
-    </>
+    </RouteGuard>
   );
 }

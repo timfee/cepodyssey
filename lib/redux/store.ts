@@ -1,22 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { appConfigSlice } from "./slices/app-config";
-import { setupStepsSlice } from "./slices/setup-steps";
-import { modalsSlice } from "./slices/modals";
-import { errorsSlice } from "./slices/errors";
-import { debugPanelSlice } from "./slices/debug-panel";
+import { appStateSlice } from "./slices/app-state";
+import { uiStateSlice } from "./slices/ui-state";
 
 export const store = configureStore({
   reducer: {
-    appConfig: appConfigSlice.reducer,
-    setupSteps: setupStepsSlice.reducer,
-    modals: modalsSlice.reducer,
-    errors: errorsSlice.reducer,
-    debugPanel: debugPanelSlice.reducer,
+    app: appStateSlice.reducer,
+    ui: uiStateSlice.reducer,
   },
+  devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       // Allow Date objects in state metadata
-      serializableCheck: false,
+      serializableCheck: process.env.NODE_ENV !== "production",
+      immutableCheck: process.env.NODE_ENV !== "production",
     }),
 });
 

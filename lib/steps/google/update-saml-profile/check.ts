@@ -4,6 +4,7 @@ import * as google from "@/lib/api/google";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const checkSamlProfileUpdate = createStepCheck({
   requiredOutputs: [
@@ -11,12 +12,14 @@ export const checkSamlProfileUpdate = createStepCheck({
     OUTPUT_KEYS.IDP_ENTITY_ID,
   ],
   checkLogic: async (context) => {
-    const profileName = context.outputs[
-      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME
-    ] as string;
-    const expectedIdpEntityId = context.outputs[
-      OUTPUT_KEYS.IDP_ENTITY_ID
-    ] as string;
+    const profileName = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+    );
+    const expectedIdpEntityId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.IDP_ENTITY_ID,
+    );
     try {
       const token = await getGoogleToken();
       let profile: google.InboundSamlSsoProfile | null = null;

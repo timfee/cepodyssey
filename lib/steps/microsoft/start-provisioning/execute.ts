@@ -4,6 +4,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 import { withExecutionHandling } from "../../utils/execute-wrapper";
+import { getRequiredOutput } from "../../utils/get-output";
 
 export const executeStartProvisioning = withExecutionHandling({
   stepId: STEP_IDS.START_PROVISIONING,
@@ -12,10 +13,12 @@ export const executeStartProvisioning = withExecutionHandling({
     OUTPUT_KEYS.PROVISIONING_JOB_ID,
   ],
   executeLogic: async (context: StepContext): Promise<StepExecutionResult> => {
-    const spId = context.outputs[
-      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID
-    ] as string;
-    const jobId = context.outputs[OUTPUT_KEYS.PROVISIONING_JOB_ID] as string;
+    const { microsoftToken } = await getTokens();
+    const spId = getRequiredOutput<string>(
+      context,
+      OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+    );
+    const jobId = getRequiredOutput<string>(context, OUTPUT_KEYS.PROVISIONING_JOB_ID);
 
     await microsoftApi.provisioning.startJob(spId, jobId, context.logger);
 

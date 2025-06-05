@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { secureStorage } from "@/lib/storage";
 
 export function useStepCompletion(
   stepId: string,
@@ -8,12 +9,12 @@ export function useStepCompletion(
 
   const [isCompleted, setIsCompleted] = useState(() => {
     if (typeof window === "undefined") return initialCompleted;
-    const stored = localStorage.getItem(storageKey);
-    return stored ? JSON.parse(stored) : initialCompleted;
+    const stored = secureStorage.load<boolean>(storageKey);
+    return stored ?? initialCompleted;
   });
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(isCompleted));
+    secureStorage.save(storageKey, isCompleted);
   }, [isCompleted, storageKey]);
 
   return [isCompleted, setIsCompleted] as const;
