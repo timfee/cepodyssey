@@ -1,4 +1,4 @@
-import { googleApi, type DirectoryUser } from "@/lib/api/google/index";
+import { googleApi, type DirectoryUser } from "@/lib/api/google";
 import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";

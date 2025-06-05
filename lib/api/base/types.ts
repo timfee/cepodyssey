@@ -8,4 +8,5 @@ export interface RequestConfig {
   method?: string;
   body?: unknown;
   headers?: Record<string, string>;
+  responseType?: 'json' | 'text';
 }

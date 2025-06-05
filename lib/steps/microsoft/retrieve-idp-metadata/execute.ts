@@ -17,7 +17,7 @@ export const executeRetrieveIdpMetadata = withExecutionHandling({
     const { tenantId } = await getTokens();
     const appId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_APP_ID);
     const spId = getRequiredOutput<string>(context, OUTPUT_KEYS.SAML_SSO_SP_OBJECT_ID);
-    const { certificate, ssoUrl, entityId } = await microsoft.getSamlMetadata(
+    const { certificate, ssoUrl, entityId } = await microsoftApi.saml.getMetadata(
       tenantId,
       appId,
       context.logger,
