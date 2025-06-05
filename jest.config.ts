@@ -9,9 +9,13 @@ const customJestConfig: Config = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@t3-oss/env-nextjs$': '<rootDir>/test/mocks/t3-env.ts',
   },
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
-  transformIgnorePatterns: ['<rootDir>/node_modules/', '^.+\\.module\\.(css|sass|scss)$'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!.*(@t3-oss/env-nextjs|@t3-oss/env-core))',
+    '^.+\\.module\\.(css|sass|scss)$',
+  ],
   collectCoverageFrom: [
     'app/actions/**/*.{js,jsx,ts,tsx}',
     'lib/**/*.{js,jsx,ts,tsx}',
