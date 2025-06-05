@@ -9,7 +9,6 @@ import {
 import { addOutputs, initializeSteps } from "@/lib/redux/slices/app-state";
 
 import type { RootState } from "@/lib/redux/store";
-import { allStepDefinitions } from "@/lib/steps";
 import { useEffect } from "react";
 import { useStore } from "react-redux";
 
@@ -21,17 +20,20 @@ export function useProgressPersistence() {
 
   useEffect(() => {
     if (domain && domain !== "") {
-      const persisted: PersistedProgress | null = loadProgress(domain);
-      if (persisted) {
-        dispatch(initializeSteps(persisted.steps));
-        dispatch(addOutputs(persisted.outputs || {}));
-      } else {
-        const initialStatuses: Record<string, { status: StepStatusType }> = {};
-        allStepDefinitions.forEach((def) => {
-          initialStatuses[def.id] = { status: StepStatus.PENDING };
-        });
-        dispatch(initializeSteps(initialStatuses));
-      }
+      void (async () => {
+        const persisted: PersistedProgress | null = loadProgress(domain);
+        if (persisted) {
+          dispatch(initializeSteps(persisted.steps));
+          dispatch(addOutputs(persisted.outputs || {}));
+        } else {
+          const initialStatuses: Record<string, { status: StepStatusType }> = {};
+          const { allStepDefinitions } = await import("@/lib/steps");
+          allStepDefinitions.forEach((def) => {
+            initialStatuses[def.id] = { status: StepStatus.PENDING };
+          });
+          dispatch(initializeSteps(initialStatuses));
+        }
+      })();
     }
   }, [domain, dispatch]);
 

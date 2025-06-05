@@ -1,6 +1,6 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import { createStepCheck } from "../../utils/check-factory";
-import * as google from "@/lib/api/google";
+import { getUser, listRoleAssignments } from "@/lib/api/google";
 import { getGoogleToken } from "../../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
 import { getRequiredOutput } from "../../utils/get-output";
@@ -14,7 +14,7 @@ export const checkSuperAdmin = createStepCheck({
     );
     try {
       const token = await getGoogleToken();
-      const user = await google.getUser(token, email, context.logger);
+      const user = await getUser(token, email, context.logger);
       if (!user) {
         return {
           completed: false,
@@ -28,7 +28,7 @@ export const checkSuperAdmin = createStepCheck({
           outputs: { [OUTPUT_KEYS.SUPER_ADMIN_ROLE_ID]: "3" },
         };
       }
-      const roles = await google.listRoleAssignments(
+      const roles = await listRoleAssignments(
         token,
         email,
         context.logger,
