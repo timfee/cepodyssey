@@ -174,6 +174,7 @@ export const OUTPUT_KEYS = {
   SERVICE_ACCOUNT_EMAIL: "googleUserEmail",
   SERVICE_ACCOUNT_ID: "googleUserId",
   SUPER_ADMIN_ROLE_ID: "googleSuperAdminRoleId",
+
   // G-4: Verify Domain
   GOOGLE_CUSTOMER_ID: "g4GwsCustomerId",
 

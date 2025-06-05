@@ -27,6 +27,7 @@ export const executeVerifyDomain = withExecutionHandling({
       };
     }
 
+
     return {
       success: true,
       message: `Domain '${context.domain}' added. Please ensure it is verified in your Google Workspace Admin console for SAML SSO.`,
