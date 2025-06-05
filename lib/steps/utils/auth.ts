@@ -1,8 +1,7 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
 import { APIError } from "@/lib/api/utils";
-
+import { auth } from "@/lib/auth";
 const HTTP_STATUS_UNAUTHORIZED = 401;
 
 export async function getGoogleToken(): Promise<string> {
@@ -11,7 +10,7 @@ export async function getGoogleToken(): Promise<string> {
     throw new APIError(
       "Please sign in with Google",
       HTTP_STATUS_UNAUTHORIZED,
-      "GOOGLE_AUTH_REQUIRED",
+      "GOOGLE_AUTH_REQUIRED"
     );
   }
   return session.googleToken;
@@ -23,7 +22,7 @@ export async function getMicrosoftToken(): Promise<string> {
     throw new APIError(
       "Please sign in with Microsoft",
       HTTP_STATUS_UNAUTHORIZED,
-      "MS_AUTH_REQUIRED",
+      "MS_AUTH_REQUIRED"
     );
   }
   return session.microsoftToken;
@@ -39,21 +38,21 @@ export async function getTokens(): Promise<{
     throw new APIError(
       "Google authentication token is missing.",
       HTTP_STATUS_UNAUTHORIZED,
-      "GOOGLE_AUTH_REQUIRED",
+      "GOOGLE_AUTH_REQUIRED"
     );
   }
   if (!session?.microsoftToken) {
     throw new APIError(
       "Microsoft authentication token is missing.",
       HTTP_STATUS_UNAUTHORIZED,
-      "MS_AUTH_REQUIRED",
+      "MS_AUTH_REQUIRED"
     );
   }
   if (!session?.microsoftTenantId) {
     throw new APIError(
       "Microsoft tenant ID is missing from session.",
       HTTP_STATUS_UNAUTHORIZED,
-      "MS_TENANT_ID_REQUIRED",
+      "MS_TENANT_ID_REQUIRED"
     );
   }
   return {

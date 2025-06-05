@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "@/app/(auth)/auth";
+import { signIn } from "@/lib/auth";
 import { config } from "@/lib/config";
 import { SignInOptions } from "next-auth/react";
 

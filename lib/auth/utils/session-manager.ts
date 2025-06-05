@@ -1,7 +1,7 @@
-import { auth, cleanupInvalidSession } from "@/app/(auth)/auth";
 import { APIError } from "@/lib/api/utils";
-import type { Session } from "next-auth";
+import { auth, cleanupInvalidSession } from "@/lib/auth";
 import { Logger } from "@/lib/utils/logger";
+import type { Session } from "next-auth";
 
 export interface SessionValidation {
   valid: boolean;
@@ -28,7 +28,11 @@ export class SessionManager {
           valid: false,
           googleValid: false,
           microsoftValid: false,
-          error: { provider: "both", message: "No session found", code: "NO_SESSION" },
+          error: {
+            provider: "both",
+            message: "No session found",
+            code: "NO_SESSION",
+          },
         };
       }
       if (session.error === "RefreshTokenError") {
@@ -44,45 +48,50 @@ export class SessionManager {
         };
       }
       const googleValid = !!session.googleToken && session.hasGoogleAuth;
-      const microsoftValid = !!session.microsoftToken && session.hasMicrosoftAuth;
-        if (!googleValid || !microsoftValid) {
-          let missingProvider: "google" | "microsoft" | "both";
-          if (!googleValid && !microsoftValid) {
-            missingProvider = "both";
-          } else if (!googleValid) {
-            missingProvider = "google";
-          } else {
-            missingProvider = "microsoft";
-          }
-
-          let message;
-          if (missingProvider === "both") {
-            message = "Both providers authentication required";
-          } else if (missingProvider === "google") {
-            message = "Please sign in with Google";
-          } else {
-            message = "Please sign in with Microsoft";
-          }
-
-          return {
-            valid: false,
-            googleValid,
-            microsoftValid,
-            error: {
-              provider: missingProvider,
-              message,
-              code: "AUTH_MISSING",
-            },
-          };
+      const microsoftValid =
+        !!session.microsoftToken && session.hasMicrosoftAuth;
+      if (!googleValid || !microsoftValid) {
+        let missingProvider: "google" | "microsoft" | "both";
+        if (!googleValid && !microsoftValid) {
+          missingProvider = "both";
+        } else if (!googleValid) {
+          missingProvider = "google";
+        } else {
+          missingProvider = "microsoft";
         }
+
+        let message;
+        if (missingProvider === "both") {
+          message = "Both providers authentication required";
+        } else if (missingProvider === "google") {
+          message = "Please sign in with Google";
+        } else {
+          message = "Please sign in with Microsoft";
+        }
+
+        return {
+          valid: false,
+          googleValid,
+          microsoftValid,
+          error: {
+            provider: missingProvider,
+            message,
+            code: "AUTH_MISSING",
+          },
+        };
+      }
       return { valid: true, googleValid: true, microsoftValid: true };
     } catch (error) {
-      Logger.error('[SessionManager]', 'Session validation error:', error);
+      Logger.error("[SessionManager]", "Session validation error:", error);
       return {
         valid: false,
         googleValid: false,
         microsoftValid: false,
-        error: { provider: "both", message: "Failed to validate session", code: "VALIDATION_ERROR" },
+        error: {
+          provider: "both",
+          message: "Failed to validate session",
+          code: "VALIDATION_ERROR",
+        },
       };
     }
   }
@@ -90,12 +99,18 @@ export class SessionManager {
   static async requireBothProviders(): Promise<ValidSession> {
     const validation = await this.validate();
     if (!validation.valid) {
-      throw new APIError(validation.error?.message ?? "Authentication required", 401, validation.error?.code);
+      throw new APIError(
+        validation.error?.message ?? "Authentication required",
+        401,
+        validation.error?.code
+      );
     }
     return (await auth()) as ValidSession;
   }
 
-  static async refreshIfNeeded(updateFn?: () => Promise<Session | null>): Promise<boolean> {
+  static async refreshIfNeeded(
+    updateFn?: () => Promise<Session | null>
+  ): Promise<boolean> {
     if (updateFn) {
       const updated = await updateFn();
       return updated?.error !== "RefreshTokenError";

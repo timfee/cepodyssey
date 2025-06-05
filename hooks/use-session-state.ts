@@ -1,13 +1,13 @@
-import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { SessionManager } from "@/lib/auth/session-manager";
-import { useAppDispatch, useAppSelector } from "./use-redux";
+import { SessionManager } from "@/lib/auth/utils/session-manager";
+import { ErrorManager } from "@/lib/error-handling/error-manager";
 import {
+  resetAuthState,
   setDomain,
   setTenantId,
-  resetAuthState,
 } from "@/lib/redux/slices/app-state";
-import { ErrorManager } from "@/lib/error-handling/error-manager";
+import { useSession } from "next-auth/react";
+import { useEffect, useRef } from "react";
+import { useAppDispatch, useAppSelector } from "./use-redux";
 
 /** Details about the user's current authentication state. */
 interface SessionState {
@@ -29,16 +29,10 @@ export function useSessionState(): SessionState {
   const lastValidation = useRef<number>(Date.now());
 
   useEffect(() => {
-    if (
-      session?.authFlowDomain &&
-      session.authFlowDomain !== domain
-    ) {
+    if (session?.authFlowDomain && session.authFlowDomain !== domain) {
       dispatch(setDomain(session.authFlowDomain));
     }
-    if (
-      session?.microsoftTenantId &&
-      session.microsoftTenantId !== tenantId
-    ) {
+    if (session?.microsoftTenantId && session.microsoftTenantId !== tenantId) {
       dispatch(setTenantId(session.microsoftTenantId));
     }
   }, [session, dispatch, domain, tenantId]);
@@ -53,7 +47,7 @@ export function useSessionState(): SessionState {
             new Error("Session expired. Please sign in again."),
             {
               stepTitle: "Session",
-            },
+            }
           );
           dispatch(resetAuthState());
         }

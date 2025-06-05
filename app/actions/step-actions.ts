@@ -1,16 +1,16 @@
 "use server";
 
-import { SessionManager } from "@/lib/auth/session-manager";
-import { isAuthenticationError } from "@/lib/api/auth-interceptor";
 import { ApiLogger } from "@/lib/api/api-logger";
-import { Logger } from "@/lib/utils/logger";
+import { isAuthenticationError } from "@/lib/api/auth-interceptor";
+import { SessionManager } from "@/lib/auth/utils/session-manager";
 import type { StepId } from "@/lib/steps/step-refs";
 import type {
   StepCheckResult,
   StepContext,
-  StepExecutionResult,
   StepDefinition,
+  StepExecutionResult,
 } from "@/lib/types";
+import { Logger } from "@/lib/utils/logger";
 
 /**
  * Dynamically load a step definition by ID.
@@ -50,7 +50,7 @@ async function validateSession(): Promise<{
  */
 export async function executeStepCheck(
   stepId: StepId,
-  context: StepContext,
+  context: StepContext
 ): Promise<StepCheckResult> {
   const logger = new ApiLogger();
   try {
@@ -73,7 +73,11 @@ export async function executeStepCheck(
     };
     return enrichedResult;
   } catch (error) {
-    Logger.error('[StepActions]', `[StepCheck] Unhandled exception for step ${stepId}:`, error);
+    Logger.error(
+      "[StepActions]",
+      `[StepCheck] Unhandled exception for step ${stepId}:`,
+      error
+    );
     if (isAuthenticationError(error)) {
       return {
         completed: false,
@@ -98,7 +102,7 @@ export async function executeStepCheck(
  */
 export async function executeStepAction(
   stepId: StepId,
-  context: StepContext,
+  context: StepContext
 ): Promise<StepExecutionResult> {
   const logger = new ApiLogger();
   context.logger = logger;
@@ -132,7 +136,7 @@ export async function executeStepAction(
     return result;
   } catch (error) {
     logger.addLog(
-      `[StepAction] Unhandled exception for step ${stepId}: ${error}`,
+      `[StepAction] Unhandled exception for step ${stepId}: ${error}`
     );
     const isAuthError = isAuthenticationError(error);
     return {

@@ -1,18 +1,17 @@
-import { auth } from "@/app/(auth)/auth";
+import { auth } from "@/lib/auth";
 import { Provider, type ProviderType } from "@/lib/constants/enums";
 import { ApiLogger } from "./api-logger";
-import { APIError, withRetry } from "./utils";
 import {
-  AuthenticationError,
   AUTH_ERROR_PATTERNS,
+  AuthenticationError,
   isAuthenticationError,
   wrapAuthError,
 } from "./auth-errors";
-
+import { APIError, withRetry } from "./utils";
 // Re-export auth error helpers for convenience
 export {
-  AuthenticationError,
   AUTH_ERROR_PATTERNS,
+  AuthenticationError,
   isAuthenticationError,
   wrapAuthError,
 } from "./auth-errors";

@@ -1,15 +1,15 @@
-import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { SessionManager } from "@/lib/auth/session-manager";
-import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "./use-redux";
-import { useErrorHandler } from "./use-error-handler";
-import { Logger } from "@/lib/utils/logger";
+import { SessionManager } from "@/lib/auth/utils/session-manager";
 import {
   resetAuthState,
   setDomain,
   setTenantId,
 } from "@/lib/redux/slices/app-state";
+import { Logger } from "@/lib/utils/logger";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useErrorHandler } from "./use-error-handler";
+import { useAppDispatch, useAppSelector } from "./use-redux";
 
 /**
  * Periodically validates the user session and syncs domain and tenant
@@ -44,17 +44,17 @@ export function useSessionSync() {
     if (session && status === "authenticated") {
       if (session.authFlowDomain && !domain) {
         Logger.info(
-          '[SessionSync]',
-          'Syncing domain from session to Redux:',
-          session.authFlowDomain,
+          "[SessionSync]",
+          "Syncing domain from session to Redux:",
+          session.authFlowDomain
         );
         dispatch(setDomain(session.authFlowDomain));
       }
       if (session.microsoftTenantId && !tenantId) {
         Logger.info(
-          '[SessionSync]',
-          'Syncing tenant from session to Redux:',
-          session.microsoftTenantId,
+          "[SessionSync]",
+          "Syncing tenant from session to Redux:",
+          session.microsoftTenantId
         );
         dispatch(setTenantId(session.microsoftTenantId));
       }

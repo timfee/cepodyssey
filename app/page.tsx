@@ -1,9 +1,8 @@
-import { auth } from "@/app/(auth)/auth";
 import { AutomationDashboard } from "@/components/dashboard";
 import { InitialConfigLoader } from "@/components/initial-config-loader";
 import { RouteGuard } from "@/components/route-guard";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-
 /**
  * Server component that renders the automation dashboard once both providers
  * are authenticated.
