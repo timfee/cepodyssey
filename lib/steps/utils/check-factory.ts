@@ -1,6 +1,22 @@
-import type { StepCheckResult, StepContext } from '@/lib/types';
-import { getStepInputs, getStepOutputs } from '@/lib/steps/registry';
+import type {
+  StepCheckResult,
+  StepContext,
+  StepDefinition,
+} from '@/lib/types';
+import { allStepDefinitions } from '@/lib/steps';
 import { type StepId } from '@/lib/steps/step-refs';
+
+function getStep(stepId: StepId): StepDefinition | undefined {
+  return allStepDefinitions.find((s) => s.id === stepId);
+}
+
+function getStepInputs(stepId: StepId) {
+  return getStep(stepId)?.inputs ?? [];
+}
+
+function getStepOutputs(stepId: StepId) {
+  return getStep(stepId)?.outputs ?? [];
+}
 
 interface CreateCheckOptions {
   stepId: StepId;

@@ -1,6 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { AutomationDashboard } from "@/components/dashboard";
-import type { AppConfigState as AppConfigTypeFromTypes } from "@/lib/types";
+import { InitialConfigLoader } from "@/components/initial-config-loader";
 import { redirect } from "next/navigation";
 
 /**
@@ -25,21 +25,13 @@ export default async function Page() {
     redirect(`/login?${queryParams.toString()}`);
   }
 
-  // Prepare configuration for the dashboard from the session
-  const initialConfig: Partial<AppConfigTypeFromTypes> = {
-    domain: session.authFlowDomain ?? null,
-    tenantId: session.microsoftTenantId ?? null,
-    outputs: {},
-  };
-  console.log(
-    "app/page.tsx: Passing initialConfig to dashboard from session:",
-    initialConfig,
-  );
+  const domain = session.authFlowDomain ?? null;
+  const tenantId = session.microsoftTenantId ?? null;
 
   return (
-    <AutomationDashboard
-      serverSession={session}
-      initialConfig={initialConfig}
-    />
+    <>
+      <InitialConfigLoader domain={domain} tenantId={tenantId} />
+      <AutomationDashboard serverSession={session} />
+    </>
   );
 }

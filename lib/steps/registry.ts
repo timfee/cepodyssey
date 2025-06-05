@@ -1,4 +1,3 @@
-import { allStepDefinitions } from './index';
 import type {
   StepCheckResult,
   StepContext,
@@ -10,35 +9,36 @@ import type {
 import type { StepId } from './step-refs';
 import { ApiLogger } from '@/lib/api/api-logger';
 
-export const STEPS: Record<StepId, StepDefinition> = {} as Record<
-  StepId,
-  StepDefinition
->;
-allStepDefinitions.forEach((step) => {
-  STEPS[step.id as StepId] = step;
-});
-
-export function getStep(stepId: StepId): StepDefinition {
-  const step = STEPS[stepId];
-  if (!step) {
-    throw new Error(`Step ${stepId} not found in registry`);
-  }
-  return step;
+export function getStep(
+  allDefs: StepDefinition[],
+  stepId: StepId,
+): StepDefinition | undefined {
+  return allDefs.find((s) => s.id === stepId);
 }
 
-export function getStepInputs(stepId: StepId): StepInput[] {
-  return getStep(stepId).inputs || [];
+export function getStepInputs(
+  allDefs: StepDefinition[],
+  stepId: StepId,
+): StepInput[] {
+  return getStep(allDefs, stepId)?.inputs ?? [];
 }
 
-export function getStepOutputs(stepId: StepId): StepOutput[] {
-  return getStep(stepId).outputs || [];
+export function getStepOutputs(
+  allDefs: StepDefinition[],
+  stepId: StepId,
+): StepOutput[] {
+  return getStep(allDefs, stepId)?.outputs ?? [];
 }
 
 export async function checkStep(
+  allDefs: StepDefinition[],
   stepId: StepId,
   context: StepContext,
 ): Promise<StepCheckResult> {
-  const step = getStep(stepId);
+  const step = getStep(allDefs, stepId);
+  if (!step) {
+    throw new Error(`Step ${stepId} not found in registry`);
+  }
   if (!step.check) {
     return { completed: false, message: 'No check available for this step.' };
   }
@@ -51,10 +51,14 @@ export async function checkStep(
 }
 
 export async function executeStep(
+  allDefs: StepDefinition[],
   stepId: StepId,
   context: StepContext,
 ): Promise<StepExecutionResult> {
-  const step = getStep(stepId);
+  const step = getStep(allDefs, stepId);
+  if (!step) {
+    throw new Error(`Step ${stepId} not found in registry`);
+  }
   if (!step.execute) {
     return {
       success: false,

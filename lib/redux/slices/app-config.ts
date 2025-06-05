@@ -17,6 +17,13 @@ export const appConfigSlice = createSlice({
       state.tenantId = action.payload.tenantId ?? state.tenantId;
       state.outputs = { ...state.outputs, ...(action.payload.outputs ?? {}) };
     },
+    setInitialConfig(
+      state,
+      action: PayloadAction<{ domain: string | null; tenantId: string | null }>,
+    ) {
+      state.domain = action.payload.domain;
+      state.tenantId = action.payload.tenantId;
+    },
     setDomain(state, action: PayloadAction<string>) {
       state.domain = action.payload;
     },
@@ -45,6 +52,7 @@ export const appConfigSlice = createSlice({
 
 export const {
   initializeConfig,
+  setInitialConfig,
   setDomain,
   setTenantId,
   addOutput,

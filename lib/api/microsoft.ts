@@ -1,5 +1,6 @@
 import type * as MicrosoftGraph from "microsoft-graph";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
+import { AlreadyExistsError } from "./errors";
 import type { ApiLogger } from "./api-logger";
 import { wrapAuthError } from "./auth-interceptor";
 import { microsoftGraphUrls, microsoftAuthUrls } from "./url-builder";
@@ -154,10 +155,7 @@ export async function createEnterpriseApp(
   templateId: string,
   displayName: string,
   logger?: ApiLogger,
-): Promise<
-  | { application: Application; servicePrincipal: ServicePrincipal }
-  | { alreadyExists: true }
-> {
+): Promise<{ application: Application; servicePrincipal: ServicePrincipal }> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.applicationTemplates.instantiate(templateId),
@@ -168,7 +166,16 @@ export async function createEnterpriseApp(
       },
       logger,
     );
-    return handleApiResponse(res);
+    const data = await handleApiResponse<{
+      application: Application;
+      servicePrincipal: ServicePrincipal;
+    }>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError(
+        `Enterprise app '${displayName}' already exists`,
+      );
+    }
+    return data as { application: Application; servicePrincipal: ServicePrincipal };
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -195,7 +202,7 @@ export async function patchServicePrincipal(
       },
       logger,
     );
-    return handleApiResponse(res);
+    return handleApiResponse<void>(res);
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -221,7 +228,7 @@ export async function updateApplication(
       },
       logger,
     );
-    return handleApiResponse(res);
+    return handleApiResponse<void>(res);
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -236,7 +243,7 @@ export async function createProvisioningJob(
   token: string,
   servicePrincipalId: string,
   logger?: ApiLogger,
-): Promise<SynchronizationJob | { alreadyExists: true }> {
+): Promise<SynchronizationJob> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.servicePrincipals.synchronization.jobs.create(
@@ -249,7 +256,11 @@ export async function createProvisioningJob(
       },
       logger,
     );
-    return handleApiResponse(res);
+    const data = await handleApiResponse<SynchronizationJob>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError("Provisioning job already exists");
+    }
+    return data as SynchronizationJob;
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -375,7 +386,7 @@ export async function updateProvisioningCredentials(
       },
       logger,
     );
-    return handleApiResponse(res);
+    return handleApiResponse<void>(res);
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -402,7 +413,7 @@ export async function startProvisioningJob(
       { method: "POST" },
       logger,
     );
-    return handleApiResponse(res);
+    return handleApiResponse<void>(res);
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -434,7 +445,11 @@ export async function configureAttributeMappings(
       },
       logger,
     );
-    return handleApiResponse(res);
+    const data = await handleApiResponse<SynchronizationSchema | { alreadyExists: true }>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError("Attribute mappings already configured");
+    }
+    return data as SynchronizationSchema;
   } catch (error) {
     handleMicrosoftError(error);
   }
@@ -450,7 +465,7 @@ export async function assignUsersToApp(
   principalId: string,
   appRoleId: string,
   logger?: ApiLogger,
-): Promise<AppRoleAssignment | { alreadyExists: true }> {
+): Promise<AppRoleAssignment> {
   try {
     const res = await fetchWithAuth(
       microsoftGraphUrls.servicePrincipals.appRoleAssignments.create(
@@ -467,7 +482,11 @@ export async function assignUsersToApp(
       },
       logger,
     );
-    return handleApiResponse(res);
+    const data = await handleApiResponse<AppRoleAssignment>(res);
+    if (typeof data === "object" && "alreadyExists" in data) {
+      throw new AlreadyExistsError("Principal already assigned to app");
+    }
+    return data as AppRoleAssignment;
   } catch (error) {
     handleMicrosoftError(error);
   }

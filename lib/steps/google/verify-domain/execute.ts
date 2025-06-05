@@ -2,9 +2,11 @@ import * as google from '@/lib/api/google';
 import type { StepContext, StepExecutionResult } from '@/lib/types';
 import { OUTPUT_KEYS } from '@/lib/types';
 import { portalUrls } from '@/lib/api/url-builder';
+import { AlreadyExistsError } from '@/lib/api/errors';
 import { getGoogleToken } from '../../utils/auth';
 import { STEP_IDS } from '@/lib/steps/step-refs';
 import { withExecutionHandling } from '../../utils/execute-wrapper';
+import { validateRequiredOutputs } from '../../utils/validation';
 
 export const executeVerifyDomain = withExecutionHandling({
   stepId: STEP_IDS.VERIFY_DOMAIN,
@@ -17,14 +19,18 @@ export const executeVerifyDomain = withExecutionHandling({
       return { success: false, error: validation.error };
     }
     const user = await google.getLoggedInUser(token);
-    const result = await google.addDomain(token, context.domain);
-    if (typeof result === "object" && "alreadyExists" in result) {
-      return {
-        success: true,
-        message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
-        resourceUrl: portalUrls.google.domains.manage(context.domain),
-        outputs: { [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]: user.customerId },
-      };
+    try {
+      await google.addDomain(token, context.domain);
+    } catch (error) {
+      if (error instanceof AlreadyExistsError) {
+        return {
+          success: true,
+          message: `Domain '${context.domain}' was already added/exists in Google Workspace.`,
+          resourceUrl: portalUrls.google.domains.manage(context.domain),
+          outputs: { [OUTPUT_KEYS.GOOGLE_CUSTOMER_ID]: user.customerId },
+        };
+      }
+      throw error;
     }
 
 
