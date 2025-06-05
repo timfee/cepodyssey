@@ -11,21 +11,31 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangleIcon } from 'lucide-react';
+import { AlertTriangleIcon, LogInIcon, ExternalLinkIcon } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export function GlobalErrorModal() {
   const dispatch = useAppDispatch();
   const error = useAppSelector(selectError);
   const hasError = useAppSelector(selectHasError);
+  const router = useRouter();
 
   const handleDismiss = () => {
     dispatch(clearError());
   };
 
-  const handleAction = () => {
-    const action = details?.action;
-    if (action?.handler) {
-      action.handler();
+  const handleSignIn = async () => {
+    // Sign out first to clear any stale tokens
+    await signOut({ redirect: false });
+    router.push('/login');
+    handleDismiss();
+  };
+
+  const handleEnableAPI = () => {
+    const details = error.details as { apiUrl?: string } | undefined;
+    if (details?.apiUrl) {
+      window.open(details.apiUrl, '_blank');
     }
     handleDismiss();
   };
@@ -37,49 +47,80 @@ export function GlobalErrorModal() {
         recoverable?: boolean;
         action?: { label: string; handler: () => void };
         category?: string;
+        code?: string;
+        provider?: 'google' | 'microsoft';
+        apiUrl?: string;
       }
     | undefined;
 
-  const isRecoverable = details?.recoverable;
-  const action = details?.action;
+  const isAuthError = details?.category === 'auth' || details?.code === 'AUTH_EXPIRED';
+  const isAPIEnablementError = details?.code === 'API_NOT_ENABLED';
 
   return (
     <Dialog open={hasError} onOpenChange={handleDismiss}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangleIcon className="h-5 w-5 text-destructive" />
-            Error
+            {isAuthError ? 'Authentication Required' : 'Error'}
           </DialogTitle>
-          {details && details.category && (
+          {details?.category && (
             <DialogDescription>
-              {details.category === 'auth' && 'Authentication Required'}
+              {details.category === 'auth' && 'Your session has expired'}
               {details.category === 'api' && 'API Error'}
               {details.category === 'validation' && 'Validation Error'}
               {details.category === 'system' && 'System Error'}
             </DialogDescription>
           )}
         </DialogHeader>
-        <div className="p-4 space-y-2">
-          <p>{error.message}</p>
-          {details && Object.keys(details).length > 0 && (
-            <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-muted-foreground">Technical Details</summary>
-              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
-                {JSON.stringify(details, null, 2)}
-              </pre>
-            </details>
+        <div className="py-4">
+          <p className="text-sm">{error.message}</p>
+          {isAuthError && details?.provider && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Provider: {details.provider === 'google' ? 'Google Workspace' : 'Microsoft Entra ID'}
+            </p>
           )}
         </div>
-        <DialogFooter>
-          {action && (
-            <Button onClick={handleAction} variant="default">
-              {action.label}
+        <DialogFooter className="flex gap-2 sm:justify-between">
+          {isAuthError ? (
+            <>
+              <Button 
+                onClick={handleSignIn} 
+                className="flex-1"
+              >
+                <LogInIcon className="h-4 w-4 mr-2" />
+                Sign In Again
+              </Button>
+              <Button 
+                onClick={handleDismiss} 
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : isAPIEnablementError && details?.apiUrl ? (
+            <>
+              <Button 
+                onClick={handleEnableAPI}
+                className="flex-1"
+              >
+                <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                Enable API
+              </Button>
+              <Button 
+                onClick={handleDismiss} 
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button onClick={handleDismiss} className="w-full">
+              Dismiss
             </Button>
           )}
-          <Button onClick={handleDismiss} variant={action ? 'outline' : 'default'}>
-            {isRecoverable ? 'Close' : 'Dismiss'}
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

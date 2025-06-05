@@ -61,7 +61,10 @@ export class ErrorManager {
     };
   }
 
-  static dispatch(error: unknown, context?: { stepId?: string; stepTitle?: string }): void {
+  static dispatch(
+    error: unknown,
+    context?: { stepId?: string; stepTitle?: string },
+  ): void {
     const managed = this.handle(error, context);
     store.dispatch(
       setError({
@@ -72,9 +75,9 @@ export class ErrorManager {
           code: managed.code,
           provider: managed.provider,
           recoverable: managed.recoverable,
-          action: managed.action,
+          action: managed.action, // Make sure action is included here
         },
-      })
+      }),
     );
   }
 }
