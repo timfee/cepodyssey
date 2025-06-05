@@ -2,7 +2,8 @@
 
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { APIError } from "@/lib/api/utils";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
@@ -20,8 +21,8 @@ export async function checkProvisioningUser(
       completed: false,
       message: "Domain not configured.",
       outputs: {
-        inputs: getStepInputs("G-2"),
-        expectedOutputs: getStepOutputs("G-2"),
+        inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER),
+        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_USER),
       },
     };
   }
@@ -38,14 +39,14 @@ export async function checkProvisioningUser(
         outputs: {
           [OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL]: user.primaryEmail,
           [OUTPUT_KEYS.SERVICE_ACCOUNT_ID]: user.id,
-          producedOutputs: getStepOutputs("G-2").map((o) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_USER).map((o) => ({
             ...o,
             value:
               o.key === OUTPUT_KEYS.SERVICE_ACCOUNT_EMAIL
                 ? user.primaryEmail
                 : user.id,
           })),
-          inputs: getStepInputs("G-2").map((inp) => ({
+          inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
@@ -57,8 +58,8 @@ export async function checkProvisioningUser(
       completed: false,
       message: `Service account '${email}' not found.`,
       outputs: {
-        inputs: getStepInputs("G-2"),
-        expectedOutputs: getStepOutputs("G-2"),
+        inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER),
+        expectedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_USER),
       },
     };
   } catch (e) {
@@ -67,8 +68,8 @@ export async function checkProvisioningUser(
         completed: false,
         message: `Service account 'azuread-provisioning@${context.domain}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-2"),
-          expectedOutputs: getStepOutputs("G-2"),
+          inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_USER),
+          expectedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_USER),
         },
       };
     }

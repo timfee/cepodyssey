@@ -1,11 +1,44 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkStartProvisioning } from "./check";
 import { executeStartProvisioning } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const M5_OUTPUTS: StepOutput[] = [];
+
+export const M5_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      description: "Service principal object ID",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_APP,
+    },
+    stepTitle: "Create Provisioning App",
+  },
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_JOB_ID,
+      description: "Provisioning job ID",
+      producedBy: STEP_IDS.AUTHORIZE_PROVISIONING,
+    },
+    stepTitle: "Authorize Provisioning",
+  },
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_APP_ID,
+      description: "Provisioning app ID",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_APP,
+    },
+    stepTitle: "Create Provisioning App",
+  },
+];
 
 export const m5StartProvisioning: StepDefinition = {
-  id: "M-5",
+  id: STEP_IDS.START_PROVISIONING,
   title: "Define Scope & Start Provisioning Job",
   description: "Start syncing users (configure who to sync first)",
   details:
@@ -17,8 +50,10 @@ export const m5StartProvisioning: StepDefinition = {
 
   automatability: "supervised",
   automatable: true,
-  requires: ["M-4"],
-  nextStep: { id: "M-6", description: "Create SAML app for SSO" },
+  inputs: M5_INPUTS,
+  outputs: M5_OUTPUTS,
+  requires: [STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS],
+  nextStep: { id: STEP_IDS.CREATE_SAML_APP, description: "Create SAML app for SSO" },
   actions: ["POST /servicePrincipals/{id}/synchronization/jobs"],
   adminUrls: {
     configure: (outputs) => {

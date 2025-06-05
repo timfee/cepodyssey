@@ -6,7 +6,8 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Determine if the default "Azure AD SSO" profile exists in Google Workspace.
@@ -26,8 +27,8 @@ export async function checkSamlProfile(
         completed: false,
         message: `SAML Profile '${profileDisplayName}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-5"),
-          expectedOutputs: getStepOutputs("G-5"),
+          inputs: getStepInputs(STEP_IDS.INITIATE_SAML_PROFILE),
+          expectedOutputs: getStepOutputs(STEP_IDS.INITIATE_SAML_PROFILE),
         },
       };
     }
@@ -51,7 +52,7 @@ export async function checkSamlProfile(
       message: `SAML Profile '${profile.displayName}' exists.`,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs("G-5").map((o) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.INITIATE_SAML_PROFILE).map((o) => ({
           ...o,
           value: outputs[o.key as keyof typeof outputs],
         })),

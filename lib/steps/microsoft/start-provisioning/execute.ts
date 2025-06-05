@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 import { validateRequiredOutputs } from "../../utils/validation";
 
 /**
@@ -22,7 +23,7 @@ export async function executeStartProvisioning(
         OUTPUT_KEYS.PROVISIONING_JOB_ID,
         OUTPUT_KEYS.PROVISIONING_APP_ID,
       ],
-      "M-4 (Configure Provisioning Attribute Mappings)",
+      STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -43,6 +44,6 @@ export async function executeStartProvisioning(
       resourceUrl: portalUrls.azure.enterpriseApp.provisioning(spId, appId),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-5");
+    return handleExecutionError(e, STEP_IDS.START_PROVISIONING);
   }
 }

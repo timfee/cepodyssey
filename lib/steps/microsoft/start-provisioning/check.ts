@@ -8,7 +8,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftProvisioningJobDetails } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkStartProvisioning(
   context: StepContext,
@@ -19,7 +20,10 @@ export async function checkStartProvisioning(
     return {
       completed: false,
       message: "Missing configuration.",
-      outputs: { inputs: getStepInputs("M-5"), expectedOutputs: getStepOutputs("M-5") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.START_PROVISIONING),
+        expectedOutputs: getStepOutputs(STEP_IDS.START_PROVISIONING),
+      },
     };
   }
   const result = await checkMicrosoftProvisioningJobDetails(spId, jobId);
@@ -28,8 +32,8 @@ export async function checkStartProvisioning(
       completed: true,
       message: "Provisioning job is active.",
       outputs: {
-        producedOutputs: getStepOutputs("M-5"),
-        inputs: getStepInputs("M-5").map((inp) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.START_PROVISIONING),
+        inputs: getStepInputs(STEP_IDS.START_PROVISIONING).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),
@@ -39,6 +43,9 @@ export async function checkStartProvisioning(
   return {
     completed: false,
     message: "Provisioning job is not active.",
-    outputs: { inputs: getStepInputs("M-5"), expectedOutputs: getStepOutputs("M-5") },
+    outputs: {
+      inputs: getStepInputs(STEP_IDS.START_PROVISIONING),
+      expectedOutputs: getStepOutputs(STEP_IDS.START_PROVISIONING),
+    },
   };
 }

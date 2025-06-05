@@ -6,7 +6,8 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Verify the SAML profile is configured; used as a proxy check for OU exclusion.
@@ -22,8 +23,8 @@ export async function checkExcludeAutomationOu(
       completed: false,
       message: "Manual verification needed for OU SSO exclusion.",
       outputs: {
-        inputs: getStepInputs("G-8"),
-        expectedOutputs: getStepOutputs("G-8"),
+        inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
+        expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
       },
     };
   }
@@ -41,8 +42,8 @@ export async function checkExcludeAutomationOu(
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-8"),
-          expectedOutputs: getStepOutputs("G-8"),
+          inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
+          expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
         },
       };
     }
@@ -65,11 +66,11 @@ export async function checkExcludeAutomationOu(
           message: "SAML profile configured.",
           outputs: {
             ...outputs,
-            producedOutputs: getStepOutputs("G-8").map((o) => ({
+            producedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU).map((o) => ({
               ...o,
               value: outputs[o.key as keyof typeof outputs],
             })),
-            inputs: getStepInputs("G-8").map((inp) => ({
+            inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU).map((inp) => ({
               ...inp,
               data: { ...inp.data, value: context.outputs[inp.data.key!] },
             })),
@@ -79,8 +80,8 @@ export async function checkExcludeAutomationOu(
           completed: false,
           message: "SAML profile not yet configured.",
           outputs: {
-            inputs: getStepInputs("G-8"),
-            expectedOutputs: getStepOutputs("G-8"),
+            inputs: getStepInputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
+            expectedOutputs: getStepOutputs(STEP_IDS.EXCLUDE_AUTOMATION_OU),
           },
         };
   } catch (e) {

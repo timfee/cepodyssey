@@ -54,6 +54,7 @@ export interface StepInput {
     value?: unknown;
     description?: string;
     stepId?: string; // For stepCompletion type
+    producedBy?: string; // Step that produces this value
   };
   stepTitle?: string; // Human readable title of the required step
 }
@@ -98,6 +99,8 @@ export interface StepDefinition {
 
   // Dependencies and flow
   requires?: string[];
+  inputs?: StepInput[];
+  outputs?: StepOutput[];
   nextStep?: {
     id: string;
     description: string;

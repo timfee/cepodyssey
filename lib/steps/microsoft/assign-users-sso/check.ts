@@ -7,7 +7,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftAppAssignments } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkAssignUsers(
   context: StepContext,
@@ -17,7 +18,10 @@ export async function checkAssignUsers(
     return {
       completed: false,
       message: "SAML SSO SP ID not found.",
-      outputs: { inputs: getStepInputs("M-9"), expectedOutputs: getStepOutputs("M-9") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.ASSIGN_USERS_SSO),
+        expectedOutputs: getStepOutputs(STEP_IDS.ASSIGN_USERS_SSO),
+      },
     };
   }
   const result = await checkMicrosoftAppAssignments(spId);
@@ -25,15 +29,15 @@ export async function checkAssignUsers(
     ...result,
     outputs: result.completed
       ? {
-          producedOutputs: getStepOutputs("M-9"),
-          inputs: getStepInputs("M-9").map((inp) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.ASSIGN_USERS_SSO),
+          inputs: getStepInputs(STEP_IDS.ASSIGN_USERS_SSO).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
         }
       : {
-          inputs: getStepInputs("M-9"),
-          expectedOutputs: getStepOutputs("M-9"),
+          inputs: getStepInputs(STEP_IDS.ASSIGN_USERS_SSO),
+          expectedOutputs: getStepOutputs(STEP_IDS.ASSIGN_USERS_SSO),
         },
   };
 }

@@ -4,7 +4,8 @@ import { APIError } from "@/lib/api/utils";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Determine whether the primary domain is verified in Google Workspace.
@@ -17,8 +18,8 @@ export async function checkDomain(
       completed: false,
       message: "Domain not configured.",
       outputs: {
-        inputs: getStepInputs("G-4"),
-        expectedOutputs: getStepOutputs("G-4"),
+        inputs: getStepInputs(STEP_IDS.VERIFY_DOMAIN),
+        expectedOutputs: getStepOutputs(STEP_IDS.VERIFY_DOMAIN),
       },
     };
   }
@@ -39,15 +40,15 @@ export async function checkDomain(
         : `Domain '${context.domain}' is not verified or not found. Verification is required for SAML SSO.`,
       outputs: isVerified
         ? {
-            producedOutputs: getStepOutputs("G-4"),
-            inputs: getStepInputs("G-4").map((inp) => ({
+            producedOutputs: getStepOutputs(STEP_IDS.VERIFY_DOMAIN),
+            inputs: getStepInputs(STEP_IDS.VERIFY_DOMAIN).map((inp) => ({
               ...inp,
               data: { ...inp.data, value: context.outputs[inp.data.key!] },
             })),
           }
         : {
-            inputs: getStepInputs("G-4"),
-            expectedOutputs: getStepOutputs("G-4"),
+            inputs: getStepInputs(STEP_IDS.VERIFY_DOMAIN),
+            expectedOutputs: getStepOutputs(STEP_IDS.VERIFY_DOMAIN),
           },
     };
   } catch (e) {
@@ -56,8 +57,8 @@ export async function checkDomain(
         completed: false,
         message: `Domain '${context.domain}' not found in Google Workspace.`,
         outputs: {
-          inputs: getStepInputs("G-4"),
-          expectedOutputs: getStepOutputs("G-4"),
+          inputs: getStepInputs(STEP_IDS.VERIFY_DOMAIN),
+          expectedOutputs: getStepOutputs(STEP_IDS.VERIFY_DOMAIN),
         },
       };
     }

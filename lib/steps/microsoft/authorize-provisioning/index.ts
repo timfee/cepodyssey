@@ -1,11 +1,32 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAuthorizeProvisioning } from "./check";
 import { executeAuthorizeProvisioning } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const M3_OUTPUTS: StepOutput[] = [
+  {
+    key: OUTPUT_KEYS.FLAG_M3_PROV_CREDS_CONFIGURED,
+    description: "Provisioning connection authorized",
+  },
+  { key: OUTPUT_KEYS.PROVISIONING_JOB_ID, description: "Provisioning job ID" },
+];
+
+export const M3_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID,
+      description: "Service principal object ID",
+      producedBy: STEP_IDS.CREATE_PROVISIONING_APP,
+    },
+    stepTitle: "Create Provisioning App",
+  },
+];
 
 export const m3AuthorizeProvisioning: StepDefinition = {
-  id: "M-3",
+  id: STEP_IDS.AUTHORIZE_PROVISIONING,
   title: "Authorize Azure AD Provisioning to Google Workspace",
   description:
     "Connect Microsoft to Google: Click 'Authorize' in Azure and sign in with the Google sync user",
@@ -18,9 +39,11 @@ export const m3AuthorizeProvisioning: StepDefinition = {
 
   automatability: "manual",
   automatable: false,
-  requires: ["M-2", "G-3"],
+  inputs: M3_INPUTS,
+  outputs: M3_OUTPUTS,
+  requires: [STEP_IDS.ENABLE_PROVISIONING_SP, STEP_IDS.GRANT_SUPER_ADMIN],
   nextStep: {
-    id: "M-4",
+    id: STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS,
     description: "Configure how user attributes map between systems",
   },
 

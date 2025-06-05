@@ -6,7 +6,8 @@ import { portalUrls } from "@/lib/api/url-builder";
 import * as google from "@/lib/api/google";
 import { getGoogleToken } from "../utils/auth";
 import { handleCheckError } from "../../utils/error-handling";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Confirm the SAML profile exists and is fully configured before assignment.
@@ -22,8 +23,8 @@ export async function checkAssignSamlProfile(
       completed: false,
       message: "SAML profile name not found.",
       outputs: {
-        inputs: getStepInputs("G-7"),
-        expectedOutputs: getStepOutputs("G-7"),
+        inputs: getStepInputs(STEP_IDS.ASSIGN_SAML_PROFILE),
+        expectedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE),
       },
     };
   }
@@ -43,8 +44,8 @@ export async function checkAssignSamlProfile(
         completed: false,
         message: `SAML Profile '${profileName}' not found.`,
         outputs: {
-          inputs: getStepInputs("G-7"),
-          expectedOutputs: getStepOutputs("G-7"),
+          inputs: getStepInputs(STEP_IDS.ASSIGN_SAML_PROFILE),
+          expectedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE),
         },
       };
     }
@@ -77,11 +78,11 @@ export async function checkAssignSamlProfile(
           message: "SAML profile configured.",
           outputs: {
             ...outputs,
-            producedOutputs: getStepOutputs("G-7").map((o) => ({
+            producedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE).map((o) => ({
               ...o,
               value: outputs[o.key as keyof typeof outputs],
             })),
-            inputs: getStepInputs("G-7").map((inp) => ({
+            inputs: getStepInputs(STEP_IDS.ASSIGN_SAML_PROFILE).map((inp) => ({
               ...inp,
               data: { ...inp.data, value: context.outputs[inp.data.key!] },
             })),
@@ -91,8 +92,8 @@ export async function checkAssignSamlProfile(
           completed: false,
           message: "SAML profile not yet configured.",
           outputs: {
-            inputs: getStepInputs("G-7"),
-            expectedOutputs: getStepOutputs("G-7"),
+            inputs: getStepInputs(STEP_IDS.ASSIGN_SAML_PROFILE),
+            expectedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE),
           },
         };
   } catch (e) {

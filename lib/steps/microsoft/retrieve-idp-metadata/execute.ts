@@ -6,6 +6,7 @@ import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { getTokens } from "../utils/auth";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Retrieve IdP metadata from Azure for configuring Google SAML SSO.
@@ -49,6 +50,6 @@ export async function executeRetrieveIdpMetadata(
       ),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-8");
+    return handleExecutionError(e, STEP_IDS.RETRIEVE_IDP_METADATA);
   }
 }

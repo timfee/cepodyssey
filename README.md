@@ -32,3 +32,11 @@ A Next.js application that automates connecting Google Workspace and Microsoft E
 
 ## Development
 See [AGENTS.md](AGENTS.md) for architecture guidelines and testing commands.
+
+## Architecture Highlights
+
+### Type-Safe Step References
+All step IDs are centralized in `lib/steps/step-refs.ts` to prevent hardcoded strings across the codebase. Steps reference one another using these constants for easier refactoring and validation.
+
+### Self-Contained Step Modules
+Each step folder contains the step definition plus its inputs, outputs, check, and execute functions. This keeps related logic together and improves maintainability.

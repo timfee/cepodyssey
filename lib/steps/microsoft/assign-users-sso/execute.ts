@@ -4,6 +4,7 @@ import type { StepContext, StepExecutionResult } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { handleExecutionError } from "../../utils/error-handling";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 /**
  * Provide instructions and link for assigning users to the SAML app in Azure.
@@ -37,6 +38,6 @@ export async function executeAssignUsers(
       ),
     };
   } catch (e) {
-    return handleExecutionError(e, "M-9");
+    return handleExecutionError(e, STEP_IDS.ASSIGN_USERS_SSO);
   }
 }

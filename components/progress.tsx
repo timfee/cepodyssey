@@ -11,8 +11,10 @@ import type { ManagedStep, StepStatusInfo } from "@/lib/types";
 import React from "react";
 import { StepCard } from "./step-card";
 
+import type { StepId } from "@/lib/steps/step-refs";
+
 interface ProgressVisualizerProps {
-  onExecuteStep: (stepId: string) => void;
+  onExecuteStep: (stepId: StepId) => void;
 }
 
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {

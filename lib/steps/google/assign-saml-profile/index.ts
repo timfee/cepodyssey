@@ -1,10 +1,25 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
+import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAssignSamlProfile } from "./check";
 import { executeAssignSamlProfile } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const G7_OUTPUTS: StepOutput[] = [];
+export const G7_INPUTS: StepInput[] = [
+  {
+    type: "keyValue",
+    data: {
+      key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
+      description: "Full name of the Google SAML profile",
+      producedBy: STEP_IDS.INITIATE_SAML_PROFILE,
+    },
+    stepTitle: "Initiate Google SAML Profile",
+  },
+];
 
 export const g7AssignSamlProfile: StepDefinition = {
-  id: "G-7",
+  id: STEP_IDS.ASSIGN_SAML_PROFILE,
   title: "Assign Google SAML Profile to Users/OUs",
   description: "Turn on single sign-on for your users",
   details:
@@ -16,8 +31,10 @@ export const g7AssignSamlProfile: StepDefinition = {
 
   automatability: "automated",
   automatable: true,
-  requires: ["G-6"],
-  nextStep: { id: "G-8", description: "Exclude Automation OU from SSO" },
+  inputs: G7_INPUTS,
+  outputs: G7_OUTPUTS,
+  requires: [STEP_IDS.UPDATE_SAML_PROFILE],
+  nextStep: { id: STEP_IDS.EXCLUDE_AUTOMATION_OU, description: "Exclude Automation OU from SSO" },
 
   actions: ["POST /v1/inboundSamlSsoProfiles/{profile}:assignToOrgUnits"],
   adminUrls: {

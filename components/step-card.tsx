@@ -31,7 +31,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ManagedStep } from "@/lib/types";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import type { StepId } from "@/lib/steps/step-refs";
 import { useStepCompletion } from "@/hooks/use-step-completion";
 import { useAppDispatch } from "@/hooks/use-redux";
 import { updateStep } from "@/lib/redux/slices/setup-steps";
@@ -39,7 +40,7 @@ import { updateStep } from "@/lib/redux/slices/setup-steps";
 interface StepCardProps {
   step: ManagedStep;
   outputs: Record<string, unknown>;
-  onExecute: (stepId: string) => void;
+  onExecute: (stepId: StepId) => void;
   canRunGlobal: boolean;
 }
 
@@ -154,8 +155,14 @@ export function StepCard({
     return true;
   }, [canRunGlobal, step.status]);
 
-  const requiredInputs = useMemo(() => getStepInputs(step.id), [step.id]);
-  const producedOutputs = useMemo(() => getStepOutputs(step.id), [step.id]);
+  const requiredInputs = useMemo(
+    () => getStepInputs(step.id as StepId),
+    [step.id],
+  );
+  const producedOutputs = useMemo(
+    () => getStepOutputs(step.id as StepId),
+    [step.id],
+  );
 
   return (
     <Card className="shadow-google-card hover:shadow-google-card-hover transition-all">
@@ -190,7 +197,7 @@ export function StepCard({
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => onExecute(step.id)}
+              onClick={() => onExecute(step.id as StepId)}
             >
               <RefreshCw className="h-4 w-4 mr-2" /> Retry
             </Button>
@@ -198,7 +205,7 @@ export function StepCard({
           {step.status !== "completed" && step.automatability !== "manual" && (
             <Button
               size="sm"
-              onClick={() => onExecute(step.id)}
+              onClick={() => onExecute(step.id as StepId)}
               disabled={!canExecute}
             >
               {step.status === "in_progress" ? (

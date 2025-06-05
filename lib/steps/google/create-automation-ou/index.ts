@@ -1,11 +1,25 @@
-import type { StepDefinition } from "@/lib/types";
+import type { StepDefinition, StepInput, StepOutput } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { portalUrls } from "@/lib/api/url-builder";
 import { checkAutomationOu } from "./check";
 import { executeCreateAutomationOu } from "./execute";
+import { STEP_IDS } from "@/lib/steps/step-refs";
+
+export const G1_OUTPUTS: StepOutput[] = [
+  {
+    key: OUTPUT_KEYS.AUTOMATION_OU_ID,
+    description: "Unique identifier for the organizational unit",
+  },
+  {
+    key: OUTPUT_KEYS.AUTOMATION_OU_PATH,
+    description: "Full path to the organizational unit",
+  },
+];
+
+export const G1_INPUTS: StepInput[] = [];
 
 export const g1CreateAutomationOu: StepDefinition = {
-  id: "G-1",
+  id: STEP_IDS.CREATE_AUTOMATION_OU,
   title: "Create 'Automation' Organizational Unit",
   description: "Create a dedicated folder for automation users and service accounts",
   details:
@@ -18,9 +32,11 @@ export const g1CreateAutomationOu: StepDefinition = {
   automatability: "automated",
   automatable: true,
 
+  inputs: G1_INPUTS,
+  outputs: G1_OUTPUTS,
   requires: [],
   nextStep: {
-    id: "G-2",
+    id: STEP_IDS.CREATE_PROVISIONING_USER,
     description: "Create a dedicated provisioning user in the Automation OU",
   },
 

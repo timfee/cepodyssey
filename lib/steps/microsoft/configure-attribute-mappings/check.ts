@@ -7,7 +7,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftAttributeMappingsApplied } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkAttributeMappings(
   context: StepContext,
@@ -18,7 +19,10 @@ export async function checkAttributeMappings(
     return {
       completed: false,
       message: "Missing configuration.",
-      outputs: { inputs: getStepInputs("M-4"), expectedOutputs: getStepOutputs("M-4") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
+        expectedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
+      },
     };
   }
   const result = await checkMicrosoftAttributeMappingsApplied(spId, jobId);
@@ -26,15 +30,15 @@ export async function checkAttributeMappings(
     ...result,
     outputs: result.completed
       ? {
-          producedOutputs: getStepOutputs("M-4"),
-          inputs: getStepInputs("M-4").map((inp) => ({
+          producedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
+          inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
         }
       : {
-          inputs: getStepInputs("M-4"),
-          expectedOutputs: getStepOutputs("M-4"),
+          inputs: getStepInputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
+          expectedOutputs: getStepOutputs(STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS),
         },
   };
 }

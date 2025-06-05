@@ -8,7 +8,8 @@
 import type { StepCheckResult, StepContext } from "@/lib/types";
 import { OUTPUT_KEYS } from "@/lib/types";
 import { checkMicrosoftProvisioningJobDetails } from "../utils/common-checks";
-import { getStepInputs, getStepOutputs } from "@/lib/steps/utils/io-mapping";
+import { getStepInputs, getStepOutputs } from "@/lib/steps/registry";
+import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export async function checkAuthorizeProvisioning(
   context: StepContext,
@@ -21,7 +22,10 @@ export async function checkAuthorizeProvisioning(
     return {
       completed: false,
       message: "Service Principal ID not found.",
-      outputs: { inputs: getStepInputs("M-3"), expectedOutputs: getStepOutputs("M-3") },
+      outputs: {
+        inputs: getStepInputs(STEP_IDS.AUTHORIZE_PROVISIONING),
+        expectedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING),
+      },
     };
   }
   if (jobId) {
@@ -31,11 +35,11 @@ export async function checkAuthorizeProvisioning(
         ...result,
         outputs: {
           ...(result.outputs || {}),
-          producedOutputs: getStepOutputs("M-3").map((o) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING).map((o) => ({
             ...o,
             value: result.outputs ? result.outputs[o.key as keyof typeof result.outputs] : undefined,
           })),
-          inputs: getStepInputs("M-3").map((inp) => ({
+          inputs: getStepInputs(STEP_IDS.AUTHORIZE_PROVISIONING).map((inp) => ({
             ...inp,
             data: { ...inp.data, value: context.outputs[inp.data.key!] },
           })),
@@ -47,8 +51,8 @@ export async function checkAuthorizeProvisioning(
       completed: true,
       message: "Provisioning connection marked authorized.",
       outputs: {
-        producedOutputs: getStepOutputs("M-3"),
-        inputs: getStepInputs("M-3").map((inp) => ({
+        producedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING),
+        inputs: getStepInputs(STEP_IDS.AUTHORIZE_PROVISIONING).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },
         })),
@@ -58,6 +62,9 @@ export async function checkAuthorizeProvisioning(
   return {
     completed: false,
     message: "Provisioning connection not yet authorized.",
-    outputs: { inputs: getStepInputs("M-3"), expectedOutputs: getStepOutputs("M-3") },
+    outputs: {
+      inputs: getStepInputs(STEP_IDS.AUTHORIZE_PROVISIONING),
+      expectedOutputs: getStepOutputs(STEP_IDS.AUTHORIZE_PROVISIONING),
+    },
   };
 }
