@@ -7,6 +7,7 @@ import { getStoredToken, setStoredToken } from "../utils/session-store";
 import { Logger } from "@/lib/utils/logger";
 import { Provider } from "@/lib/constants/enums";
 import { refreshGoogleToken, refreshMicrosoftToken } from "../token-refresh";
+import { config } from "@/lib/config";
 export default async function jwtCallback({
   token,
   user,
@@ -62,7 +63,7 @@ export default async function jwtCallback({
         (account as { tenantId?: string }).tenantId ||
         token.microsoftTenantId;
       finalToken.microsoftTenantId =
-        accountTenantId || process.env.MICROSOFT_TENANT_ID;
+        accountTenantId || config.MICROSOFT_TENANT_ID;
       if (finalToken.microsoftTenantId) {
         Logger.debug(
           "[Auth]",

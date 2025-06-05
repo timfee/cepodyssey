@@ -51,7 +51,7 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
 
       return { ...definition, ...statusInfo, status: effectiveStatus };
     });
-  }, [stepsStatusMap]);
+  }, [stepsStatusMap, stepDefs]);
 
   const categories = [
     { id: "all", label: "All Steps", steps: managedSteps },

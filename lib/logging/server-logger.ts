@@ -1,6 +1,7 @@
 const getCookies = async () => (await import('next/headers')).cookies();
 import crypto from 'crypto';
 import type { LogEntry } from './types';
+import { config } from "@/lib/config";
 
 class ServerLogger {
   private static instance: ServerLogger;
@@ -24,7 +25,7 @@ class ServerLogger {
       sessionId = crypto.randomUUID();
       cookieStore.set('debug-session', sessionId, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: config.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24,
       });

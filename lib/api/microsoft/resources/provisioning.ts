@@ -82,13 +82,20 @@ export const provisioning = {
     credentials: { key: string; value: string }[],
     logger?: ApiLogger,
   ): Promise<void | { alreadyExists: true }> {
-    return microsoftApiClient.put<void | { alreadyExists: true }>(
-      microsoftGraphUrls.servicePrincipals.synchronization.secrets(
-        servicePrincipalId,
-      ),
-      { value: credentials },
-      logger,
-    );
+    try {
+      await microsoftApiClient.put<void>(
+        microsoftGraphUrls.servicePrincipals.synchronization.secrets(
+          servicePrincipalId,
+        ),
+        { value: credentials },
+        logger,
+      );
+    } catch (error) {
+      if (error instanceof APIError && error.status === 409) {
+        return { alreadyExists: true };
+      }
+      throw error;
+    }
   },
 
   async startJob(
@@ -96,14 +103,21 @@ export const provisioning = {
     jobId: string,
     logger?: ApiLogger,
   ): Promise<void | { alreadyExists: true }> {
-    return microsoftApiClient.post<void | { alreadyExists: true }>(
-      microsoftGraphUrls.servicePrincipals.synchronization.jobs.start(
-        servicePrincipalId,
-        jobId,
-      ),
-      {},
-      logger,
-    );
+    try {
+      await microsoftApiClient.post<void>(
+        microsoftGraphUrls.servicePrincipals.synchronization.jobs.start(
+          servicePrincipalId,
+          jobId,
+        ),
+        {},
+        logger,
+      );
+    } catch (error) {
+      if (error instanceof APIError && error.status === 409) {
+        return { alreadyExists: true };
+      }
+      throw error;
+    }
   },
 
   async configureMappings(

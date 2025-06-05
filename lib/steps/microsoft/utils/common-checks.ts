@@ -1,16 +1,6 @@
 "use server";
-// @ts-nocheck
 
-import {
-  microsoftApi,
-  getServicePrincipalByAppId,
-  getServicePrincipalDetails,
-  getApplicationDetails,
-  getProvisioningJob,
-  listSynchronizationJobs,
-  getSynchronizationSchema,
-  listAppRoleAssignments,
-} from "@/lib/api/microsoft";
+import { microsoftApi } from "@/lib/api/microsoft";
 import type { ApiLogger } from "@/lib/api/api-logger";
 import type { SynchronizationJob } from "@/lib/api/microsoft";
 import type { StepCheckResult } from "@/lib/types";
@@ -41,8 +31,11 @@ function createCheckFunction<T, A extends unknown[]>(
 
 const checkMicrosoftServicePrincipalInner = createCheckFunction(
   "MicrosoftServicePrincipal",
-  async (token: string, appClientId: string) => {
-    const sp = await getServicePrincipalByAppId(token, appClientId);
+  async (appClientId: string, logger?: ApiLogger) => {
+    const sp = await microsoftApi.servicePrincipals.getByAppId(
+      appClientId,
+      logger,
+    );
     
     if (sp?.id && sp.appId) {
       let appObjectId: string | undefined;
@@ -86,8 +79,8 @@ export async function checkMicrosoftServicePrincipal(
 
 const checkMicrosoftServicePrincipalEnabledInner = createCheckFunction(
   "MicrosoftServicePrincipalEnabled",
-  async (token: string, spObjectId: string) => {
-    const sp = await getServicePrincipalDetails(token, spObjectId);
+  async (spObjectId: string, logger?: ApiLogger) => {
+    const sp = await microsoftApi.servicePrincipals.get(spObjectId, logger);
 
     if (sp?.accountEnabled === true) {
       return { completed: true, message: "Service Principal is enabled." } as StepCheckResult;
@@ -119,14 +112,13 @@ const checkMicrosoftProvisioningJobDetailsInner = createCheckFunction(
     try {
       let jobToInspect: SynchronizationJob | null = null;
       if (jobId) {
-        jobToInspect = await getProvisioningJob(
-          token,
+        jobToInspect = await microsoftApi.provisioning.getJob(
           spObjectId,
           jobId,
           logger,
         );
       } else {
-        const jobs = await listSynchronizationJobs(token, spObjectId);
+        const jobs = await microsoftApi.provisioning.listJobs(spObjectId, logger);
         jobToInspect =
           jobs.find((j) => j.templateId === "GoogleApps") ?? jobs[0] ?? null;
       }
@@ -198,7 +190,10 @@ const checkMicrosoftSamlAppSettingsAppliedInner = createCheckFunction(
     expectedAcsUrl: string,
     logger?: ApiLogger,
   ) => {
-    const appDetails = await getApplicationDetails(token, appObjectId);
+    const appDetails = await microsoftApi.applications.get(
+      appObjectId,
+      logger,
+    );
 
     if (!appDetails) {
       return {
@@ -255,8 +250,7 @@ const checkMicrosoftAttributeMappingsAppliedInner = createCheckFunction(
   "MicrosoftAttributeMappingsApplied",
   async (spObjectId: string, jobId: string, logger?: ApiLogger) => {
     try {
-      const schema = await getSynchronizationSchema(
-        token,
+      const schema = await microsoftApi.provisioning.getSchema(
         spObjectId,
         jobId,
         logger,
@@ -326,8 +320,7 @@ const checkMicrosoftAppAssignmentsInner = createCheckFunction(
   "MicrosoftAppAssignments",
   async (servicePrincipalObjectId: string, logger?: ApiLogger) => {
     try {
-      const assignments = await listAppRoleAssignments(
-        token,
+      const assignments = await microsoftApi.servicePrincipals.listAssignments(
         servicePrincipalObjectId,
         logger,
       );

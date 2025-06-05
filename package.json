@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md}'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

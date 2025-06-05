@@ -1,7 +1,5 @@
 import { executeStepCheck } from '@/app/actions/step-actions'
 import { auth } from '@/app/(auth)/auth'
-import { server } from '@/test/mocks/server'
-import { http, HttpResponse } from 'msw'
 import type { StepContext, StepDefinition } from '@/lib/types'
 
 jest.mock('@/lib/steps', () => {

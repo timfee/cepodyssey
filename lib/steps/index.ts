@@ -15,3 +15,8 @@ export const allStepDefinitions: StepDefinition[] = [
 export const stepDefinitionMap = new Map<string, StepDefinition>(
   allStepDefinitions.map((def) => [def.id, def]),
 );
+
+// Utility stub for tests
+export const mockStep = {
+  check: async () => ({ completed: true }),
+};

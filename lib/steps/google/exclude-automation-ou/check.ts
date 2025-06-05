@@ -1,8 +1,6 @@
 import { OUTPUT_KEYS } from "@/lib/types";
 import {
-  getSamlProfile,
-  listSamlProfiles,
-  listIdpCredentials,
+  googleApi,
   type InboundSamlSsoProfile,
 } from "@/lib/api/google";
 
@@ -19,16 +17,14 @@ export const checkExcludeAutomationOu = createStepCheck({
       OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
     );
     try {
-      const token = await getGoogleToken();
       let profile: InboundSamlSsoProfile | null = null;
       if (profileName.startsWith("inboundSamlSsoProfiles/")) {
-        profile = await getSamlProfile(
-          token,
+        profile = await googleApi.saml.getProfile(
           profileName,
           context.logger,
         );
       } else {
-        const profiles = await listSamlProfiles(token, context.logger);
+        const profiles = await googleApi.saml.listProfiles(context.logger);
         profile = profiles.find((p) => p.displayName === profileName) ?? null;
       }
       if (!profile?.name) {
@@ -44,8 +40,7 @@ export const checkExcludeAutomationOu = createStepCheck({
         ssoMode: profile.ssoMode,
         resourceUrl: portalUrls.google.sso.samlProfile(profile.name),
       };
-      const idpCreds = await listIdpCredentials(
-        token,
+      const idpCreds = await googleApi.saml.listIdpCredentials(
         profile.name,
         context.logger,
       );
