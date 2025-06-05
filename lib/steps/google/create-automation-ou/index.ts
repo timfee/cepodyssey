@@ -21,7 +21,8 @@ export const G1_INPUTS: StepInput[] = [];
 export const g1CreateAutomationOu: StepDefinition = {
   id: STEP_IDS.CREATE_AUTOMATION_OU,
   title: "Create 'Automation' Organizational Unit",
-  description: "Create a dedicated folder for automation users and service accounts",
+  description:
+    "Create a dedicated folder for automation users and service accounts",
   details:
     "Creates an organizational unit at the root level of your Google Workspace directory. This OU will contain service accounts and other automation-related users, keeping them separate from regular users for security and organization.",
 

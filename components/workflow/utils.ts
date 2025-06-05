@@ -1,6 +1,6 @@
 export function parseApiAction(
   action: string,
-  outputs: Record<string, unknown>
+  outputs: Record<string, unknown>,
 ): { method: string; path: string; isManual: boolean } {
   let trimmed = action.trim();
   let isManual = false;

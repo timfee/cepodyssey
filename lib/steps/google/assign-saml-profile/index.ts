@@ -34,7 +34,10 @@ export const g7AssignSamlProfile: StepDefinition = {
   inputs: G7_INPUTS,
   outputs: G7_OUTPUTS,
   requires: [STEP_IDS.UPDATE_SAML_PROFILE],
-  nextStep: { id: STEP_IDS.EXCLUDE_AUTOMATION_OU, description: "Exclude Automation OU from SSO" },
+  nextStep: {
+    id: STEP_IDS.EXCLUDE_AUTOMATION_OU,
+    description: "Exclude Automation OU from SSO",
+  },
 
   actions: ["POST /v1/inboundSamlSsoProfiles/{profile}:assignToOrgUnits"],
   adminUrls: {

@@ -10,10 +10,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type {
-  StepStatusInfo,
-  StepDefinition,
-} from "@/lib/types";
+import type { StepStatusInfo, StepDefinition } from "@/lib/types";
 
 export interface StatusDisplayConfig {
   icon: LucideIcon;

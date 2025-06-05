@@ -49,7 +49,10 @@ export const m8RetrieveIdpMetadata: StepDefinition = {
   inputs: M8_INPUTS,
   outputs: M8_OUTPUTS,
   requires: [STEP_IDS.CONFIGURE_SAML_APP],
-  nextStep: { id: STEP_IDS.ASSIGN_USERS_SSO, description: "Assign users to SSO app" },
+  nextStep: {
+    id: STEP_IDS.ASSIGN_USERS_SSO,
+    description: "Assign users to SSO app",
+  },
   actions: ["GET /federationmetadata/2007-06/federationmetadata.xml"],
   adminUrls: {
     configure: (outputs) => {

@@ -28,7 +28,10 @@ export const setupStepsSlice = createSlice({
       const existingStep = state.steps[id] ?? { status: "pending" };
       state.steps[id] = { ...existingStep, ...statusInfo };
     },
-    markStepComplete(state, action: PayloadAction<{ id: string; isUserMarked: boolean }>) {
+    markStepComplete(
+      state,
+      action: PayloadAction<{ id: string; isUserMarked: boolean }>,
+    ) {
       const { id, isUserMarked } = action.payload;
       state.steps[id] = {
         ...state.steps[id],

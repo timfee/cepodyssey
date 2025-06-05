@@ -6,7 +6,11 @@ import {
 } from "./api-enablement-error";
 import { wrapAuthError } from "./auth-interceptor";
 import { APIError, fetchWithAuth, handleApiResponse } from "./utils";
-import { googleDirectoryUrls, googleIdentityUrls, API_BASES } from "./url-builder";
+import {
+  googleDirectoryUrls,
+  googleIdentityUrls,
+  API_BASES,
+} from "./url-builder";
 
 export type DirectoryUser = admin_directory_v1.Schema$User;
 export type GoogleOrgUnit = admin_directory_v1.Schema$OrgUnit;
@@ -69,8 +73,8 @@ export async function getLoggedInUser(token: string): Promise<DirectoryUser> {
       token,
     );
     const data = await handleApiResponse<DirectoryUser>(userRes);
-    if (data && typeof data === 'object' && 'alreadyExists' in data) {
-      throw new APIError('User lookup failed', 404);
+    if (data && typeof data === "object" && "alreadyExists" in data) {
+      throw new APIError("User lookup failed", 404);
     }
     return data;
   } catch (error) {

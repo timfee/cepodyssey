@@ -58,7 +58,10 @@ export const m4ConfigureAttributeMappings: StepDefinition = {
   inputs: M4_INPUTS,
   outputs: M4_OUTPUTS,
   requires: [STEP_IDS.AUTHORIZE_PROVISIONING],
-  nextStep: { id: STEP_IDS.START_PROVISIONING, description: "Start synchronization job" },
+  nextStep: {
+    id: STEP_IDS.START_PROVISIONING,
+    description: "Start synchronization job",
+  },
   actions: ["Manual: Edit attribute mappings in portal"],
   adminUrls: {
     configure: (outputs) => {

@@ -98,7 +98,8 @@ export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Progress</CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {cat.steps.filter((s) => s.status === "completed").length}/{cat.steps.length} done
+                  {cat.steps.filter((s) => s.status === "completed").length}/
+                  {cat.steps.length} done
                 </span>
               </div>
             </CardHeader>

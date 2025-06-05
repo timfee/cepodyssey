@@ -1,4 +1,8 @@
-import type { AppConfigState, StepStatusInfo, StepDefinition } from "@/lib/types";
+import type {
+  AppConfigState,
+  StepStatusInfo,
+  StepDefinition,
+} from "@/lib/types";
 
 export interface PersistedProgress {
   steps: Record<string, StepStatusInfo>;
@@ -21,7 +25,7 @@ function migrateStepStatus(input: StepStatusInfo | string): StepStatusInfo {
  */
 export function saveProgress(
   domain: string,
-  progress: PersistedProgress
+  progress: PersistedProgress,
 ): void {
   if (typeof window === "undefined" || !domain) return;
   try {
@@ -40,14 +44,14 @@ export function saveProgress(
 export function loadProgress(domain: string): PersistedProgress | null {
   if (typeof window === "undefined" || !domain) return null;
   try {
-  const key = getStorageKey(domain);
-  const savedData = localStorage.getItem(key);
+    const key = getStorageKey(domain);
+    const savedData = localStorage.getItem(key);
     if (!savedData) return null;
     const parsed = JSON.parse(savedData) as PersistedProgress;
 
-  // Import step definitions to check which steps are checkable
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { allStepDefinitions } = require("@/lib/steps");
+    // Import step definitions to check which steps are checkable
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { allStepDefinitions } = require("@/lib/steps");
 
     // Filter out checkable steps from persisted state
     const filteredSteps: Record<string, StepStatusInfo> = {};

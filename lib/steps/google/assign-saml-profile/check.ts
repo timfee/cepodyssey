@@ -78,10 +78,12 @@ export async function checkAssignSamlProfile(
           message: "SAML profile configured.",
           outputs: {
             ...outputs,
-            producedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE).map((o) => ({
-              ...o,
-              value: outputs[o.key as keyof typeof outputs],
-            })),
+            producedOutputs: getStepOutputs(STEP_IDS.ASSIGN_SAML_PROFILE).map(
+              (o) => ({
+                ...o,
+                value: outputs[o.key as keyof typeof outputs],
+              }),
+            ),
             inputs: getStepInputs(STEP_IDS.ASSIGN_SAML_PROFILE).map((inp) => ({
               ...inp,
               data: { ...inp.data, value: context.outputs[inp.data.key!] },

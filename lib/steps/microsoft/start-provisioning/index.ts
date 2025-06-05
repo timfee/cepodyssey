@@ -53,7 +53,10 @@ export const m5StartProvisioning: StepDefinition = {
   inputs: M5_INPUTS,
   outputs: M5_OUTPUTS,
   requires: [STEP_IDS.CONFIGURE_ATTRIBUTE_MAPPINGS],
-  nextStep: { id: STEP_IDS.CREATE_SAML_APP, description: "Create SAML app for SSO" },
+  nextStep: {
+    id: STEP_IDS.CREATE_SAML_APP,
+    description: "Create SAML app for SSO",
+  },
   actions: ["POST /servicePrincipals/{id}/synchronization/jobs"],
   adminUrls: {
     configure: (outputs) => {

@@ -51,13 +51,19 @@ export const stepContentEnhancements = {
     details:
       "Updates the SAML profile with metadata from Azure AD including entity ID, SSO URL, and certificate. This completes the trust configuration for single sign-on.",
     actions: ["PATCH /v1/inboundSamlSsoProfiles/{profile}"],
-    nextStep: { id: STEP_IDS.ASSIGN_SAML_PROFILE, description: "Assign the SAML profile" },
+    nextStep: {
+      id: STEP_IDS.ASSIGN_SAML_PROFILE,
+      description: "Assign the SAML profile",
+    },
   },
   [STEP_IDS.ASSIGN_SAML_PROFILE]: {
     details:
       "Assigns the configured SAML profile to organizational units or groups so users are redirected to Microsoft for authentication.",
     actions: ["POST /v1/inboundSamlSsoProfiles/{profile}:assignToOrgUnits"],
-    nextStep: { id: STEP_IDS.EXCLUDE_AUTOMATION_OU, description: "Exclude Automation OU from SSO" },
+    nextStep: {
+      id: STEP_IDS.EXCLUDE_AUTOMATION_OU,
+      description: "Exclude Automation OU from SSO",
+    },
   },
   [STEP_IDS.EXCLUDE_AUTOMATION_OU]: {
     details:
@@ -71,7 +77,10 @@ export const stepContentEnhancements = {
     details:
       "Instantiates the Google Cloud/G Suite Connector by Microsoft gallery app in Azure AD. This creates both an application registration and a service principal for provisioning.",
     actions: ["POST /applicationTemplates/{templateId}/instantiate"],
-    nextStep: { id: STEP_IDS.ENABLE_PROVISIONING_SP, description: "Enable the service principal" },
+    nextStep: {
+      id: STEP_IDS.ENABLE_PROVISIONING_SP,
+      description: "Enable the service principal",
+    },
   },
   [STEP_IDS.ENABLE_PROVISIONING_SP]: {
     details:
@@ -100,31 +109,46 @@ export const stepContentEnhancements = {
     details:
       "Configures attribute mappings so Azure AD fields sync correctly to Google Workspace. Adjust mappings for usernames, addresses, and group membership.",
     actions: ["Manual: Configure attribute mappings in portal"],
-    nextStep: { id: STEP_IDS.START_PROVISIONING, description: "Start synchronization job" },
+    nextStep: {
+      id: STEP_IDS.START_PROVISIONING,
+      description: "Start synchronization job",
+    },
   },
   [STEP_IDS.START_PROVISIONING]: {
     details:
       "Defines the provisioning scope and starts the synchronization job. Azure AD begins syncing users and groups to Google Workspace.",
     actions: ["POST /servicePrincipals/{id}/synchronization/jobs"],
-    nextStep: { id: STEP_IDS.CREATE_SAML_APP, description: "Create SAML app for SSO" },
+    nextStep: {
+      id: STEP_IDS.CREATE_SAML_APP,
+      description: "Create SAML app for SSO",
+    },
   },
   [STEP_IDS.CREATE_SAML_APP]: {
     details:
       "Creates a second gallery application specifically for SAML single sign-on with Google Workspace. Generates a new service principal and app registration.",
     actions: ["POST /applicationTemplates/{templateId}/instantiate"],
-    nextStep: { id: STEP_IDS.CONFIGURE_SAML_APP, description: "Configure SAML settings" },
+    nextStep: {
+      id: STEP_IDS.CONFIGURE_SAML_APP,
+      description: "Configure SAML settings",
+    },
   },
   [STEP_IDS.CONFIGURE_SAML_APP]: {
     details:
       "Updates the SAML application with Google's ACS URL and entity ID. Also uploads the Azure AD certificate used for signing assertions.",
     actions: ["Manual: Enter SAML settings in portal"],
-    nextStep: { id: STEP_IDS.RETRIEVE_IDP_METADATA, description: "Retrieve IdP metadata" },
+    nextStep: {
+      id: STEP_IDS.RETRIEVE_IDP_METADATA,
+      description: "Retrieve IdP metadata",
+    },
   },
   [STEP_IDS.RETRIEVE_IDP_METADATA]: {
     details:
       "Retrieves the Azure AD SAML metadata XML which includes the IdP entity ID, login URL, and certificate. Google needs this data to trust Azure AD.",
     actions: ["GET /federationmetadata/2007-06/federationmetadata.xml"],
-    nextStep: { id: STEP_IDS.ASSIGN_USERS_SSO, description: "Assign users to SSO app" },
+    nextStep: {
+      id: STEP_IDS.ASSIGN_USERS_SSO,
+      description: "Assign users to SSO app",
+    },
   },
   [STEP_IDS.ASSIGN_USERS_SSO]: {
     details:

@@ -9,7 +9,10 @@ import type {
 } from "@/lib/types";
 import type { StepId } from "./step-refs";
 
-export const STEPS: Record<StepId, StepDefinition> = {} as Record<StepId, StepDefinition>;
+export const STEPS: Record<StepId, StepDefinition> = {} as Record<
+  StepId,
+  StepDefinition
+>;
 allStepDefinitions.forEach((step) => {
   STEPS[step.id as StepId] = step;
 });

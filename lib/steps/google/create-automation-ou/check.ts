@@ -28,13 +28,15 @@ export async function checkAutomationOu(
           [OUTPUT_KEYS.AUTOMATION_OU_ID]: orgUnit.orgUnitId,
           [OUTPUT_KEYS.AUTOMATION_OU_PATH]: orgUnit.orgUnitPath,
           resourceUrl: portalUrls.google.orgUnits.details(orgUnit.orgUnitPath),
-          producedOutputs: getStepOutputs(STEP_IDS.CREATE_AUTOMATION_OU).map((o) => ({
-            ...o,
-            value:
-              o.key === OUTPUT_KEYS.AUTOMATION_OU_ID
-                ? orgUnit.orgUnitId
-                : orgUnit.orgUnitPath,
-          })),
+          producedOutputs: getStepOutputs(STEP_IDS.CREATE_AUTOMATION_OU).map(
+            (o) => ({
+              ...o,
+              value:
+                o.key === OUTPUT_KEYS.AUTOMATION_OU_ID
+                  ? orgUnit.orgUnitId
+                  : orgUnit.orgUnitPath,
+            }),
+          ),
         },
       };
     }

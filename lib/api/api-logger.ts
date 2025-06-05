@@ -91,7 +91,7 @@ export class ApiLogger {
     id: string,
     response: Response,
     responseBody?: unknown,
-    duration?: number
+    duration?: number,
   ) {
     // Always log to console
     console.log(`[API] Response ${response.status} for ${id} (${duration}ms)`);

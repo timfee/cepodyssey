@@ -15,19 +15,19 @@ This directory contains clients for communicating with external APIs (Google Wor
 All functions that make an API call must accept an optional `ApiLogger` instance and pass it to `fetchWithAuth`.
 
 ```typescript
-import { ApiLogger } from './api-logger';
+import { ApiLogger } from "./api-logger";
 
 export async function someApiFunction(
   token: string,
   params: SomeParams,
-  logger?: ApiLogger // Accept the logger
+  logger?: ApiLogger, // Accept the logger
 ): Promise<SomeResult> {
   // ...
   const res = await fetchWithAuth(
     someUrl,
     token,
-    { method: 'POST', body: JSON.stringify(payload) },
-    logger // Pass it to the fetch client
+    { method: "POST", body: JSON.stringify(payload) },
+    logger, // Pass it to the fetch client
   );
   // ...
 }

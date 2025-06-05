@@ -12,7 +12,9 @@ interface StepCardOutputsDisplayProps {
   outputs: DisplayOutput[];
 }
 
-export function StepCardOutputsDisplay({ outputs }: StepCardOutputsDisplayProps) {
+export function StepCardOutputsDisplay({
+  outputs,
+}: StepCardOutputsDisplayProps) {
   if (!outputs || outputs.length === 0) return null;
 
   return (

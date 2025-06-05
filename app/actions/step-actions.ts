@@ -12,7 +12,10 @@ import type { StepId } from "@/lib/steps/step-refs";
 import { ApiLogger } from "@/lib/api/api-logger";
 import { getLogCollector, clearLogCollector } from "@/lib/api/log-collector";
 
-async function validateSession(): Promise<{ valid: boolean; error?: StepCheckResult }> {
+async function validateSession(): Promise<{
+  valid: boolean;
+  error?: StepCheckResult;
+}> {
   const session = await auth();
 
   if (!session) {
@@ -29,12 +32,16 @@ async function validateSession(): Promise<{ valid: boolean; error?: StepCheckRes
     };
   }
 
-  if ((session.error as unknown as string) === 'MissingTokens' || session.error === 'RefreshTokenError') {
+  if (
+    (session.error as unknown as string) === "MissingTokens" ||
+    session.error === "RefreshTokenError"
+  ) {
     return {
       valid: false,
       error: {
         completed: false,
-        message: "Your session is invalid. Please sign out and sign in again with both Google and Microsoft.",
+        message:
+          "Your session is invalid. Please sign out and sign in again with both Google and Microsoft.",
         outputs: {
           errorCode: "INVALID_SESSION",
           errorProvider: "both",
@@ -158,7 +165,8 @@ export async function executeStepAction(
         return {
           success: false,
           error: {
-            message: sessionValidation.error.message || "Authentication required",
+            message:
+              sessionValidation.error.message || "Authentication required",
             code: "AUTH_EXPIRED",
           },
           outputs: sessionValidation.error.outputs,

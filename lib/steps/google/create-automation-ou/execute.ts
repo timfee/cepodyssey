@@ -29,7 +29,12 @@ export async function executeCreateAutomationOu(
     const parentPath = "/";
     const customerId = context.outputs[OUTPUT_KEYS.GWS_CUSTOMER_ID] as string;
 
-    const result = await google.createOrgUnit(token, ouName, parentPath, customerId);
+    const result = await google.createOrgUnit(
+      token,
+      ouName,
+      parentPath,
+      customerId,
+    );
 
     if (typeof result === "object" && "alreadyExists" in result) {
       const existing = await google.getOrgUnit(token, `${parentPath}${ouName}`);

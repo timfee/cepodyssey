@@ -89,9 +89,7 @@ export function StepCardFooterActions({
                 step.automatability !== "manual" ? onExecute : onMarkComplete
               }
               disabled={!canExecute || isProcessing}
-              variant={
-                step.automatability === "manual" ? "outline" : "default"
-              }
+              variant={step.automatability === "manual" ? "outline" : "default"}
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />

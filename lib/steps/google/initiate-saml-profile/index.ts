@@ -6,12 +6,18 @@ import { executeInitiateSamlProfile } from "./execute";
 import { STEP_IDS } from "@/lib/steps/step-refs";
 
 export const G5_OUTPUTS: StepOutput[] = [
-  { key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME, description: "SAML profile name" },
+  {
+    key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_NAME,
+    description: "SAML profile name",
+  },
   {
     key: OUTPUT_KEYS.GOOGLE_SAML_PROFILE_FULL_NAME,
     description: "Full resource name of the SAML profile",
   },
-  { key: OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID, description: "Google SP Entity ID" },
+  {
+    key: OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,
+    description: "Google SP Entity ID",
+  },
   { key: OUTPUT_KEYS.GOOGLE_SAML_ACS_URL, description: "Google ACS URL" },
 ];
 

@@ -34,10 +34,12 @@ export async function checkProvisioningApp(
       ...result,
       outputs: {
         ...outputs,
-        producedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_APP).map((o) => ({
-          ...o,
-          value: outputs[o.key as keyof typeof outputs],
-        })),
+        producedOutputs: getStepOutputs(STEP_IDS.CREATE_PROVISIONING_APP).map(
+          (o) => ({
+            ...o,
+            value: outputs[o.key as keyof typeof outputs],
+          }),
+        ),
         inputs: getStepInputs(STEP_IDS.CREATE_PROVISIONING_APP).map((inp) => ({
           ...inp,
           data: { ...inp.data, value: context.outputs[inp.data.key!] },

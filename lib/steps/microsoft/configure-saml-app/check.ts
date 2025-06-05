@@ -30,7 +30,11 @@ export async function checkConfigureSamlApp(
       },
     };
   }
-  const result = await checkMicrosoftSamlAppSettingsApplied(appObjectId, spEntityId, acsUrl);
+  const result = await checkMicrosoftSamlAppSettingsApplied(
+    appObjectId,
+    spEntityId,
+    acsUrl,
+  );
   return {
     ...result,
     outputs: result.completed

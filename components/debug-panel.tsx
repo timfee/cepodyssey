@@ -38,7 +38,7 @@ export function DebugPanel() {
     if (filterType === "all") return logs.length;
     if (filterType === "errors")
       return logs.filter(
-        (log) => log.error || (log.responseStatus && log.responseStatus >= 400)
+        (log) => log.error || (log.responseStatus && log.responseStatus >= 400),
       ).length;
     return logs.filter((log) => log.provider === filterType).length;
   };
@@ -93,12 +93,12 @@ export function DebugPanel() {
                 className={cn(
                   "text-xs px-2.5 py-1 h-auto capitalize",
                   filter === filterType &&
-                    "bg-primary/10 text-primary border-primary/50"
+                    "bg-primary/10 text-primary border-primary/50",
                 )}
               >
                 {filterType} ({getLogCount(filterType)})
               </Button>
-            )
+            ),
           )}
         </div>
       </div>
@@ -125,7 +125,7 @@ export function DebugPanel() {
                       "border rounded-sm",
                       isError
                         ? "border-destructive/30 bg-destructive/5 dark:border-destructive/50 dark:bg-destructive/10"
-                        : "border-border bg-slate-50/50 dark:bg-slate-800/30"
+                        : "border-border bg-slate-50/50 dark:bg-slate-800/30",
                     )}
                   >
                     <CollapsibleTrigger className="w-full p-2 text-left group">
@@ -133,7 +133,7 @@ export function DebugPanel() {
                         <span
                           className={cn(
                             "font-semibold",
-                            isError ? "text-destructive" : "text-primary"
+                            isError ? "text-destructive" : "text-primary",
                           )}
                         >
                           {log.method} {log.url}
@@ -161,7 +161,7 @@ export function DebugPanel() {
                             className={cn(
                               log.responseStatus >= 400
                                 ? "text-destructive"
-                                : "text-success"
+                                : "text-success",
                             )}
                           >
                             Status: {log.responseStatus}

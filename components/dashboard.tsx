@@ -71,7 +71,7 @@ export function AutomationDashboard({
   const store = useStore<RootState>();
   const appConfig = useAppSelector((state: RootState) => state.appConfig);
   const stepsStatusMap = useAppSelector(
-    (state: RootState) => state.setupSteps.steps
+    (state: RootState) => state.setupSteps.steps,
   );
 
   const isLoadingSession = status === "loading";
@@ -89,18 +89,18 @@ export function AutomationDashboard({
     ) {
       console.log(
         "AutomationDashboard: Initializing Redux with config from server session props:",
-        initialConfig
+        initialConfig,
       );
       dispatch(
         initializeConfig({
           domain: initialConfig.domain ?? null,
           tenantId: initialConfig.tenantId ?? null,
           outputs: initialConfig.outputs ?? {},
-        })
+        }),
       );
     } else if (!initialConfig && (!appConfig.domain || !appConfig.tenantId)) {
       console.log(
-        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant."
+        "AutomationDashboard: No initialConfig prop, and Redux domain/tenant is empty. This might happen if session didn't have domain/tenant.",
       );
     }
   }, [dispatch, initialConfig, appConfig.domain, appConfig.tenantId]);
@@ -109,7 +109,7 @@ export function AutomationDashboard({
   useEffect(() => {
     if (appConfig.domain && appConfig.domain !== "") {
       const persisted: PersistedProgress | null = loadProgress(
-        appConfig.domain
+        appConfig.domain,
       );
       if (persisted) {
         dispatch(initializeSteps(persisted.steps));
@@ -149,7 +149,7 @@ export function AutomationDashboard({
       currentSession?.hasMicrosoftAuth,
       appConfig.domain,
       appConfig.tenantId,
-    ]
+    ],
   );
 
   const { executeStep } = useStepExecution();
@@ -160,13 +160,13 @@ export function AutomationDashboard({
         dispatch(
           setError({
             message: "Please sign in to both Google and Microsoft to continue.",
-          })
+          }),
         );
         return;
       }
       await executeStep(stepId);
     },
-    [executeStep, canRunAutomation, dispatch]
+    [executeStep, canRunAutomation, dispatch],
   );
 
   const executeCheck = useCallback(
@@ -181,7 +181,7 @@ export function AutomationDashboard({
           id: stepId,
           status: "in_progress",
           message: "Checking status...",
-        })
+        }),
       );
 
       const context: StepContext = {
@@ -203,7 +203,7 @@ export function AutomationDashboard({
               message:
                 checkResult.message ||
                 "Your session has expired. Please sign in again.",
-            })
+            }),
           );
 
           dispatch(
@@ -216,7 +216,7 @@ export function AutomationDashboard({
                 errorProvider: checkResult.outputs.errorProvider,
               },
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
           return checkResult;
         }
@@ -231,7 +231,7 @@ export function AutomationDashboard({
               error: errorMessage,
               metadata: checkResult.outputs,
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
 
           if (checkResult.outputs.errorCode === "API_NOT_ENABLED") {
@@ -243,13 +243,13 @@ export function AutomationDashboard({
                     ? [0]
                     : undefined,
                 },
-              })
+              }),
             );
           } else {
             dispatch(
               setError({
                 message: `Check Failed: ${errorMessage}`,
-              })
+              }),
             );
           }
           return checkResult;
@@ -267,7 +267,7 @@ export function AutomationDashboard({
                 ...(checkResult.outputs || {}),
               },
               lastCheckedAt: new Date().toISOString(),
-            })
+            }),
           );
         } else {
           // Reset to pending if check shows it's not completed
@@ -278,7 +278,7 @@ export function AutomationDashboard({
               message: checkResult.message || "Not completed",
               error: null,
               metadata: checkResult.outputs || {},
-            })
+            }),
           );
         }
         return checkResult;
@@ -291,7 +291,7 @@ export function AutomationDashboard({
             status: "failed",
             error: error instanceof Error ? error.message : "Check failed",
             lastCheckedAt: new Date().toISOString(),
-          })
+          }),
         );
 
         dispatch(
@@ -300,12 +300,12 @@ export function AutomationDashboard({
               error instanceof Error
                 ? error.message
                 : "An unexpected error occurred",
-          })
+          }),
         );
         return { completed: false } as StepCheckResult;
       }
     },
-    [appConfig.domain, appConfig.tenantId, dispatch, store]
+    [appConfig.domain, appConfig.tenantId, dispatch, store],
   );
 
   const { manualRefresh, isChecking } = useAutoCheck(executeCheck);
@@ -339,7 +339,7 @@ export function AutomationDashboard({
   const ProgressSummary = () => {
     const totalSteps = allStepDefinitions.length;
     const completedSteps = Object.values(stepsStatusMap).filter(
-      (s) => s.status === "completed"
+      (s) => s.status === "completed",
     ).length;
     const progressPercent = (completedSteps / totalSteps) * 100;
 
