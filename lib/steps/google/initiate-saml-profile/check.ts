@@ -1,5 +1,4 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import * as google from '@/lib/api/google';
 import { portalUrls } from '@/lib/api/url-builder';
@@ -7,7 +6,6 @@ import { getGoogleToken } from '../../utils/auth';
 import { handleCheckError } from '../../utils/error-handling';
 
 export const checkSamlProfile = createStepCheck({
-  stepId: STEP_IDS.INITIATE_SAML_PROFILE,
   requiredOutputs: [],
   checkLogic: async (_context) => {
     const profileDisplayName = 'Azure AD SSO';

@@ -1,10 +1,8 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import { checkMicrosoftSamlAppSettingsApplied } from '../utils/common-checks';
 
 export const checkConfigureSamlApp = createStepCheck({
-  stepId: STEP_IDS.CONFIGURE_SAML_APP,
   requiredOutputs: [
     OUTPUT_KEYS.SAML_SSO_APP_OBJECT_ID,
     OUTPUT_KEYS.GOOGLE_SAML_SP_ENTITY_ID,

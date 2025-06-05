@@ -1,10 +1,8 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import { checkMicrosoftProvisioningJobDetails } from '../utils/common-checks';
 
 export const checkAuthorizeProvisioning = createStepCheck({
-  stepId: STEP_IDS.AUTHORIZE_PROVISIONING,
   requiredOutputs: [OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID],
   checkLogic: async (context) => {
     const spId = context.outputs[OUTPUT_KEYS.PROVISIONING_SP_OBJECT_ID] as string;

@@ -1,5 +1,4 @@
 import { OUTPUT_KEYS } from '@/lib/types';
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import * as google from '@/lib/api/google';
 import { portalUrls } from '@/lib/api/url-builder';
 import { getGoogleToken } from '../../utils/auth';
@@ -8,7 +7,6 @@ import { handleCheckError } from '../../utils/error-handling';
 import { APIError } from '@/lib/api/utils';
 
 export const checkAutomationOu = createStepCheck({
-  stepId: STEP_IDS.CREATE_AUTOMATION_OU,
   requiredOutputs: [],
   checkLogic: async (_context) => {
     try {

@@ -1,4 +1,3 @@
-import { STEP_IDS } from '@/lib/steps/step-refs';
 import { createStepCheck } from '../../utils/check-factory';
 import * as google from '@/lib/api/google';
 import { getGoogleToken } from '../../utils/auth';
@@ -6,7 +5,6 @@ import { handleCheckError } from '../../utils/error-handling';
 import { APIError } from '@/lib/api/utils';
 
 export const checkDomain = createStepCheck({
-  stepId: STEP_IDS.VERIFY_DOMAIN,
   requiredOutputs: [],
   checkLogic: async (context) => {
     if (!context.domain) {
