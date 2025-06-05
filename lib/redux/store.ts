@@ -13,10 +13,12 @@ export const store = configureStore({
     errors: errorsSlice.reducer,
     debugPanel: debugPanelSlice.reducer,
   },
+  devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       // Allow Date objects in state metadata
-      serializableCheck: false,
+      serializableCheck: process.env.NODE_ENV !== "production",
+      immutableCheck: process.env.NODE_ENV !== "production",
     }),
 });
 
