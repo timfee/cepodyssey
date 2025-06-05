@@ -14,7 +14,7 @@ interface ActionToolbarProps {
 }
 
 export function ActionToolbar({ session, isLoadingSession }: ActionToolbarProps) {
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const appConfig = useAppSelector((state) => state.app);
   const showActionRequired =
     (!appConfig.domain ||
       !appConfig.tenantId ||

@@ -1,10 +1,6 @@
 import { executeStepAction } from "@/app/actions/step-actions";
 import { ErrorManager } from "@/lib/error-handling/error-manager";
-import { addOutputs } from "@/lib/redux/slices/app-config";
-import {
-  clearCheckTimestamp,
-  updateStep,
-} from "@/lib/redux/slices/setup-steps";
+import { addOutputs, clearCheckTimestamp, updateStep } from "@/lib/redux/slices/app-state";
 import { allStepDefinitions } from "@/lib/steps";
 import type { StepId } from "@/lib/steps/step-refs";
 import { useCallback } from "react";
@@ -12,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "./use-redux";
 
 export function useStepExecution() {
   const dispatch = useAppDispatch();
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const appConfig = useAppSelector((state) => state.app);
 
   const executeStep = useCallback(
     async (stepId: StepId) => {

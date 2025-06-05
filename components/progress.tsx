@@ -18,8 +18,8 @@ interface ProgressVisualizerProps {
 }
 
 export function ProgressVisualizer({ onExecuteStep }: ProgressVisualizerProps) {
-  const stepsStatusMap = useAppSelector((state) => state.setupSteps.steps);
-  const appConfig = useAppSelector((state) => state.appConfig);
+  const stepsStatusMap = useAppSelector((state) => state.app.steps);
+  const appConfig = useAppSelector((state) => state.app);
   const canRunGlobalSteps = !!(appConfig.domain && appConfig.tenantId);
 
   const managedSteps: ManagedStep[] = React.useMemo(() => {

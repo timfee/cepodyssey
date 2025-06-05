@@ -1,15 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { appConfigSlice } from "./slices/app-config";
-import { setupStepsSlice } from "./slices/setup-steps";
-import { modalsSlice } from "./slices/modals";
-import { errorsSlice } from "./slices/errors";
+import { appStateSlice } from "./slices/app-state";
+import { uiStateSlice } from "./slices/ui-state";
 
 export const store = configureStore({
   reducer: {
-    appConfig: appConfigSlice.reducer,
-    setupSteps: setupStepsSlice.reducer,
-    modals: modalsSlice.reducer,
-    errors: errorsSlice.reducer,
+    app: appStateSlice.reducer,
+    ui: uiStateSlice.reducer,
   },
   devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>

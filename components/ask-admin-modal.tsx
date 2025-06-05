@@ -20,7 +20,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/use-redux";
 import {
   closeAskAdminModal,
   selectAskAdminModal,
-} from "@/lib/redux/slices/modals";
+} from "@/lib/redux/slices/ui-state";
 import { useSession } from "next-auth/react";
 
 export function AskAdminModal() {

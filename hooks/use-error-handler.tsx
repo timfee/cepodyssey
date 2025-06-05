@@ -1,5 +1,5 @@
 import { useAppDispatch } from "./use-redux";
-import { setError } from "@/lib/redux/slices/errors";
+import { setError } from "@/lib/redux/slices/ui-state";
 
 export function useErrorHandler() {
   const dispatch = useAppDispatch();
